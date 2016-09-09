@@ -65,6 +65,79 @@ class GenomeFileUtil(object):
             'GenomeFileUtil.genome_to_gff',
             [params], self._service_ver, context)
 
+    def TranslateNucToProtSeq(self, params, context=None):
+        """
+        :param params: instance of type "TranslateNucToProtSeq_Params"
+           (TranslateNucToProtSeq()) -> structure: parameter "nuc_seq" of
+           String, parameter "genetic_code" of String
+        :returns: instance of type "TranslateNucToProtSeq_Output" ->
+           structure: parameter "prot_seq" of String
+        """
+        return self._client.call_method(
+            'GenomeFileUtil.TranslateNucToProtSeq',
+            [params], self._service_ver, context)
+
+    def GenomeToFASTA(self, params, context=None):
+        """
+        :param params: instance of type "GenomeToFASTA_Params"
+           (GenomeToFASTA()) -> structure: parameter "genome_ref" of type
+           "data_obj_ref", parameter "file" of type "path_type", parameter
+           "dir" of type "path_type", parameter "console" of list of type
+           "log_msg", parameter "invalid_msgs" of list of type "log_msg",
+           parameter "residue_type" of String, parameter "feature_type" of
+           String, parameter "record_id_pattern" of type "pattern_type",
+           parameter "record_desc_pattern" of type "pattern_type", parameter
+           "case" of String, parameter "linewrap" of Long
+        :returns: instance of type "GenomeToFASTA_Output" -> structure:
+           parameter "fasta_file_path" of type "path_type", parameter
+           "feature_ids" of list of type "feature_id"
+        """
+        return self._client.call_method(
+            'GenomeFileUtil.GenomeToFASTA',
+            [params], self._service_ver, context)
+
+    def GenomeSetToFASTA(self, params, context=None):
+        """
+        :param params: instance of type "GenomeSetToFASTA_Params"
+           (GenomeSetToFASTA()) -> structure: parameter "genomeSet_ref" of
+           type "data_obj_ref", parameter "file" of type "path_type",
+           parameter "dir" of type "path_type", parameter "console" of list
+           of type "log_msg", parameter "invalid_msgs" of list of type
+           "log_msg", parameter "residue_type" of String, parameter
+           "feature_type" of String, parameter "record_id_pattern" of type
+           "pattern_type", parameter "record_desc_pattern" of type
+           "pattern_type", parameter "case" of String, parameter "linewrap"
+           of Long, parameter "merge_fasta_files" of type "true_false"
+        :returns: instance of type "GenomeSetToFASTA_Output" -> structure:
+           parameter "fasta_file_path_list" of list of type "path_type",
+           parameter "feature_ids_by_genome_id" of mapping from type
+           "genome_id" to list of type "feature_id"
+        """
+        return self._client.call_method(
+            'GenomeFileUtil.GenomeSetToFASTA',
+            [params], self._service_ver, context)
+
+    def FeatureSetToFASTA(self, params, context=None):
+        """
+        :param params: instance of type "FeatureSetToFASTA_Params"
+           (FeatureSetToFASTA()) -> structure: parameter "featureSet_ref" of
+           type "data_obj_ref", parameter "file" of type "path_type",
+           parameter "dir" of type "path_type", parameter "console" of list
+           of type "log_msg", parameter "invalid_msgs" of list of type
+           "log_msg", parameter "residue_type" of String, parameter
+           "feature_type" of String, parameter "record_id_pattern" of type
+           "pattern_type", parameter "record_desc_pattern" of type
+           "pattern_type", parameter "case" of String, parameter "linewrap"
+           of Long
+        :returns: instance of type "FeatureSetToFASTA_Output" -> structure:
+           parameter "fasta_file_path" of type "path_type", parameter
+           "feature_ids_by_genome_ref" of mapping from type "data_obj_ref" to
+           list of type "feature_id"
+        """
+        return self._client.call_method(
+            'GenomeFileUtil.FeatureSetToFASTA',
+            [params], self._service_ver, context)
+
     def status(self, context=None):
         return self._client.call_method('GenomeFileUtil.status',
-                                        [], self._service_ver, context)
+            [], self._service_ver, context)
