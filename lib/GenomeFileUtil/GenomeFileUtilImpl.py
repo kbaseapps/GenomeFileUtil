@@ -440,7 +440,8 @@ class GenomeFileUtil:
         # get genomeSet object
         try:
             ws = workspaceService(self.workspaceURL, token=ctx['token'])
-            genomeSet_object = ws.get_objects2({'objects':[{'ref':genomeSet_ref}]})['data'][0]
+            #genomeSet_object = ws.get_objects2({'objects':[{'ref':genomeSet_ref}]})['data'][0]['data']
+            genomeSet_object = ws.get_objects([{'ref':genomeSet_ref}])[0]['data']
         except Exception as e:
             raise ValueError('Unable to fetch GenomeSet object from workspace: ' + str(e))
             #to get the full stack trace: traceback.format_exc()
@@ -643,7 +644,8 @@ class GenomeFileUtil:
         # get featureSet object
         try:
             ws = workspaceService(self.workspaceURL, token=ctx['token'])
-            featureSet_object = ws.get_objects2({'objects':[{'ref':featureSet_ref}]})['data'][0]
+            #featureSet_object = ws.get_objects2({'objects':[{'ref':featureSet_ref}]})['data'][0]['data']
+            featureSet_object = ws.get_objects([{'ref':featureSet_ref}])[0]['data']
         except Exception as e:
             raise ValueError('Unable to fetch featureSet object from workspace: ' + str(e))
             #to get the full stack trace: traceback.format_exc()
