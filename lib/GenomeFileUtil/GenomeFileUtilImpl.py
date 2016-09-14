@@ -318,7 +318,7 @@ class GenomeFileUtil:
                     # nuc recs
                     else:
                         if 'dna_sequence' not in feature or feature['dna_sequence'] == None:
-                            self.log(invalid_msgs, "bad feature "+feature['id']+": No dna_sequence field.")
+                            self.log(invalid_msgs, "bad feature "+fid+": No dna_sequence field.")
                         else:
                             feature_sequence_found = True
                             # can't get genome_id from GenomeAnnotationAPI
@@ -521,7 +521,7 @@ class GenomeFileUtil:
                     # nuc recs
                     else:
                         if 'dna_sequence' not in feature or feature['dna_sequence'] == None:
-                            self.log(invalid_msgs, "bad feature "+feature['id']+": No dna_sequence field.")
+                            self.log(invalid_msgs, "bad feature "+fid+": No dna_sequence field.")
                         else:
                             feature_sequence_found = True
                             rec_id = record_header_sub(record_id_pattern, fid, genome_id, genome_ref)
@@ -719,7 +719,7 @@ class GenomeFileUtil:
                         # nuc recs
                         else:
                             if 'dna_sequence' not in feature or feature['dna_sequence'] == None:
-                                self.log(invalid_msgs, "bad feature "+feature['id']+": No dna_sequence field.")
+                                self.log(invalid_msgs, "bad feature "+fid+": No dna_sequence field.")
                             else:
                                 feature_sequence_found = True
                                 rec_id = record_id_pattern
