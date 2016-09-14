@@ -421,7 +421,6 @@ class GenomeFileUtil:
         # init and simplify
         fasta_file_path_list = []
         feature_ids_by_genome_id = dict()
-        feature_sequence_found = False
         residue_type = residue_type[0:3].lower()
         feature_type = feature_type.upper()
         case = case[0:1].upper()
@@ -449,6 +448,7 @@ class GenomeFileUtil:
         # iterate through genomeSet members
         genome_ids = genomeSet_object['elements'].keys()
         for genome_i in range(len(genome_ids)):
+            feature_sequence_found = False
             genome_id = genome_ids[genome_i]
             feature_ids_by_genome_id[genome_id] = []
 
@@ -550,9 +550,9 @@ class GenomeFileUtil:
                 fasta_file_path_list.append(fasta_file_path)
 
 
-        # report if no features found
-        if not feature_sequence_found:
-            self.log(invalid_msgs, "No sequence records found in Genome "+genome_object['id']+" of residue_type: "+residue_type+", feature_type: "+feature_type)
+            # report if no features found
+            if not feature_sequence_found:
+                self.log(invalid_msgs, "No sequence records found in Genome "+genome_object['id']+" of residue_type: "+residue_type+", feature_type: "+feature_type)
 
         # build returnVal
         #
@@ -622,10 +622,10 @@ class GenomeFileUtil:
 
         # init and simplify
         feature_ids_by_genome_ref = dict()
-        feature_sequence_found = False
         residue_type = residue_type[0:3].lower()
         feature_type = feature_type.upper()
         case = case[0:1].upper()
+        feature_sequence_found = False
         
         def record_header_sub(str, feature_id, genome_id, genome_ref):
             str = str.replace('%%feature_id%%', feature_id)
