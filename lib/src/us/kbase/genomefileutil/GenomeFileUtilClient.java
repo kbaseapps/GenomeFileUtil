@@ -16,6 +16,10 @@ import us.kbase.common.service.UnauthorizedException;
 /**
  * <p>Original spec-file module name: GenomeFileUtil</p>
  * <pre>
+ * ** A KBase module: GenomeFileUtil
+ * **
+ * ** This module contains methods for converting KBase Data Objects to common bioinformatics file formats
+ * **
  * </pre>
  */
 public class GenomeFileUtilClient {
@@ -38,6 +42,19 @@ public class GenomeFileUtilClient {
      */
     public GenomeFileUtilClient(URL url, AuthToken token) throws UnauthorizedException, IOException {
         caller = new JsonClientCaller(url, token);
+    }
+
+    /** Constructs a client with a custom URL
+     * and a custom authorization service URL.
+     * @param url the URL of the service.
+     * @param token the user's authorization token.
+     * @param auth the URL of the authorization server.
+     * @throws UnauthorizedException if the token is not valid.
+     * @throws IOException if an IOException occurs when checking the token's
+     * validity.
+     */
+    public GenomeFileUtilClient(URL url, AuthToken token, URL auth) throws UnauthorizedException, IOException {
+        caller = new JsonClientCaller(url, token, auth);
     }
 
     /** Constructs a client with a custom URL.
@@ -192,6 +209,74 @@ public class GenomeFileUtilClient {
         args.add(params);
         TypeReference<List<GenomeToGFFResult>> retType = new TypeReference<List<GenomeToGFFResult>>() {};
         List<GenomeToGFFResult> res = caller.jsonrpcCall("GenomeFileUtil.genome_to_gff", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: TranslateNucToProtSeq</p>
+     * <pre>
+     * </pre>
+     * @param   params   instance of type {@link us.kbase.genomefileutil.TranslateNucToProtSeqParams TranslateNucToProtSeqParams} (original type "TranslateNucToProtSeq_Params")
+     * @return   instance of type {@link us.kbase.genomefileutil.TranslateNucToProtSeqOutput TranslateNucToProtSeqOutput} (original type "TranslateNucToProtSeq_Output")
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public TranslateNucToProtSeqOutput translateNucToProtSeq(TranslateNucToProtSeqParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(params);
+        TypeReference<List<TranslateNucToProtSeqOutput>> retType = new TypeReference<List<TranslateNucToProtSeqOutput>>() {};
+        List<TranslateNucToProtSeqOutput> res = caller.jsonrpcCall("GenomeFileUtil.TranslateNucToProtSeq", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: GenomeToFASTA</p>
+     * <pre>
+     * </pre>
+     * @param   params   instance of type {@link us.kbase.genomefileutil.GenomeToFASTAParams GenomeToFASTAParams} (original type "GenomeToFASTA_Params")
+     * @return   instance of type {@link us.kbase.genomefileutil.GenomeToFASTAOutput GenomeToFASTAOutput} (original type "GenomeToFASTA_Output")
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public GenomeToFASTAOutput genomeToFASTA(GenomeToFASTAParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(params);
+        TypeReference<List<GenomeToFASTAOutput>> retType = new TypeReference<List<GenomeToFASTAOutput>>() {};
+        List<GenomeToFASTAOutput> res = caller.jsonrpcCall("GenomeFileUtil.GenomeToFASTA", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: GenomeSetToFASTA</p>
+     * <pre>
+     * </pre>
+     * @param   params   instance of type {@link us.kbase.genomefileutil.GenomeSetToFASTAParams GenomeSetToFASTAParams} (original type "GenomeSetToFASTA_Params")
+     * @return   instance of type {@link us.kbase.genomefileutil.GenomeSetToFASTAOutput GenomeSetToFASTAOutput} (original type "GenomeSetToFASTA_Output")
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public GenomeSetToFASTAOutput genomeSetToFASTA(GenomeSetToFASTAParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(params);
+        TypeReference<List<GenomeSetToFASTAOutput>> retType = new TypeReference<List<GenomeSetToFASTAOutput>>() {};
+        List<GenomeSetToFASTAOutput> res = caller.jsonrpcCall("GenomeFileUtil.GenomeSetToFASTA", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: FeatureSetToFASTA</p>
+     * <pre>
+     * </pre>
+     * @param   params   instance of type {@link us.kbase.genomefileutil.FeatureSetToFASTAParams FeatureSetToFASTAParams} (original type "FeatureSetToFASTA_Params")
+     * @return   instance of type {@link us.kbase.genomefileutil.FeatureSetToFASTAOutput FeatureSetToFASTAOutput} (original type "FeatureSetToFASTA_Output")
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public FeatureSetToFASTAOutput featureSetToFASTA(FeatureSetToFASTAParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(params);
+        TypeReference<List<FeatureSetToFASTAOutput>> retType = new TypeReference<List<FeatureSetToFASTAOutput>>() {};
+        List<FeatureSetToFASTAOutput> res = caller.jsonrpcCall("GenomeFileUtil.FeatureSetToFASTA", args, retType, true, true, jsonRpcContext, this.serviceVersion);
         return res.get(0);
     }
 
