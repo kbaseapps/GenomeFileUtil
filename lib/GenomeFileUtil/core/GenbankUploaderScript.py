@@ -401,7 +401,8 @@ def upload_genome(shock_service_url=None,
     genbank_division_set = {'PRI','ROD','MAM','VRT','INV','PLN','BCT','VRL','PHG','SYN','UNA','EST','PAT','STS','GSS','HTG','HTC','ENV','CON'}
 
     #Make the Fasta file for the sequences to be written to
-    os.makedirs("temp_fasta_file_dir")
+    if not os.path.exists("temp_fasta_file_dir"):
+        os.makedirs("temp_fasta_file_dir")
     fasta_file_name = "temp_fasta_file_dir/" +fasta_file_name
     fasta_file_handle = open(fasta_file_name, 'w')
     
@@ -428,6 +429,7 @@ def upload_genome(shock_service_url=None,
 
     #Feature Data structures
     list_of_features = list()
+    locus_tag_index_dict = dict()
 
 #    #Key is the gene tag (ex: gene="NAC001"), the value is a dict with feature type as the key. The value is a list of maps (one for each feature with that gene value).  
 #    #The internal map stores all the key value pairs of that feature.
@@ -750,6 +752,9 @@ def upload_genome(shock_service_url=None,
         
         #Go through each feature and determine key value pairs, properties and importantly the id to use to group for interfeature_relationships.
         for feature_text in features_list:
+#            if("gene" in feature_text):
+#                print feature_text
+#                sys.exit()
             feature_object = dict()
             #split the feature into the key value pairs. "/" denotes start of a new key value pair.
             feature_key_value_pairs_list = feature_text.split("                     /")
@@ -970,12 +975,11 @@ def upload_genome(shock_service_url=None,
                 elif key == "locus_tag":
                     feature_object["locus_tag"] = value 
                     alias_dict[value]=1 
-                    if source.upper() != "ENSEMBL" and feature_type == "gene":
+                    if source.upper() != "ENSEMBL" and ( feature_type == "gene" or feature_type == "CDS" ):
                         if value in feature_ids:
                             raise Exception("More than one feature has the specific feature id of {}.  All feature ids need to be unique.".format(value))
                         else:
                             feature_id = value
-                            feature_ids[value] = 1
 #                    if feature_type == "gene":
 #                        feature_object["feature_specific_id"] = value
                 elif key == "old_locus_tag" or key == "standard_name":
@@ -992,12 +996,12 @@ def upload_genome(shock_service_url=None,
                 elif (key == "protein_id"):
 #                    if feature_type == "CDS":
 #                        feature_object["feature_specific_id"] = value
-                    if feature_type == "CDS":
-                        if value in feature_ids:
-                            raise Exception("More than one feature has the specific feature id of {}.  All feature ids need to be unique.".format(value))
-                        else:
-                            feature_id = value
-                            feature_ids[value] = 1 
+#                    if feature_type == "CDS":
+#                        if value in feature_ids:
+#                            raise Exception("More than one feature has the specific feature id of {}.  All feature ids need to be unique.".format(value))
+#                        else:
+#                            feature_id = value
+#                            feature_ids[value] = 1 
                     alias_dict[value]=1 
                     has_protein_id = True
 
@@ -1193,9 +1197,35 @@ ADVANCED OPTIONS AND CHECK THE\
 #            pickled_feature = cPickle.dumps(feature_object, cPickle.HIGHEST_PROTOCOL) 
 #            sql_cursor.execute("insert into features values(:feature_id, :feature_type , :sequence_length, :feature_data)", 
 #                               (feature_id, feature_object["type"], feature_object["dna_sequence_length"], sqlite3.Binary(pickled_feature),))
+#            print key,value,feature_id,feature_type
+#            print feature_object
+   
+            #Only add genes to the feature object, but maintain dict of locus_tag indices
+            if(feature_object["type"]=="gene"):
+                list_of_features.append(feature_object)
+                last_index = len(list_of_features)-1
+                if(feature_object['id'] in locus_tag_index_dict):
+                            raise Exception("More than one gene has this locus tag: {}".format(value))
+                locus_tag_index_dict[feature_object['id']]=last_index
 
-            list_of_features.append(feature_object)
-            
+            if(feature_object["type"]=="CDS"):
+                gene_index = locus_tag_index_dict[feature_object['id']]
+                list_of_features[gene_index]['protein_translation']=feature_object['protein_translation']
+                list_of_features[gene_index]['protein_translation_length']=feature_object['protein_translation_length']
+                list_of_features[gene_index]['function']=feature_object['function']
+                aliases_dict=dict()
+                if('aliases' in list_of_features[gene_index]):
+                   for alias in list_of_features[gene_index]['aliases']:
+                       aliases_dict[alias]=1
+                if('aliases' in feature_object):
+                   for alias in feature_object['aliases']:
+                       aliases_dict[alias]=1
+                list_of_features[gene_index]['aliases']=aliases_dict.keys()
+                if("ontology_terms" in feature_object):
+                    list_of_features[gene_index]["ontology_terms"]=feature_object["ontology_terms"]
+                                                  
+#            if(len(list_of_features)==10):
+#                sys.exit()
 #        for feature_type in feature_type_counts:
 #            print "Feature " + feature_type + "  count: " + str(feature_type_counts[feature_type])
 
@@ -1433,6 +1463,7 @@ if __name__ == "__main__":
                                  workspace_service_url = args.workspace_service_url,
                                  taxon_wsname = args.taxon_wsname,
                                  taxon_reference = args.taxon_reference,
+                                 taxon_lookup_obj_name='taxon_lookup',
                                  core_genome_name = args.object_name,
                                  source = args.source,
                                  release = args.release,
