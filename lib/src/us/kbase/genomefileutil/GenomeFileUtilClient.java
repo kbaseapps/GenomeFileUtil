@@ -179,6 +179,23 @@ public class GenomeFileUtilClient {
     }
 
     /**
+     * <p>Original spec-file function name: fasta_gff_to_genome</p>
+     * <pre>
+     * </pre>
+     * @param   params   instance of type {@link us.kbase.genomefileutil.FastaGFFToGenomeParams FastaGFFToGenomeParams}
+     * @return   parameter "result" of type {@link us.kbase.genomefileutil.GenomeSaveResult GenomeSaveResult}
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public GenomeSaveResult fastaGffToGenome(FastaGFFToGenomeParams params, RpcContext... jsonRpcContext) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(params);
+        TypeReference<List<GenomeSaveResult>> retType = new TypeReference<List<GenomeSaveResult>>() {};
+        List<GenomeSaveResult> res = caller.jsonrpcCall("GenomeFileUtil.fasta_gff_to_genome", args, retType, true, true, jsonRpcContext, this.serviceVersion);
+        return res.get(0);
+    }
+
+    /**
      * <p>Original spec-file function name: genome_to_gff</p>
      * <pre>
      * </pre>
