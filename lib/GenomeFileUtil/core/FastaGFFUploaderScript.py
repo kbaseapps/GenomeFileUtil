@@ -51,14 +51,44 @@ def convert_ftr_object(old_ftr,contig):
     new_ftr["location"] = [[old_ftr["contig"],old_ftr["start"],old_ftr["strand"],len(dna_sequence)]]
     return new_ftr
 
-def upload_genome(input_gff_file=None, input_fasta_file=None, workspace_name=None,
-                  shock_service_url=None, handle_service_url=None, workspace_service_url=None,
-                  taxon_reference = None, source=None, core_genome_name=None, genome_type=None,scientific_name=None,taxonomy=None,
-                  level=logging.INFO, logger=None):
+def upload_genome(shock_service_url=None,
+                  handle_service_url=None,
+                  workspace_service_url=None,
+                  callback_url=None,
+
+                  input_gff_file=None,
+                  input_fasta_file=None,
+                  
+                  workspace_name=None,
+                  core_genome_name=None,
+
+                  genome_type=None,
+                  scientific_name=None,
+                  taxonomy=None,
+                  taxon_reference = None,
+                  source=None):
 
     assembly_ref = None
     gff_handle_ref = None
     time_string = str(datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
+
+    ###########################################
+    #Create logger
+    ###########################################
+    logger = logging.getLogger(__file__)
+    logger.setLevel(logging.INFO)
+    
+    # send messages to sys.stderr
+    streamHandler = logging.StreamHandler(sys.stderr)
+
+    formatter = logging.Formatter("%(asctime)s - %(filename)s - %(lineno)d - %(levelname)s - %(message)s")
+    formatter.converter = time.gmtime
+    streamHandler.setFormatter(formatter)
+
+    logger.addHandler(streamHandler)
+    ###########################################
+    #End logger creation
+    ###########################################
 
     ##########################################
     #Reading in Fasta file, Code taken from https://www.biostars.org/p/710/
