@@ -24,7 +24,8 @@ from Bio.Data import CodonTable
 codon_table = CodonTable.ambiguous_generic_by_name["Standard"]
 
 # KBase imports
-import biokbase.workspace.client 
+from biokbase.workspace.client import Workspace
+from biokbase.workspace.baseclient import ServerError as WorkspaceError
 import biokbase.Transform.script_utils as script_utils
 
 def convert_ftr_object(old_ftr,contig):
@@ -90,6 +91,11 @@ def upload_genome(shock_service_url=None,
     #End logger creation
     ###########################################
 
+    ###########################################
+    #Create workspace client
+    ###########################################
+    ws_client = Workspace(workspace_service_url)
+
     ##########################################
     #Reading in Fasta file, Code taken from https://www.biostars.org/p/710/
     ##########################################
@@ -98,7 +104,8 @@ def upload_genome(shock_service_url=None,
     assembly = {"contigs":{},"dna_size":0,"gc_content":0,"md5":[],"base_counts":{}}
     contig_seq_start=0
 
-    input_file_handle = gzip.open(input_fasta_file,'rb')
+#    input_file_handle = gzip.open(input_fasta_file,'rb')
+    input_file_handle = open(input_fasta_file,'rb')
     # ditch the boolean (x[0]) and just keep the header or sequence since
     # we know they alternate.
     faiter = (x[1] for x in itertools.groupby(input_file_handle, lambda line: line[0] == ">"))
@@ -181,7 +188,8 @@ def upload_genome(shock_service_url=None,
     original_CDS_count=dict()
     original_feature_ids=dict()
 
-    gff_file_handle = gzip.open(input_gff_file, 'rb')
+#    gff_file_handle = gzip.open(input_gff_file, 'rb')
+    gff_file_handle = open(input_gff_file, 'rb')
     current_line = gff_file_handle.readline()
     gff_object = dict()
     while ( current_line != '' ):
@@ -211,7 +219,7 @@ def upload_genome(shock_service_url=None,
             elif("PACid" in attributes_dict):
                 old_id=attributes_dict["PACid"]
             else:
-                eprint("Cannot find unique ID or PACid in GFF attributes: "+attributes)
+                logger.info("Cannot find unique ID or PACid in GFF attributes: "+attributes)
                 continue
 
             if("Name" in attributes_dict):
@@ -427,7 +435,7 @@ def upload_genome(shock_service_url=None,
 
                 #Remove base(s) according to phase, but only for first CDS
                 if(CDS == CDS_list[0] and int(add_ftr["phase"]) != 0):
-                    eprint("Adjusting phase for first CDS: "+CDS)
+                    logger.info("Adjusting phase for first CDS: "+CDS)
                     add_ftr_obj["dna_sequence"] = add_ftr_obj["dna_sequence"][int(add_ftr["phase"]):]
 
                 dna_sequence+=add_ftr_obj["dna_sequence"]
@@ -440,14 +448,14 @@ def upload_genome(shock_service_url=None,
             #Incomplete gene model with no start codon
             #Translate as is
             if str(rna_sequence.upper())[:3] not in codon_table.start_codons:
-                eprint("Missing start codon for :"+feature_object["id"]+". Assuming incomplete gene model")
+                logger.info("Missing start codon for "+feature_object["id"]+" Assuming incomplete gene model.")
                 #temp_seq = 'AUG'+str(rna_sequence.upper())[3:]
                 #rna_sequence = Seq(temp_seq, IUPAC.ambiguous_dna)
 
             #You should never have this problem, needs to be reported rather than "fixed"
             codon_count = len(str(rna_sequence)) % 3
             if codon_count != 0:
-                eprint("Number of bases for RNA sequence for "+feature_object["id"]+" is not divisible by 3\nThe resulting protein may well be mis-translated")
+                logger.info("Number of bases for RNA sequence for "+feature_object["id"]+" is not divisible by 3. The resulting protein may well be mis-translated.")
                 #temp_seq = str(rna_sequence.upper())+"N"
                 #if codon_count == 1:
                 #    temp_seq+="N"
@@ -458,7 +466,7 @@ def upload_genome(shock_service_url=None,
             try:
                 protein_sequence = rna_sequence.translate() #cds=True)
             except CodonTable.TranslationError as te:
-                eprint("TranslationError for "+feature_object["id"],phases,exons,": "+str(te))
+                logger.info("TranslationError for: "+feature_object["id"],phases,exons," : "+str(te))
 
             cds_object["protein_translation"] = str(protein_sequence).upper()
             cds_object["protein_translation_length"]=len(cds_object["protein_translation"])
@@ -489,18 +497,19 @@ def upload_genome(shock_service_url=None,
     for contig in assembly["contigs"]:
         del assembly["contigs"][contig]["sequence"]
 
-    assembly_string = simplejson.dumps(assembly, sort_keys=True, indent=4, ensure_ascii=False)
-    assembly_file = open("Bulk_Phytozome_Upload/"+assembly["name"]+'.json', 'w+')
-    assembly_file.write(assembly_string)
-    assembly_file.close()
+#    assembly_string = simplejson.dumps(assembly, sort_keys=True, indent=4, ensure_ascii=False)
+#    assembly_file = open("Bulk_Phytozome_Upload/"+assembly["name"]+'.json', 'w+')
+#    assembly_file.write(assembly_string)
+#    assembly_file.close()
 
     if(assembly_ref == None):
         #Upload FASTA to shock
         #Need to gunzip file first
-        gunzipped_fasta_file=input_fasta_file[0:-3]
-        with gzip.open(input_fasta_file, 'rb') as f_in:
-            with open(gunzipped_fasta_file, 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
+        gunzipped_fasta_file=input_fasta_file
+#        gunzipped_fasta_file=input_fasta_file[0:-3]
+#        with gzip.open(input_fasta_file, 'rb') as f_in:
+#            with open(gunzipped_fasta_file, 'wb') as f_out:
+#                shutil.copyfileobj(f_in, f_out)
 
         token = os.environ.get('KB_AUTH_TOKEN') 
         fasta_handle_ref=None
@@ -511,7 +520,7 @@ def upload_genome(shock_service_url=None,
         assembly['fasta_handle_ref'] = fasta_handle_ref
         
         #Remove gunzipped file
-        os.remove(input_fasta_file[0:-3])
+        #os.remove(input_fasta_file[0:-3])
 
         #Provenance has a 1 MB limit.  We may want to add more like the accessions, but to be safe for now not doing that.
         assembly_provenance = [{"script": __file__, "script_ver": "0.1", "description": "Assembly from FASTA from %s" % (source)}]
@@ -519,7 +528,7 @@ def upload_genome(shock_service_url=None,
         #Report large genomes?
         hidden=0
 
-        logger.info("Attempting Assembly save for %s" % (assembly["name"]))
+        logger.info("Attempting Assembly save for %s" % (assembly["assembly_id"]))
         assembly_not_saved = True
         while assembly_not_saved:
             try:
@@ -532,13 +541,13 @@ def upload_genome(shock_service_url=None,
                 assembly_not_saved = False 
                 logger.info("Assembly saved for %s" % (assembly["name"]))
                 assembly_ref = workspace_name+"/"+assembly["assembly_id"]
-            except biokbase.workspace.client.ServerError as err: 
+            except WorkspaceError as e:
+                logger.info('Logging workspace error on save_objects: {}\n{}'.format(e.message, e.data))
                 raise
 
     genome = dict()
     genome["id"]=core_genome_name
     genome["scientific_name"]=scientific_name
-    genome["taxon_ref"]=taxon_reference
     genome["assembly_ref"]=assembly_ref
     genome["features"]=genome_features_list
     genome["cdss"]=genome_cdss_list
@@ -548,7 +557,10 @@ def upload_genome(shock_service_url=None,
     genome["genetic_code"]=1
     genome["gc_content"]=assembly["gc_content"]
     genome["dna_size"]=assembly["dna_size"]
-    genome["taxonomy"]=taxonomy
+
+    if taxon_reference is not None:
+        genome["taxon_ref"] = taxon_reference
+        genome["taxonomy"]=taxonomy
 
     UserMeta = dict()
     UserMeta['Taxonomy']=taxonomy
@@ -578,13 +590,15 @@ def upload_genome(shock_service_url=None,
         gff_handle_ref=handles[0]
     genome['gff_handle_ref'] = gff_handle_ref
 
-    genome_string = simplejson.dumps(genome, sort_keys=True, indent=4, ensure_ascii=False)
-    genome_file = open("Bulk_Phytozome_Upload/"+core_genome_name+'.json', 'w+')
-    genome_file.write(genome_string)
-    genome_file.close()
+#    genome_string = simplejson.dumps(genome, sort_keys=True, indent=4, ensure_ascii=False)
+#    genome_file = open("Bulk_Phytozome_Upload/"+core_genome_name+'.json', 'w+')
+#    genome_file.write(genome_string)
+#    genome_file.close()
 
     #Provencance has a 1 MB limit.  We may want to add more like the accessions, but to be safe for now not doing that.
     genome_provenance = [{"script": __file__, "script_ver": "0.1", "description": "Genome from GFF from %s" % (source)}]
+
+    pprint(UserMeta)
 
     logger.info("Attempting Genome save for %s" % (core_genome_name))
     genome_not_saved = True
@@ -594,13 +608,18 @@ def upload_genome(shock_service_url=None,
                                                    "objects":[ { "type": "KBaseGenomes.Genome",
                                                                  "data": genome,
                                                                  "name": core_genome_name,
-                                                                 "meta": UserMeta,
+#                                                                 "meta": UserMeta,
                                                                  "hidden" : hidden,
                                                                  "provenance": genome_provenance}]})
             genome_not_saved = False 
             logger.info("Genome saved for %s" % (core_genome_name))
-        except biokbase.workspace.client.ServerError as err: 
+        except WorkspaceError as e:
+            logger.info('Logging workspace error on save_objects: {}\n{}'.format(e.message, e.data))
             raise
+
+    return { 'genome_info': genome_info[0] }
+#        'report_name': report_info['name'],
+#        'report_ref': report_info['ref']
 
 if __name__ == "__main__":
 

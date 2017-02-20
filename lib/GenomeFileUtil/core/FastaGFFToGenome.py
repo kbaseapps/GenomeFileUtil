@@ -25,7 +25,11 @@ class FastaGFFToGenome:
         self.validate_params(params)
 
         # 2) construct the input directory staging area
-        file_paths = self.stage_input(params)
+
+        input_directory =  os.path.join(self.cfg.sharedFolder, 'genome-upload-staging-'+str(uuid.uuid4()))
+        os.makedirs(input_directory)
+
+        file_paths = self.stage_input(params,input_directory)
         pprint(file_paths)
 
         # 3) extract out the parameters
@@ -90,9 +94,9 @@ class FastaGFFToGenome:
         info = result['genome_info']
         details = {
             'genome_ref': str(info[6]) + '/' + str(info[0]) + '/' + str(info[4]),
-            'genome_info': info,
-            'report_name': result['report_name'],
-            'report_ref': result['report_ref']
+            'genome_info': info
+#            'report_name': result['report_name'],
+#            'report_ref': result['report_ref']
         }
 
         return details
@@ -143,12 +147,8 @@ class FastaGFFToGenome:
         }
         return default_params
 
-    def stage_input(self, params):
+    def stage_input(self, params, input_directory):
         ''' Setup the input_directory by fetching the files and uncompressing if needed. '''
-
-        # construct the input directory where we stage files
-        input_directory =  os.path.join(self.cfg.sharedFolder, 'genome-upload-staging-'+str(uuid.uuid4()))
-        os.makedirs(input_directory)
 
         # at this point, the 'fasta_file' and 'gff_file' input is validated, so we don't have to catch any special cases
         # we expect one and only one of path, or shock_id
@@ -207,8 +207,8 @@ class FastaGFFToGenome:
                 print("staged input file =" + file_path)
                 sys.stdout.flush()
                 dfUtil = DataFileUtil(self.cfg.callbackURL)
-                dfUtil.unpack_file({ 'file_path': file_path })
-                file_paths[key]=file_path
+                dfUtil_result = dfUtil.unpack_file({ 'file_path': file_path })
+                file_paths[key]=dfUtil_result['file_path']
             else:
                 raise ValueError('No valid files could be extracted based on the input')
 
