@@ -175,7 +175,15 @@ def upload_genome(input_gff_file=None, input_fasta_file=None, workspace_name=Non
                 attributes_dict[key]=value            
 
             #ID should be transferred from Name or Parent
-            old_id=attributes_dict["ID"]
+            old_id=None
+            if("ID" in attributes_dict):
+                old_id=attributes_dict["ID"]
+            elif("PACid" in attributes_dict):
+                old_id=attributes_dict["PACid"]
+            else:
+                eprint("Cannot find unique ID or PACid in GFF attributes: "+attributes)
+                continue
+
             if("Name" in attributes_dict):
                 attributes_dict["ID"]=attributes_dict["Name"]
             else:
