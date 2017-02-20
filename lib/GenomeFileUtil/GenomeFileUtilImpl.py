@@ -11,6 +11,7 @@ from pprint import pprint, pformat
 from GenomeFileUtil.core.GenbankToGenome import GenbankToGenome
 from GenomeFileUtil.core.GenomeToGFF import GenomeToGFF
 from GenomeFileUtil.core.GenomeToGenbank import GenomeToGenbank
+from GenomeFileUtil.core.FastaGFFToGenome import FastaGFFToGenome
 
 from biokbase.workspace.client import Workspace
 
@@ -139,6 +140,12 @@ class GenomeFileUtil:
         # ctx is the context object
         # return variables are: result
         #BEGIN fasta_gff_to_genome
+        print('fasta_gff_to_genome -- paramaters = ')
+        pprint(params)
+
+        importer = FastaGFFToGenome(self.cfg)
+        result = importer.import_file(ctx, params)
+        pprint(result)
         #END fasta_gff_to_genome
 
         # At some point might do deeper type checking...
