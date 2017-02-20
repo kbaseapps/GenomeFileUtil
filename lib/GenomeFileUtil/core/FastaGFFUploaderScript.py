@@ -232,7 +232,8 @@ def upload_genome(input_gff_file=None, input_fasta_file=None, workspace_name=Non
     #Writing updated lines to gff_file_handle
     input_gff_file = input_gff_file.replace("gene","edited_gene")
     gff_file_handle = gzip.open(input_gff_file, 'wb')
-    gff_file_handle.write("\n".join(gff_object["headers"]))
+    if('headers' in gff_object):
+        gff_file_handle.write("\n".join(gff_object["headers"]))
     gff_file_handle.write("\n".join(gff_object["features"]))
     gff_file_handle.close()
 
@@ -394,8 +395,10 @@ def upload_genome(input_gff_file=None, input_fasta_file=None, workspace_name=Non
                 add_ftr_obj = convert_ftr_object(add_ftr,assembly["contigs"][add_ftr["contig"]]["sequence"])
                 exons.append(len(add_ftr_obj["dna_sequence"]))
 
-                #Remove base(s) according to phase
-                add_ftr_obj["dna_sequence"] = add_ftr_obj["dna_sequence"][int(add_ftr["phase"]):]
+                #Remove base(s) according to phase, but only for first CDS
+                if(CDS == CDS_list[0] and int(add_ftr["phase"]) != 0):
+                    eprint("Adjusting phase for first CDS: "+CDS)
+                    add_ftr_obj["dna_sequence"] = add_ftr_obj["dna_sequence"][int(add_ftr["phase"]):]
 
                 dna_sequence+=add_ftr_obj["dna_sequence"]
                 locations.append(add_ftr_obj["location"][0])
@@ -404,27 +407,28 @@ def upload_genome(input_gff_file=None, input_fasta_file=None, workspace_name=Non
             dna_sequence_obj = Seq(dna_sequence, IUPAC.ambiguous_dna)
             rna_sequence = dna_sequence_obj.transcribe()
 
-            #Force start codon for now
+            #Incomplete gene model with no start codon
+            #Translate as is
             if str(rna_sequence.upper())[:3] not in codon_table.start_codons:
-                print("Forcing AUG to "+feature_object["id"],phases,exons)
-                temp_seq = 'AUG'+str(rna_sequence.upper())[3:]
-                rna_sequence = Seq(temp_seq, IUPAC.ambiguous_dna)
+                eprint("Missing start codon for :"+feature_object["id"]+". Assuming incomplete gene model")
+                #temp_seq = 'AUG'+str(rna_sequence.upper())[3:]
+                #rna_sequence = Seq(temp_seq, IUPAC.ambiguous_dna)
 
-            #Append N(N) if necessary
+            #You should never have this problem, needs to be reported rather than "fixed"
             codon_count = len(str(rna_sequence)) % 3
             if codon_count != 0:
-                temp_seq = str(rna_sequence.upper())+"N"
-                if codon_count == 1:
-                    temp_seq+="N"
-                new_codon_count=len(temp_seq) % 3
-                print("Appending N(s) to "+feature_object["id"],phases,exons)
-                rna_sequence = Seq(temp_seq, IUPAC.ambiguous_dna)
+                eprint("Number of bases for RNA sequence for "+feature_object["id"]+" is not divisible by 3\nThe resulting protein may well be mis-translated")
+                #temp_seq = str(rna_sequence.upper())+"N"
+                #if codon_count == 1:
+                #    temp_seq+="N"
+                #new_codon_count=len(temp_seq) % 3
+                #rna_sequence = Seq(temp_seq, IUPAC.ambiguous_dna)
 
             protein_sequence = Seq("")
             try:
                 protein_sequence = rna_sequence.translate() #cds=True)
             except CodonTable.TranslationError as te:
-                print("TranslationError for "+feature_object["id"],phases,exons,": "+str(te))
+                eprint("TranslationError for "+feature_object["id"],phases,exons,": "+str(te))
 
             cds_object["protein_translation"] = str(protein_sequence).upper()
             cds_object["protein_translation_length"]=len(cds_object["protein_translation"])
@@ -482,10 +486,8 @@ def upload_genome(input_gff_file=None, input_fasta_file=None, workspace_name=Non
         #Provenance has a 1 MB limit.  We may want to add more like the accessions, but to be safe for now not doing that.
         assembly_provenance = [{"script": __file__, "script_ver": "0.1", "description": "Assembly from FASTA from %s" % (source)}]
 
-        #Hide large genomes
+        #Report large genomes?
         hidden=0
-        if("Zmays" in assembly["assembly_id"] or "Mdomestica" in assembly["assembly_id"] or ("Gmax" in assembly["assembly_id"] and "Wm82.a2.v1" in assembly["assembly_id"])):
-            hidden=1
 
         logger.info("Attempting Assembly save for %s" % (assembly["name"]))
         assembly_not_saved = True
@@ -504,7 +506,6 @@ def upload_genome(input_gff_file=None, input_fasta_file=None, workspace_name=Non
                 raise
 
     genome = dict()
-#    core_genome_name+="_example"
     genome["id"]=core_genome_name
     genome["scientific_name"]=scientific_name
     genome["taxon_ref"]=taxon_reference
@@ -626,4 +627,3 @@ if __name__ == "__main__":
                   taxon_reference=taxon_ref,taxonomy=taxonomy,source=args.source,core_genome_name=args.name,genome_type=genome_type,scientific_name=display_sc_name,
                   logger=logger)
     sys.exit(0)
-
