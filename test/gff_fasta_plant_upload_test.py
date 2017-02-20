@@ -88,7 +88,7 @@ class GenomeFileUtilTest(unittest.TestCase):
                 'genome_name':ws_obj_name
             })[0]
         pprint(result)
-        #self.assertIsNotNone(result['genome_ref'])
+        self.assertIsNotNone(result['genome_ref'])
         #target_dir = os.path.join("/kb/module/work/tmp", "Test_Plant")
         #download_genome_to_json_files(self.getContext()['token'], result['genome_ref'],
         #                              target_dir)
