@@ -157,7 +157,7 @@ def upload_genome(input_gff_file=None, input_fasta_file=None, workspace_name=Non
     while ( current_line != '' ):
         current_line=current_line.strip()
         
-        if(current_line.startswith("##")):
+        if(current_line.startswith("##") or current_line.startswith("#!")):
             header.append(current_line)
             if('headers' not in gff_object):
                 gff_object['headers']=list()
