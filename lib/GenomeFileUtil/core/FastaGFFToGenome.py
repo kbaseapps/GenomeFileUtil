@@ -69,6 +69,7 @@ class FastaGFFToGenome:
                 workspace_name   = parsed_params['workspace_name'],
                 core_genome_name = parsed_params['genome_name'],
 
+                scientific_name = parsed_params['genome_name'],
 #                taxon_wsname     = parsed_params['taxon_wsname'],
 #                taxon_lookup_obj_name = parsed_params['taxon_lookup_obj_name'],
 #                taxon_reference = parsed_params['taxon_reference'],

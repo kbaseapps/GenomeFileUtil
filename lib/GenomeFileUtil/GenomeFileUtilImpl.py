@@ -145,7 +145,6 @@ class GenomeFileUtil:
 
         importer = FastaGFFToGenome(self.cfg)
         result = importer.import_file(ctx, params)
-        pprint(result)
         #END fasta_gff_to_genome
 
         # At some point might do deeper type checking...

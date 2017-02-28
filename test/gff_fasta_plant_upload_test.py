@@ -76,15 +76,17 @@ class GenomeFileUtilTest(unittest.TestCase):
         genomeFileUtil = self.getImpl()
         fasta_path = "data/Test_Plant/Test_v1.0.fa.gz"
         gff_path = "data/Test_Plant/Test_v1.0.gene.gff3.gz"
+        ws_obj_name = 'MyGenome'
+        ws_name = self.getWsName()
 
         ### Test for a Local Function Call
         print('attempting upload via local function directly')
-        ws_obj_name = 'MyGenome'
+
         result = genomeFileUtil.fasta_gff_to_genome(self.getContext(), 
             {
                 'fasta_file' : { 'path': fasta_path },
                 'gff_file' : { 'path' : gff_path },
-                'workspace_name':self.getWsName(),
+                'workspace_name':ws_name,
                 'genome_name':ws_obj_name
             })[0]
         pprint(result)

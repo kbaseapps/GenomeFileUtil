@@ -24,9 +24,8 @@ from Bio.Data import CodonTable
 codon_table = CodonTable.ambiguous_generic_by_name["Standard"]
 
 # KBase imports
-from biokbase.workspace.client import Workspace
-from biokbase.workspace.baseclient import ServerError as WorkspaceError
-import biokbase.Transform.script_utils as script_utils
+from DataFileUtil.DataFileUtilClient import DataFileUtil
+from AssemblyUtil.AssemblyUtilClient import AssemblyUtil
 
 def convert_ftr_object(old_ftr,contig):
     new_ftr = dict()
@@ -66,7 +65,7 @@ def upload_genome(shock_service_url=None,
                   genome_type=None,
                   scientific_name=None,
                   taxonomy=None,
-                  taxon_reference = None,
+                  taxon_reference=None,
                   source=None):
 
     assembly_ref = None
@@ -90,11 +89,6 @@ def upload_genome(shock_service_url=None,
     ###########################################
     #End logger creation
     ###########################################
-
-    ###########################################
-    #Create workspace client
-    ###########################################
-    ws_client = Workspace(workspace_service_url)
 
     ##########################################
     #Reading in Fasta file, Code taken from https://www.biostars.org/p/710/
@@ -214,12 +208,12 @@ def upload_genome(shock_service_url=None,
 
             #ID should be transferred from Name or Parent
             old_id=None
-            if("ID" in attributes_dict):
-                old_id=attributes_dict["ID"]
-            elif("PACid" in attributes_dict):
-                old_id=attributes_dict["PACid"]
-            else:
-                logger.info("Cannot find unique ID or PACid in GFF attributes: "+attributes)
+            for key in ("ID","PACid","pacid"):
+                if(key in attributes_dict):
+                    old_id=attributes_dict[key]
+                    break
+            if(old_id is None):
+                eprint("Cannot find unique ID, PACid, or pacid in GFF attributes: "+attributes)
                 continue
 
             if("Name" in attributes_dict):
@@ -501,7 +495,7 @@ def upload_genome(shock_service_url=None,
 #    assembly_file = open("Bulk_Phytozome_Upload/"+assembly["name"]+'.json', 'w+')
 #    assembly_file.write(assembly_string)
 #    assembly_file.close()
-
+    
     if(assembly_ref == None):
         #Upload FASTA to shock
         #Need to gunzip file first
@@ -512,38 +506,15 @@ def upload_genome(shock_service_url=None,
 #                shutil.copyfileobj(f_in, f_out)
 
         token = os.environ.get('KB_AUTH_TOKEN') 
-        fasta_handle_ref=None
-        shock_info = script_utils.upload_file_to_shock(logger, shock_service_url, gunzipped_fasta_file, token=token)
-        shock_id = shock_info["id"]
-        handles = script_utils.getHandles(logger, shock_service_url, handle_service_url, [shock_id], [fasta_handle_ref], token)
-        fasta_handle_ref=handles[0]
-        assembly['fasta_handle_ref'] = fasta_handle_ref
+
+        logger.info("Attempting Assembly save for %s" % (assembly["assembly_id"]))
+        aUtil = AssemblyUtil(callback_url)
+        assembly_ref =  aUtil.save_assembly_from_fasta({'file':{'path':gunzipped_fasta_file, 'assembly_name':assembly['assembly_id']},
+                                                        'workspace_name':workspace_name, 'assembly_name':assembly['assembly_id']})
+        logger.info("Assembly saved for %s" % (assembly["name"]))
         
         #Remove gunzipped file
         #os.remove(input_fasta_file[0:-3])
-
-        #Provenance has a 1 MB limit.  We may want to add more like the accessions, but to be safe for now not doing that.
-        assembly_provenance = [{"script": __file__, "script_ver": "0.1", "description": "Assembly from FASTA from %s" % (source)}]
-
-        #Report large genomes?
-        hidden=0
-
-        logger.info("Attempting Assembly save for %s" % (assembly["assembly_id"]))
-        assembly_not_saved = True
-        while assembly_not_saved:
-            try:
-                assembly_info =  ws_client.save_objects({"workspace":workspace_name,
-                                                           "objects":[ { "type": "KBaseGenomeAnnotations.Assembly",
-                                                                         "data": assembly,
-                                                                         "name": assembly["assembly_id"],
-                                                                         "hidden" : hidden,
-                                                                         "provenance": assembly_provenance}]}) 
-                assembly_not_saved = False 
-                logger.info("Assembly saved for %s" % (assembly["name"]))
-                assembly_ref = workspace_name+"/"+assembly["assembly_id"]
-            except WorkspaceError as e:
-                logger.info('Logging workspace error on save_objects: {}\n{}'.format(e.message, e.data))
-                raise
 
     genome = dict()
     genome["id"]=core_genome_name
@@ -577,17 +548,15 @@ def upload_genome(shock_service_url=None,
     #id_source_version_array = core_genome_name.split("_")
     #version = "_".join(id_source_version_array[2:])
     #UserMeta['Version']=version
+    #UserMeta['url']='';
 
-    UserMeta['url']='https://transfer.api.globusonline.org/v0.10/endpoint/78312867-6d04-11e5-ba46-22000b92c6ec/ls?path=By_Organism_Name//P/PhytozomeV11/';
+    dfUtil = DataFileUtil(callback_url)
 
     if(gff_handle_ref == None):
-        #Upload GFF to shock
         token = os.environ.get('KB_AUTH_TOKEN') 
+        file_upload = dfUtil.file_to_shock({'file_path' : input_gff_file,'make_handle': 1,'pack' : "gzip"})
+        gff_handle_ref=file_upload['handle']['hid']
 
-        shock_info = script_utils.upload_file_to_shock(logger, shock_service_url, input_gff_file, token=token)
-        shock_id = shock_info["id"]
-        handles = script_utils.getHandles(logger, shock_service_url, handle_service_url, [shock_id], [gff_handle_ref], token)   
-        gff_handle_ref=handles[0]
     genome['gff_handle_ref'] = gff_handle_ref
 
 #    genome_string = simplejson.dumps(genome, sort_keys=True, indent=4, ensure_ascii=False)
@@ -595,27 +564,10 @@ def upload_genome(shock_service_url=None,
 #    genome_file.write(genome_string)
 #    genome_file.close()
 
-    #Provencance has a 1 MB limit.  We may want to add more like the accessions, but to be safe for now not doing that.
-    genome_provenance = [{"script": __file__, "script_ver": "0.1", "description": "Genome from GFF from %s" % (source)}]
-
-    pprint(UserMeta)
-
     logger.info("Attempting Genome save for %s" % (core_genome_name))
-    genome_not_saved = True
-    while genome_not_saved:
-        try:
-            genome_info =  ws_client.save_objects({"workspace":workspace_name,
-                                                   "objects":[ { "type": "KBaseGenomes.Genome",
-                                                                 "data": genome,
-                                                                 "name": core_genome_name,
-#                                                                 "meta": UserMeta,
-                                                                 "hidden" : hidden,
-                                                                 "provenance": genome_provenance}]})
-            genome_not_saved = False 
-            logger.info("Genome saved for %s" % (core_genome_name))
-        except WorkspaceError as e:
-            logger.info('Logging workspace error on save_objects: {}\n{}'.format(e.message, e.data))
-            raise
+    workspace_id = dfUtil.ws_name_to_id(workspace_name)
+    genome_info =  dfUtil.save_objects({"id":workspace_id, "objects":[ {"name": core_genome_name, "type": "KBaseGenomes.Genome", "data": genome} ]})
+    logger.info("Genome saved for %s" % (core_genome_name))
 
     return { 'genome_info': genome_info[0] }
 #        'report_name': report_info['name'],
@@ -645,16 +597,14 @@ if __name__ == "__main__":
 
     args, unknown = parser.parse_known_args()
 
-    logger = script_utils.stderrlogger(__file__)
-
     #Check files
     for check_file in (args.input_fasta_file,args.input_gff_file):
         if not os.path.isfile(check_file):
-            logger.critical(check_file+" not a recognizable file")
+            print(check_file+" not a recognizable file")
             sys.exit(0)
 
         if(check_file[-3:len(check_file)] != '.gz'):
-            logger.warning("{0} is not a gzipped file".format(check_file))
+            print("{0} is not a gzipped file".format(check_file))
             subprocess.check_output(["gzip","-f",check_file])
             check_file+=".gz"
 
@@ -673,6 +623,5 @@ if __name__ == "__main__":
     genome_type="User"
     upload_genome(input_gff_file=args.input_gff_file,input_fasta_file=args.input_fasta_file,workspace_name=args.ws_name,
                   shock_service_url=shock_service_url,handle_service_url=handle_service_url,workspace_service_url=workspace_service_url,
-                  taxon_reference=taxon_ref,taxonomy=taxonomy,source=args.source,core_genome_name=args.name,genome_type=genome_type,scientific_name=display_sc_name,
-                  logger=logger)
+                  taxon_reference=taxon_ref,taxonomy=taxonomy,source=args.source,core_genome_name=args.name,genome_type=genome_type,scientific_name=display_sc_name)
     sys.exit(0)
