@@ -1,6 +1,3 @@
-/*
-
-*/
 module GenomeFileUtil {
 
     /* A boolean - 0 for false, 1 for true.
