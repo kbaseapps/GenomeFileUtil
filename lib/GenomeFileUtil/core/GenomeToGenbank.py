@@ -5,6 +5,7 @@ __author__ = 'Marcin Joachimiak <mjoachimiak@lbl.gov>'
 __date__ = '6/10/16'
 
 # Stdlib
+from collections import OrderedDict
 import os
 import string
 import cStringIO as StringIO
@@ -168,62 +169,26 @@ class GenbankAnnotations(object):
         for contig_id in contigs:
             contig_length_dict[contig_id] = contigs[contig_id]["length"]
         del contigs
-        contigs_tuples = sorted(contig_length_dict.items(), key=lambda x:x[1], reverse=True)
+        # longest contigs first
+        contigs_tuples = sorted(contig_length_dict.items(), key=lambda x: x[1],
+                                reverse=True)
         # print("Contig tuples : " + str(contigs_tuples))
 
         # organize features by location
         feature_ids_by_region = self._ga.get_feature_ids(group_by="region")["by_region"]
         # print('FEATURE IDS BY REGION :: ' + str(feature_ids_by_region))
 
-        # flatten the last level of the results to get a contiguous list per contig/strand
-        feature_ids_by_contig = {}
-        for contig_tuple in contigs_tuples:
-            cid = contig_tuple[0]
-            feature_ids_by_contig[cid] = {}
-            if cid in feature_ids_by_region:
-                if "+" in feature_ids_by_region[cid]:
-                    sorted_regions = sorted(feature_ids_by_region[cid]["+"].keys(),
-                                            cmp=lambda x,y: cmp(int(x.split("-")[0]),
-                                                                int(y.split("-")[0])))
-
-                    sorted_ids = []
-                    for region in sorted_regions:
-                        for fid in self._sort_feature_ids(feature_ids_by_region[cid]["+"][region]):
-                            sorted_ids.append(fid)
-
-                    feature_ids_by_contig[cid]["+"] = sorted_ids
-                else:
-                    feature_ids_by_contig[cid]["+"] = []
-
-                if "-" in feature_ids_by_region[cid]:
-                    sorted_regions = sorted(feature_ids_by_region[cid]["-"].keys(),
-                                            cmp=lambda x, y: cmp(int(x.split("-")[0]),
-                                                                 int(y.split("-")[0])))
-
-                    sorted_ids = []
-                    for region in sorted_regions:
-                        for fid in self._sort_feature_ids(feature_ids_by_region[cid]["-"][region]):
-                            sorted_ids.append(fid)
-
-                    feature_ids_by_contig[cid]["-"] = sorted_ids
-                else:
-                    feature_ids_by_contig[cid]["-"] = []
-
-        for cid in feature_ids_by_contig:
-            # add a header for the contig
+        for cid, length in contigs_tuples:
             self._add_contig_header(cid)
-
-            # add positive strand features
-            if "+" in feature_ids_by_contig[cid]:
-                for fid in feature_ids_by_contig[cid]["+"]:
+            if cid not in feature_ids_by_region:
+                continue
+            # get the features from both strands, sort them by the starting loc
+            features = sorted(feature_ids_by_region[cid].get("+", {}).items() +
+                              feature_ids_by_region[cid].get("-", {}).items(),
+                              key=lambda x: x[0].split("_")[0])
+            for loc, fid_list in features:
+                for fid in fid_list:
                     self._add_feature(fid)
-
-            # add minus strand features
-            if "-" in feature_ids_by_contig[cid]:
-                for fid in feature_ids_by_contig[cid]["-"]:
-                    self._add_feature(fid)
-
-            self._add_contig_sequence(cid)
 
     # formats a string into lines of given length (first line can be different)
     @staticmethod
