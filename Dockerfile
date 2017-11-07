@@ -44,6 +44,7 @@ RUN git clone https://github.com/kbase/data_api && \
 
 
 COPY ./ /kb/module
+RUN chmod -R a+rw /kb/module
 
 RUN make all
 
