@@ -75,7 +75,6 @@ class GenbankToGenome:
         files = self._find_input_files(input_directory)
         consolidated_file = self._join_files_skip_empty_lines(files)
         genome = self.parse_genbank(consolidated_file, params)
-        print genome
         result = self.gi.save_one_genome({
             'workspace': params['workspace_name'],
             'name': params['genome_name'],
@@ -266,7 +265,7 @@ class GenbankToGenome:
             if dates[0] != dates[-1]:
                 genome['external_source_origination_date'] += " _ " + \
                     time.strftime("%d-%b-%Y", dates[-1])
-        genome['ontology_present'] = dict(self.ontologies_present)
+        genome['ontologies_present'] = dict(self.ontologies_present)
         genome['feature_counts'] = dict(self.feature_counts)
         # can't serialize a set
         genome['publications'] = list(genome['publications'])

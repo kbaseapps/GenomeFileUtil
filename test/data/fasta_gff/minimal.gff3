@@ -1,0 +1,18 @@
+##gff-version 3
+##sequence-region Supercontig_1 1 9798893
+Supercontig_1	prediction	gene	1151	2878	0	-	.	ID=gene_1;Name=jgi.p|Neucr2|1;portal_id=Neucr2;proteinId=1;transcriptId=411
+Supercontig_1	prediction	mRNA	1151	2878	.	-	.	ID=mRNA_1;Name=jgi.p|Neucr2|1;Parent=gene_1;proteinId=1;track=BroadModels;transcriptId=411
+Supercontig_1	prediction	exon	1528	2878	.	-	.	ID=exon_1_1;Parent=mRNA_1
+Supercontig_1	prediction	five_prime_UTR	1991	2878	.	-	.	ID=UTR5_1;Parent=mRNA_1
+Supercontig_1	prediction	CDS	1528	1990	.	-	0	ID=CDS_1;Parent=mRNA_1
+Supercontig_1	prediction	exon	1151	1449	.	-	.	ID=exon_1_2;Parent=mRNA_1
+Supercontig_1	prediction	CDS	1436	1449	.	-	2	ID=CDS_1;Parent=mRNA_1
+Supercontig_1	prediction	three_prime_UTR	1151	1435	.	-	.	ID=UTR3_1;Parent=mRNA_1
+Supercontig_7	prediction	gene	4234257	4235509	0	+	.	ID=gene_10785;Name=jgi.p|Neucr2|10785;portal_id=Neucr2;proteinId=10785;transcriptId=11195
+Supercontig_7	prediction	mRNA	4234257	4235509	.	+	.	ID=mRNA_10785;Name=jgi.p|Neucr2|10785;Parent=gene_10785;proteinId=10785;track=BroadModels;transcriptId=11195
+Supercontig_7	prediction	exon	4234257	4235057	.	+	.	ID=exon_10785_1;Parent=mRNA_10785
+Supercontig_7	prediction	five_prime_UTR	4234257	4234486	.	+	.	ID=UTR5_10785;Parent=mRNA_10785
+Supercontig_7	prediction	CDS	4234487	4235057	.	+	0	ID=CDS_10785;Parent=mRNA_10785
+Supercontig_7	prediction	exon	4235123	4235509	.	+	.	ID=exon_10785_2;Parent=mRNA_10785
+Supercontig_7	prediction	CDS	4235123	4235379	.	+	2	ID=CDS_10785;Parent=mRNA_10785
+Supercontig_7	prediction	three_prime_UTR	4235380	4235509	.	+	.	ID=UTR3_10785;Parent=mRNA_10785

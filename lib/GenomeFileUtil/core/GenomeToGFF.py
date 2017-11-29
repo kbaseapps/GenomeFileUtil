@@ -112,7 +112,7 @@ class GenomeToGFF:
         for feature in genome_data['features'] + genome_data.get(
                 'non_coding_features', []):
             if 'type' not in feature:
-                feature['type'] = feature
+                feature['type'] = 'gene'
             features_by_contig[feature['location'][0][0]].append(feature)
 
         file_handle = open(out_file_path, 'w')

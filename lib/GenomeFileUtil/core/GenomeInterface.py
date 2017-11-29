@@ -12,13 +12,30 @@ from DataFileUtil.DataFileUtilClient import DataFileUtil
 from AssemblySequenceAPI.AssemblySequenceAPIServiceClient import AssemblySequenceAPI
 from collections import defaultdict
 
+
 def log(message, prefix_newline=False):
     time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time()))
     print(('\n' if prefix_newline else '') + time_str + ': ' + message)
 
+
 class GenomeInterface:
 
-    def _validate_save_one_genome_params(self, params):
+    def __init__(self, config):
+        self.ws_url = config.workspaceURL
+        self.handle_url = config.handleURL
+        self.shock_url = config.shockURL
+        self.sw_url = config.srvWizURL
+        self.token = config.token
+        self.auth_service_url = config.authServiceUrl
+        self.callback_url = config.callbackURL
+
+        self.ws = Workspace(self.ws_url, token=self.token)
+        self.auth_client = _KBaseAuth(self.auth_service_url)
+        self.dfu = DataFileUtil(self.callback_url)
+        self.taxon_wsname = config.raw['taxon-workspace-name']
+
+    @staticmethod
+    def _validate_save_one_genome_params(params):
         """
         _validate_save_one_genome_params:
                 validates params passed to save_one_genome method
@@ -104,19 +121,6 @@ class GenomeInterface:
                     if feature['id'] in dna_sequences:
                         feature['dna_sequence'] = dna_sequences[feature['id']]
                         feature['dna_sequence_length'] = len(feature['dna_sequence'])
-
-    def __init__(self, config):
-        self.ws_url = config.workspaceURL
-        self.handle_url = config.handleURL
-        self.shock_url = config.shockURL
-        self.sw_url = config.srvWizURL
-        self.token = config.token
-        self.auth_service_url = config.authServiceUrl
-        self.callback_url = config.callbackURL
-
-        self.ws = Workspace(self.ws_url, token=self.token)
-        self.auth_client = _KBaseAuth(self.auth_service_url)
-        self.dfu = DataFileUtil(self.callback_url)
         
     def save_one_genome(self, params):
         log('start saving genome object')
@@ -130,6 +134,8 @@ class GenomeInterface:
             meta = params['meta']
         else:
             meta = {}
+        if 'feature_counts' not in data:
+            data = self._update_genome(data)
 
         # check all handles point to shock nodes owned by calling user
         self._own_handle(data, 'genbank_handle_ref')
@@ -209,11 +215,32 @@ class GenomeInterface:
 
     def _update_genome(self, genome):
         """Checks for missing required fields and fixes breaking changes"""
+        # do top level updates
         if 'genome_tier' not in genome:
-            genome['source'], genome['genome_tier'] = self.determine_tier(
+            genome['source'], genome['genome_tiers'] = self.determine_tier(
                 genome['source'])
+        if 'molecule_type' not in genome:
+            genome['molecule_type'] = 'Unknown'
+        if 'taxon_ref' not in genome:
+            genome['taxonomy'], genome['taxon_ref'], genome['domain'], \
+                genome['genetic_code'] = self.retrieve_taxon(
+                    self.taxon_wsname, genome['scientific_name'])
+
+        if any([x not in genome for x in ('dna_size', 'md5', 'gc_content')]):
+            assembly_data = self.dfu.get_objects(
+                {'object_refs': [genome['assembly_ref']],
+                 'ignore_errors': 0})['data'][0]['data']
+            genome["gc_content"] = assembly_data['gc_content']
+            genome["dna_size"] = assembly_data['dna_size']
+            genome["md5"] = assembly_data['md5']
+
+        if 'cdss' not in genome:
+            genome['cdss'] = []
+        if 'mrnas' not in genome:
+            genome['mrnas'] = []
+
         # do feature level updates
-        move_non_coding = []
+        retained_features = []
         type_counts = defaultdict(int)
         for field in ('mrnas', 'cdss', 'features'):
             for i, feat in enumerate(genome.get(field, [])):
@@ -223,19 +250,31 @@ class GenomeInterface:
                     feat['aliases'] = [['db_xref', x] for x in feat['aliases']]
                 if 'type' in feat:
                     type_counts[feat['type']] += 1
-                if field == 'feature' and not len(feat['cdss']):
-                    move_non_coding.append(i)
-                #TODO: Ontologies
+                # TODO: Ontologies
 
-        if move_non_coding and 'non_coding_features' not in genome:
-            genome['non_coding_features'] = []
-        for i in move_non_coding:
-            genome['non_coding_features'].append(genome['features'].pop(i))
+                # split all the stuff lumped together in old versions into the
+                # right arrays
+                if field == 'features':
+                    if feat.get('type', 'gene') == 'gene':
+                        if not feat.get('cdss', []):
+                            genome['non_coding_features'].append(feat)
+                        else:
+                            retained_features.append(feat)
+                    elif feat.get('type', 'gene') == 'CDS':
+                        if 'protein_md5' not in feat:
+                            feat['protein_md5'] = ''
+                        if 'parent_gene' not in feat:
+                            feat['parent_gene'] = ''
+                        genome['cdss'].append(feat)
+                    elif feat.get('type', 'gene') == 'mRNA':
+                        genome['mrnas'].append(feat)
+
+        genome['features'] = retained_features
 
         type_counts['mRNA'] = len(genome.get('mrnas', []))
         type_counts['CDS'] = len(genome.get('cdss', []))
         type_counts['protein_encoding_gene'] = len(genome['features'])
-        type_counts['non-protein_encoding_gene'] = len(genome['non_coding_features'])
+        type_counts['non-protein_encoding_gene'] = len(genome.get('non_coding_features', []))
         genome['feature_counts'] = type_counts
 
         return genome
