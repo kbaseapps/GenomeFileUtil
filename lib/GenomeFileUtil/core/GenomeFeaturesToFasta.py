@@ -51,14 +51,25 @@ class GenomeFeaturesToFasta(object):
         data = genome_data['data']
 
         # 3) make sure the type is valid
-        if info[2].split(".")[1].split('-')[0] != 'Genome':
-            raise ValueError('Object is not a Genome, it is a:' + str(info[2]))
+        if info[2].split(".")[1].split('-')[0] not in {'Genome', 'Metagenome'}:
+            raise ValueError('Object is not a Genome or Metagenome, it is a:' + str(info[2]))
+
         if 'feature_counts' not in data:
             logging.warning("Updating legacy genome")
             data = self.gi._update_genome(data)
 
         # 4) build the fasta file and return it
-        if protein:
+        if 'protein_handle_ref' in data:
+            if not protein:
+                raise ValueError("Nucleotide sequence extraction for Metagenomes is not yet "
+                                 "supported.")
+
+            file_path = self.dfu.shock_to_file(
+                {'handle_id': data['protein_handle_ref'],
+                 'file_path': f'{self.cfg.sharedFolder}/{info[1]}_protein.faa',
+                 'unpack': 'uncompress'})['file_path']
+
+        elif protein:
             file_path = self._build_fasta_file(data.get('cdss'), info[1] + '_protein.faa',
                                                'protein_translation', params)
         else:
