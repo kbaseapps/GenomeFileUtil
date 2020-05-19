@@ -15,3 +15,4 @@ test_token={ci_dev_token}
 kbase_endpoint=https://ci.kbase.us/services
 auth_service_url=https://ci.kbase.us/services/auth/api/legacy/KBase/Sessions/Login
 ```
+
