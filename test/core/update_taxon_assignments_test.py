@@ -8,10 +8,6 @@ from GenomeFileUtil.GenomeFileUtilImpl import GenomeFileUtil
 from GenomeFileUtil.GenomeFileUtilServer import MethodContext
 from installed_clients.WorkspaceClient import Workspace as workspaceService
 
-# NOTE: These tests must run against https://ci.kbase.us
-_WORKSPACE_ID = 33192
-_OBJECT_ID = 33
-
 
 class UpdateTaxonAssignmentsTest(unittest.TestCase):
 
@@ -39,7 +35,15 @@ class UpdateTaxonAssignmentsTest(unittest.TestCase):
         cls.serviceImpl = GenomeFileUtil(cls.cfg)
         suffix = int(time.time() * 1000)
         cls.wsName = "test_GenomeFileUtil_" + str(suffix)
-        cls.wsClient.create_workspace({'workspace': cls.wsName})
+        ws_info = cls.wsClient.create_workspace({'workspace': cls.wsName})
+        cls.wsID = ws_info[0]
+        # Copy the example genome into the test workspace
+        obj_info = cls.wsClient.copy_object({
+            "from": {"ref": "33192/33/17"},
+            "to": {"wsid": cls.wsID, "name": "test_taxonomy_assignment_genome"},
+        })
+        cls.example_obj_id = obj_info[0]
+        cls.example_obj_wsid = obj_info[6]
 
     def test_update_taxon_assignments_valid(self):
         """
@@ -48,28 +52,28 @@ class UpdateTaxonAssignmentsTest(unittest.TestCase):
         taxon_key = str(uuid4())
         taxon_val = str(uuid4())
         taxon_val_new = str(uuid4())
-        get_obj_params = {
-            'wsid': _WORKSPACE_ID,
-            'objid': _OBJECT_ID,
-            'included': ['/taxon_assignments']
-        }
         # Add a new assignment
         self.serviceImpl.update_taxon_assignments(self.ctx, {
-            'workspace_id': _WORKSPACE_ID,
-            'object_id': _OBJECT_ID,
+            'workspace_id': self.example_obj_wsid,
+            'object_id': self.example_obj_id,
             'taxon_assignments': {
                 taxon_key: taxon_val
             }
         })
         # Fetch the object and check the mapping
+        get_obj_params = {
+            'wsid': self.example_obj_wsid,
+            'objid': self.example_obj_id,
+            'included': ['/taxon_assignments']
+        }
         obj = self.wsClient.get_objects2({'objects': [get_obj_params]})['data'][0]['data']
         self.assertTrue(taxon_key in obj['taxon_assignments'])
         print(obj['taxon_assignments'])
         self.assertEqual(obj['taxon_assignments'][taxon_key], taxon_val)
         # Update the assignment we just added
         self.serviceImpl.update_taxon_assignments(self.ctx, {
-            'workspace_id': _WORKSPACE_ID,
-            'object_id': _OBJECT_ID,
+            'workspace_id': self.example_obj_wsid,
+            'object_id': self.example_obj_id,
             'taxon_assignments': {
                 taxon_key: taxon_val_new
             }
@@ -80,8 +84,8 @@ class UpdateTaxonAssignmentsTest(unittest.TestCase):
         self.assertEqual(obj['taxon_assignments'][taxon_key], taxon_val_new)
         # Remove the assignment we just added
         self.serviceImpl.update_taxon_assignments(self.ctx, {
-            'workspace_id': _WORKSPACE_ID,
-            'object_id': _OBJECT_ID,
+            'workspace_id': self.example_obj_wsid,
+            'object_id': self.example_obj_id,
             'remove_assignments': [taxon_key]
         })
         # Fetch the object and check the mapping
