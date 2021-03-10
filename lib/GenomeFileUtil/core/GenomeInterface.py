@@ -228,6 +228,7 @@ class GenomeInterface:
         else:
             GenomeUtils.set_default_taxon_data(genome)
 
+        # fixes issue of user have contig_ids key but an empty list
         if 'contig_ids' in genome and len(genome['contig_ids']) == 0 and  'assembly_ref' in genome:
             assembly_data = self.dfu.get_objects(
                 {'object_refs': [genome['assembly_ref']],
