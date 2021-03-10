@@ -228,11 +228,18 @@ class GenomeInterface:
         else:
             GenomeUtils.set_default_taxon_data(genome)
 
-        if any([x not in genome for x in ('dna_size', 'md5', 'gc_content', 'num_contigs')]):
+        if 'contig_ids' in genome and len(genome['contig_ids']) == 0 and  'assembly_ref' in genome:
+            assembly_data = self.dfu.get_objects(
+                {'object_refs': [genome['assembly_ref']],
+                 'ignore_errors': 0})['data'][0]['data']
+            genome["contig_ids"] = assembly_data["contigs"].keys()
+            
+        if any([x not in genome for x in ('dna_size', 'md5', 'gc_content', 'num_contigs', 'contig_ids')]):
             if 'assembly_ref' in genome:
                 assembly_data = self.dfu.get_objects(
                     {'object_refs': [genome['assembly_ref']],
                      'ignore_errors': 0})['data'][0]['data']
+                genome["contig_ids"] = assembly_data["contigs"].keys()
                 genome["gc_content"] = assembly_data['gc_content']
                 genome["dna_size"] = assembly_data['dna_size']
                 genome["md5"] = assembly_data['md5']
@@ -250,6 +257,7 @@ class GenomeInterface:
                 genome["dna_size"] = sum((c['length'] for c in contig_data['contigs']))
                 genome["md5"] = contig_data['md5']
                 genome["num_contigs"] = len(contig_data['contigs'])
+        
 
         # NOTE: metagenomes do not have the following fields
         if 'cdss' not in genome:
