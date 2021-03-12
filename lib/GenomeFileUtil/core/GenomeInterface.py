@@ -233,14 +233,30 @@ class GenomeInterface:
             assembly_data = self.dfu.get_objects(
                 {'object_refs': [genome['assembly_ref']],
                  'ignore_errors': 0})['data'][0]['data']
-            genome["contig_ids"] = assembly_data["contigs"].keys()
+            contig_ids = assembly_data["contigs"].keys()
+            genome["contig_ids"] = contig_ids
+            contig_lengths = list()
+            for contig_id in contig_ids:
+                if "length" in assembly_data["contigs"][contig_id]:
+                    contig_lengths.append(assembly_data["contigs"][contig_id]["length"])
+                else:
+                    contig_lengths.append(0)
+            genome["contig_lengths"] = contig_lengths
             
-        if any([x not in genome for x in ('dna_size', 'md5', 'gc_content', 'num_contigs', 'contig_ids')]):
+        if any([x not in genome for x in ('dna_size', 'md5', 'gc_content', 'num_contigs', 'contig_ids', "contig_lengths")]):
             if 'assembly_ref' in genome:
                 assembly_data = self.dfu.get_objects(
                     {'object_refs': [genome['assembly_ref']],
                      'ignore_errors': 0})['data'][0]['data']
-                genome["contig_ids"] = assembly_data["contigs"].keys()
+                contig_ids = assembly_data["contigs"].keys()
+                genome["contig_ids"] = contig_ids
+                contig_lengths = list()
+                for	contig_id in contig_ids:
+		    if "length" in assembly_data["contigs"][contig_id]:
+                        contig_lengths.append(assembly_data["contigs"][contig_id]["length"])
+		    else:
+                        contig_lengths.append(0)
+	        genome["contig_lengths"] = contig_lengths
                 genome["gc_content"] = assembly_data['gc_content']
                 genome["dna_size"] = assembly_data['dna_size']
                 genome["md5"] = assembly_data['md5']
