@@ -272,8 +272,8 @@ class GenomeInterface:
                     ids_present.add(non_coding_feature["id"])
         if len(duplicates_ids_found) > 0:
             duplicate_id_string = ', '.join(str(s) for s in duplicates_ids_found)
-            raised_error_message = ("Duplicate ids were found and not properly handled by the uploader. "
-                                    "Please enter a help desk ticket.  Duplicate IDs: "
+            raised_error_message = ("Duplicate ids were found and not properly handled by the uploader. " +
+                                    "Please enter a help desk ticket.  Duplicate IDs: " +
                                     duplicate_id_string)
             raise ValueError(raised_error_message)
             
