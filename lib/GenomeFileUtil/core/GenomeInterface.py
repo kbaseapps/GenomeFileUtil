@@ -210,6 +210,9 @@ class GenomeInterface:
 
     def _update_genome(self, genome):
         """Checks for missing required fields and fixes breaking changes"""
+
+        print("IN UPDATE GENOME")
+        print(str(genome))
         # do top level updates
         ontologies_present = defaultdict(dict)  # type: dict
         ontologies_present.update(genome.get('ontologies_present', {}))
@@ -233,6 +236,7 @@ class GenomeInterface:
         # code that causes the code to handle duplicates to not work properly
         # The following few lines need to be uncommented to test if the check is working properly
         # only way to really test this checker
+        
 
         temp_duplicate_cds = genome["cdss"][0]
         print("first CDS : " + str(temp_duplicate_cds))
