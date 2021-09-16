@@ -235,8 +235,9 @@ class GenomeInterface:
         # only way to really test this checker
 
         temp_duplicate_cds = genome["cdss"][0]
+        print("first CDS : " + str(temp_duplicate_cds))
         genome["cdss"].append(temp_duplicate_cds)
-
+        print("Last CDS : " + str( genome["cdss"][-1]))
 
         
         ids_present = set()
