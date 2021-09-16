@@ -228,7 +228,66 @@ class GenomeInterface:
         else:
             GenomeUtils.set_default_taxon_data(genome)
 
-        if any([x not in genome for x in ('dna_size', 'md5', 'gc_content', 'num_contigs')]):
+        # Double check for duplicate feature ids across all 4 feature lists
+        # Note this is more than anything a check to make sure the coder does not introduce
+        # code that causes the code to handle duplicates to not work properly
+        # The following few lines need to be uncommented to test if the check is working properly
+        # only way to really test this checker
+
+        temp_duplicate_cds = genome["cdss"][0]
+        genome["cdss"].append(temp_duplicate_cds)
+
+
+        
+        ids_present = set()
+        duplicates_ids_found = set()
+        if "cdss" in genome:
+            for cds in genome["cdss"]:
+                if cds["id"] in ids_present:
+                    duplicate_ids_found.add(cds["id"])
+                else: 
+                    ids_present.add(cds["id"])
+        if "features" in genome:
+            for feature in genome["features"]:
+                if feature["id"] in ids_present:
+                    duplicate_ids_found.add(cds["id"])
+                else: 
+                    ids_present.add(feature["id"])
+        if "mrnas" in genome:
+            for mrna in genome["mrnas"]:
+                if mrna["id"] in ids_present:
+                    duplicate_ids_found.add(cds["id"])
+                else: 
+                    ids_present.add(mrna["id"])
+        if "non_coding_featues" in genome:
+            for non_coding_feature in genome["non_coding_features"]:
+                if non_coding_feature["id"] in ids_present:
+                    duplicate_ids_found.add(cds["id"])
+                else: 
+                    ids_present.add(non_coding_feature["id"])
+        if len(duplicates_ids_found) > 0:
+            duplicate_id_string = ', '.join(str(s) for s in duplicates_ids_found)
+            raised_error_message = ("Duplicate ids were found and not properly handled by the uploader. "
+                                    "Please enter a help desk ticket.  Duplicate IDs: "
+                                    duplicate_id_string)
+            raise ValueError(raised_error_message)
+            
+        # fixes issue of user have contig_ids key but an empty list
+        if 'contig_ids' in genome and len(genome['contig_ids']) == 0 and  'assembly_ref' in genome:
+            assembly_data = self.dfu.get_objects(
+                {'object_refs': [genome['assembly_ref']],
+                 'ignore_errors': 0})['data'][0]['data']
+            contig_ids = assembly_data["contigs"].keys()
+            genome["contig_ids"] = contig_ids
+            contig_lengths = list()
+            for contig_id in contig_ids:
+                if "length" in assembly_data["contigs"][contig_id]:
+                    contig_lengths.append(assembly_data["contigs"][contig_id]["length"])
+                else:
+                    contig_lengths.append(0)
+            genome["contig_lengths"] = contig_lengths
+            
+        if any([x not in genome for x in ('dna_size', 'md5', 'gc_content', 'num_contigs', 'contig_ids', "contig_lengths")]):
             if 'assembly_ref' in genome:
                 assembly_data = self.dfu.get_objects(
                     {'object_refs': [genome['assembly_ref']],
