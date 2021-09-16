@@ -211,8 +211,8 @@ class GenomeInterface:
     def _update_genome(self, genome):
         """Checks for missing required fields and fixes breaking changes"""
 
-        print("IN UPDATE GENOME")
-        print(str(genome))
+        print(f"IN UPDATE GENOME {str(genome)}")
+
         # do top level updates
         ontologies_present = defaultdict(dict)  # type: dict
         ontologies_present.update(genome.get('ontologies_present', {}))
@@ -270,12 +270,14 @@ class GenomeInterface:
                     duplicate_ids_found.add(cds["id"])
                 else: 
                     ids_present.add(non_coding_feature["id"])
+        print(f"dup ids count {str(len(duplicate_ids_found))}")
         if len(duplicates_ids_found) > 0:
             duplicate_id_string = ', '.join(str(s) for s in duplicates_ids_found)
-            raised_error_message = ("Duplicate ids were found and not properly handled by the uploader. " +
-                                    "Please enter a help desk ticket.  Duplicate IDs: " +
-                                    duplicate_id_string)
-            raise ValueError(raised_error_message)
+            raised_error_message = "Duplicate keys HERE"
+            #("Duplicate ids were found and not properly handled by the uploader. " +
+            #                        "Please enter a help desk ticket.  Duplicate IDs: " +
+            #                        duplicate_id_string)
+            raise ValueError(f"DUPLICATE IDS ERROR")
             
         # fixes issue of user have contig_ids key but an empty list
         if 'contig_ids' in genome and len(genome['contig_ids']) == 0 and  'assembly_ref' in genome:
