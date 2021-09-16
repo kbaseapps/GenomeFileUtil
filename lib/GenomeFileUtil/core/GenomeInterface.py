@@ -142,8 +142,8 @@ class GenomeInterface:
             if params.get('upgrade') or 'feature_counts' not in data:
                 data = self._update_metagenome(data)
         else:
-            if params.get('upgrade') or 'feature_counts' not in data:
-                data = self._update_genome(data)
+#            if params.get('upgrade') or 'feature_counts' not in data:
+            data = self._update_genome(data)
 
         # check all handles point to shock nodes owned by calling user
         self._own_handle(data, 'genbank_handle_ref')
