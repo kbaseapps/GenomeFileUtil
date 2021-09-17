@@ -145,7 +145,7 @@ class GenomeInterface:
 #            if params.get('upgrade') or 'feature_counts' not in data:
             data = self._update_genome(data)
 
-        self._check_for_duplicate_ids(data):
+#        self._check_for_duplicate_ids(data):
             
         # check all handles point to shock nodes owned by calling user
         self._own_handle(data, 'genbank_handle_ref')
@@ -231,8 +231,8 @@ class GenomeInterface:
         else:
             GenomeUtils.set_default_taxon_data(genome)
 
-        need_to_populate_assembly_related_metadata = False
         # fixes issue of user have contig_ids key but an empty list
+        need_to_populate_assembly_related_metadata = False
         if 'contig_ids' in genome and len(genome['contig_ids']) == 0 :
             need_to_populate_assembly_related_metadata = True
 
