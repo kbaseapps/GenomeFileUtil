@@ -271,12 +271,12 @@ class GenomeInterface:
                 else: 
                     ids_present.add(non_coding_feature["id"])
         print(f"dup ids count {str(len(duplicate_ids_found))}")
-        if len(duplicates_ids_found) > 0:
-            duplicate_id_string = ', '.join(str(s) for s in duplicates_ids_found)
+        if len(duplicate_ids_found) > 0:
+            duplicate_ids_string = ', '.join(str(s) for s in duplicate_ids_found)
             raised_error_message = "Duplicate keys HERE"
             #("Duplicate ids were found and not properly handled by the uploader. " +
             #                        "Please enter a help desk ticket.  Duplicate IDs: " +
-            #                        duplicate_id_string)
+            #                        duplicate_ids_string)
             raise ValueError(f"DUPLICATE IDS ERROR")
             
         # fixes issue of user have contig_ids key but an empty list
