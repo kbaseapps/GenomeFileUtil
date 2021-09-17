@@ -245,7 +245,7 @@ class GenomeInterface:
 
         
         ids_present = set()
-        duplicates_ids_found = set()
+        duplicate_ids_found = set()
         if "cdss" in genome:
             for cds in genome["cdss"]:
                 if cds["id"] in ids_present:
@@ -255,19 +255,19 @@ class GenomeInterface:
         if "features" in genome:
             for feature in genome["features"]:
                 if feature["id"] in ids_present:
-                    duplicate_ids_found.add(cds["id"])
+                    duplicate_ids_found.add(feature["id"])
                 else: 
                     ids_present.add(feature["id"])
         if "mrnas" in genome:
             for mrna in genome["mrnas"]:
                 if mrna["id"] in ids_present:
-                    duplicate_ids_found.add(cds["id"])
+                    duplicate_ids_found.add(mrna["id"])
                 else: 
                     ids_present.add(mrna["id"])
         if "non_coding_featues" in genome:
             for non_coding_feature in genome["non_coding_features"]:
                 if non_coding_feature["id"] in ids_present:
-                    duplicate_ids_found.add(cds["id"])
+                    duplicate_ids_found.add(non_coding_feature["id"])
                 else: 
                     ids_present.add(non_coding_feature["id"])
         print(f"dup ids count {str(len(duplicate_ids_found))}")
