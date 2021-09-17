@@ -404,7 +404,8 @@ class GenomeInterface:
             raised_error_message = ("Duplicate ids were found and not properly handled by the uploader. " +
                                     "Please enter a help desk ticket.  Duplicate IDs: " +
                                     duplicate_ids_string)
-            raise ValueError(raised_error_message)
+            print("Duplicate IDs exist")
+            raise ValueError("DUPLICATES EXIST: " + raised_error_message)
         return 1
         
     @staticmethod
