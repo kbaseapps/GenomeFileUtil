@@ -364,12 +364,11 @@ class GenomeInterface:
         # Double check for duplicate feature ids across all 4 feature lists
         # Note this is more than anything a check to make sure the coder does not introduce
         # code that causes the code to handle duplicates to not work properly
-        # The following few lines need to be uncommented to test if the check is working properly
-        # only way to really test this checker
-        temp_duplicate_cds = genome["cdss"][0]
-        print("first CDS : " + str(temp_duplicate_cds))
-        genome["cdss"].append(temp_duplicate_cds)
-        print("Last CDS : " + str( genome["cdss"][-1]))
+        # The following two lines need to be uncommented to test if the check is working properly
+        # only way to really test this checker.
+        # Uncomment the next two lines to test if dup check is working.
+        #temp_duplicate_cds = genome["cdss"][0]
+        #genome["cdss"].append(temp_duplicate_cds)
 
         ids_present = set()
         duplicate_ids_found = set()
