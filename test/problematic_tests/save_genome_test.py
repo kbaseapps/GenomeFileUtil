@@ -74,10 +74,10 @@ class SaveGenomeTest(unittest.TestCase):
         config.readfp(io.StringIO(test_cfg_text))
 
         test_cfg_dict = dict(config.items("test"))
-        if ('test_token2' not in test_cfg_dict):
+        if ('test_token' not in test_cfg_dict):
             raise ValueError("Configuration in <module>/test_local/test.cfg file should " +
                              "include second user credentials ('test_token2')")
-        token2 = test_cfg_dict['test_token2']
+        token2 = test_cfg_dict['test_token']
         user2 = auth_client.get_user(token2)
         cls.ctx2 = MethodContext(None)
         cls.ctx2.update({'token': token2,
