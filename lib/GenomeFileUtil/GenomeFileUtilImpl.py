@@ -10,7 +10,7 @@ from pprint import pprint
 from GenomeFileUtil.core.FastaGFFToGenome import FastaGFFToGenome
 from GenomeFileUtil.core.GenbankToGenome import GenbankToGenome
 from GenomeFileUtil.core.GenomeFeaturesToFasta import GenomeFeaturesToFasta
-from GenomeFileUtil.core.GenomeInterface import GenomeInterface
+from GenomeFileUtil.core.GenomeInterface import GenomeInterface, MAX_THREADS, THREADS_PER_CPU
 from GenomeFileUtil.core.GenomeToGFF import GenomeToGFF
 from GenomeFileUtil.core.GenomeToGenbank import GenomeToGenbank
 from installed_clients.AssemblyUtilClient import AssemblyUtil

@@ -16,6 +16,10 @@ from GenomeFileUtil.core import GenomeUtils
 
 MAX_GENOME_SIZE = 2**30
 
+# catalog params
+MAX_THREADS = 10
+THREADS_PER_CPU = 1
+
 
 class GenomeInterface:
     def __init__(self, config):
