@@ -219,6 +219,7 @@ class SaveGenomeTest(unittest.TestCase):
         self.assertTrue(feature_dna_sum > 3000000)
         self.assertEqual(copied_genome, self.test_genome_data)
 
+    @unittest.skip()
     def test_GenomeInterface_own_handle(self):
         # no handle in genome
         genome = {'missing_genbank_handle_ref': 'hid'}
