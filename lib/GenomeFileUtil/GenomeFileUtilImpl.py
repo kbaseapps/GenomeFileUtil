@@ -32,6 +32,31 @@ class SDKConfig:
         self.re_api_url = config['re-api-url']
         self.raw = config
 
+
+# Helper function to validate max_threads catalog param
+def _validate_max_threads_type(threads_count, var_name, default_val):
+    if threads_count is None:
+        print(f"Cannot retrieve {var_name} from the catalog, set {var_name}={default_val}")
+        return default_val
+    print(f"Successfully retrieve {var_name} from the catalog!")
+    try:
+        threads_count = int(threads_count)
+    except ValueError as e:
+        raise ValueError(f"{var_name} must be an integer") from e
+    return threads_count
+
+
+# Helper function to validate threads_per_cpu catalog param
+def _validate_threads_per_cpu_type(threads_count, var_name, default_val):
+    if threads_count is None:
+        print(f"Cannot retrieve {var_name} from the catalog, set {var_name}={default_val}")
+        return default_val
+    print(f"Successfully retrieve {var_name} from the catalog!")
+    try:
+        threads_count = float(threads_count)
+    except ValueError as e:
+        raise ValueError(f"{var_name} must be an integer or decimal") from e
+    return threads_count
 #END_HEADER
 
 
@@ -64,6 +89,11 @@ class GenomeFileUtil:
         self.cfg = SDKConfig(config)
         logging.basicConfig(format='%(created)s %(levelname)s: %(message)s',
                             level=logging.INFO)
+
+        max_threads = os.environ.get("KBASE_SECURE_CONFIG_PARAM_MAX_THREADS")
+        threads_per_cpu = os.environ.get("KBASE_SECURE_CONFIG_PARAM_THREADS_PER_CPU")
+        self.max_threads = _validate_max_threads_type(max_threads, "MAX_THREADS", MAX_THREADS)
+        self.threads_per_cpu = _validate_threads_per_cpu_type(threads_per_cpu, "THREADS_PER_CPU", THREADS_PER_CPU)
         #END_CONSTRUCTOR
         pass
 
