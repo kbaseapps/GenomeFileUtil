@@ -17,8 +17,8 @@ from GenomeFileUtil.core import GenomeUtils
 MAX_GENOME_SIZE = 2**30
 
 # catalog params
-MAX_THREADS = 10
-THREADS_PER_CPU = 1
+MAX_THREADS_DEFAULT = 10
+THREADS_PER_CPU_DEFAULT = 1
 
 
 class GenomeInterface:

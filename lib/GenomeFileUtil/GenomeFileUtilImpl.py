@@ -10,7 +10,11 @@ from pprint import pprint
 from GenomeFileUtil.core.FastaGFFToGenome import FastaGFFToGenome
 from GenomeFileUtil.core.GenbankToGenome import GenbankToGenome
 from GenomeFileUtil.core.GenomeFeaturesToFasta import GenomeFeaturesToFasta
-from GenomeFileUtil.core.GenomeInterface import GenomeInterface, MAX_THREADS, THREADS_PER_CPU
+from GenomeFileUtil.core.GenomeInterface import (
+    GenomeInterface,
+    MAX_THREADS_DEFAULT,
+    THREADS_PER_CPU_DEFAULT,
+)
 from GenomeFileUtil.core.GenomeToGFF import GenomeToGFF
 from GenomeFileUtil.core.GenomeToGenbank import GenomeToGenbank
 from installed_clients.AssemblyUtilClient import AssemblyUtil
@@ -33,29 +37,29 @@ class SDKConfig:
         self.raw = config
 
 
-# Helper function to validate max_threads catalog param
-def _validate_max_threads_type(threads_count, var_name, default_val):
+def _validate_catalog_param_exist(var_name):
+    """Helper function to validate catalog params exist"""
+    catalog_params = ["MAX_THREADS", "THREADS_PER_CPU"]
+    if var_name not in catalog_params:
+        raise ValueError(
+            f"currently only support those {catalog_params} catalog params"
+        )
+
+
+def _validate_catalog_param_type(threads_count, var_name, default_val, convert_cls):
+    """Helper function to validate catalog params type"""
+    _validate_catalog_param_exist(var_name)
     if threads_count is None:
         print(f"Cannot retrieve {var_name} from the catalog, set {var_name}={default_val}")
         return default_val
     print(f"Successfully retrieve {var_name} from the catalog!")
     try:
-        threads_count = int(threads_count)
+        threads_count = convert_cls(threads_count)
     except ValueError as e:
-        raise ValueError(f"{var_name} must be an integer") from e
-    return threads_count
-
-
-# Helper function to validate threads_per_cpu catalog param
-def _validate_threads_per_cpu_type(threads_count, var_name, default_val):
-    if threads_count is None:
-        print(f"Cannot retrieve {var_name} from the catalog, set {var_name}={default_val}")
-        return default_val
-    print(f"Successfully retrieve {var_name} from the catalog!")
-    try:
-        threads_count = float(threads_count)
-    except ValueError as e:
-        raise ValueError(f"{var_name} must be an integer or decimal") from e
+        if var_name == "MAX_THREADS":
+            raise ValueError(f"{var_name} must be an integer") from e
+        elif var_name == "THREADS_PER_CPU":
+            raise ValueError(f"{var_name} must be an integer or decimal") from e
     return threads_count
 #END_HEADER
 
@@ -92,8 +96,8 @@ class GenomeFileUtil:
 
         max_threads = os.environ.get("KBASE_SECURE_CONFIG_PARAM_MAX_THREADS")
         threads_per_cpu = os.environ.get("KBASE_SECURE_CONFIG_PARAM_THREADS_PER_CPU")
-        self.max_threads = _validate_max_threads_type(max_threads, "MAX_THREADS", MAX_THREADS)
-        self.threads_per_cpu = _validate_threads_per_cpu_type(threads_per_cpu, "THREADS_PER_CPU", THREADS_PER_CPU)
+        self.max_threads = _validate_catalog_param_type(max_threads, "MAX_THREADS", MAX_THREADS_DEFAULT, int)
+        self.threads_per_cpu = _validate_catalog_param_type(threads_per_cpu, "THREADS_PER_CPU", THREADS_PER_CPU_DEFAULT, str)
         #END_CONSTRUCTOR
         pass
 
