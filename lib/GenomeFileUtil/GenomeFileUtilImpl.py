@@ -46,7 +46,7 @@ def _validate_catalog_param_exist(var_name):
         )
 
 
-def _validate_catalog_param_type(threads_count, var_name, default_val, convert_cls):
+def _validate_catalog_param_type(threads_count, var_name, default_val, expected_type):
     """Helper function to validate catalog params type"""
     _validate_catalog_param_exist(var_name)
     if threads_count is None:
@@ -54,7 +54,7 @@ def _validate_catalog_param_type(threads_count, var_name, default_val, convert_c
         return default_val
     print(f"Successfully retrieve {var_name} from the catalog!")
     try:
-        threads_count = convert_cls(threads_count)
+        threads_count = expected_type(threads_count)
     except ValueError as e:
         if var_name == "MAX_THREADS":
             raise ValueError(f"{var_name} must be an integer") from e
@@ -96,8 +96,12 @@ class GenomeFileUtil:
 
         max_threads = os.environ.get("KBASE_SECURE_CONFIG_PARAM_MAX_THREADS")
         threads_per_cpu = os.environ.get("KBASE_SECURE_CONFIG_PARAM_THREADS_PER_CPU")
-        self.max_threads = _validate_catalog_param_type(max_threads, "MAX_THREADS", MAX_THREADS_DEFAULT, int)
-        self.threads_per_cpu = _validate_catalog_param_type(threads_per_cpu, "THREADS_PER_CPU", THREADS_PER_CPU_DEFAULT, str)
+        self.max_threads = _validate_catalog_param_type(
+            max_threads, "MAX_THREADS", MAX_THREADS_DEFAULT, int
+        )
+        self.threads_per_cpu = _validate_catalog_param_type(
+            threads_per_cpu, "THREADS_PER_CPU", THREADS_PER_CPU_DEFAULT, float
+        )
         #END_CONSTRUCTOR
         pass
 
