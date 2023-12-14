@@ -37,29 +37,16 @@ class SDKConfig:
         self.raw = config
 
 
-def _validate_catalog_param_exist(var_name):
-    """Helper function to validate catalog params exist"""
-    catalog_params = ["MAX_THREADS", "THREADS_PER_CPU"]
-    if var_name not in catalog_params:
-        raise ValueError(
-            f"currently only support those {catalog_params} catalog params"
-        )
-
-
 def _validate_catalog_param_type(threads_count, var_name, default_val, expected_type):
     """Helper function to validate catalog params type"""
-    _validate_catalog_param_exist(var_name)
     if threads_count is None:
         print(f"Cannot retrieve {var_name} from the catalog, set {var_name}={default_val}")
         return default_val
-    print(f"Successfully retrieve {var_name} from the catalog!")
+    print(f"Successfully retrieved {var_name} from the catalog!")
     try:
         threads_count = expected_type(threads_count)
     except ValueError as e:
-        if var_name == "MAX_THREADS":
-            raise ValueError(f"{var_name} must be an integer") from e
-        elif var_name == "THREADS_PER_CPU":
-            raise ValueError(f"{var_name} must be an integer or decimal") from e
+        raise ValueError(f"{var_name} must be of type {expected_type.__name__}") from e
     return threads_count
 #END_HEADER
 
