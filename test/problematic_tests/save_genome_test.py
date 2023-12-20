@@ -13,6 +13,7 @@ from configparser import ConfigParser
 from os import environ
 
 import requests  # noqa: F401
+from pytest import raises
 
 from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.DataFileUtilClient import DataFileUtil
@@ -22,6 +23,7 @@ from GenomeFileUtil.GenomeFileUtilServer import MethodContext
 from GenomeFileUtil.authclient import KBaseAuth as _KBaseAuth
 from GenomeFileUtil.core.GenomeInterface import GenomeInterface
 from installed_clients.WorkspaceClient import Workspace as workspaceService
+from conftest import assert_exception_correct
 
 
 class SaveGenomeTest(unittest.TestCase):
@@ -191,6 +193,32 @@ class SaveGenomeTest(unittest.TestCase):
                   'hidden': True}
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
         self.check_save_one_genome_output(ret, genome_name)
+
+    def test_invalid_catalog_param_type(self):
+        self.start_test()
+
+        MAX_THREADS = "MAX_THREADS"
+        THREADS_PER_CPU = "THREADS_PER_CPU"
+
+        # max_threads type check fails
+        os.environ["KBASE_SECURE_CONFIG_PARAM_MAX_THREADS"] = "10.5"
+        os.environ["KBASE_SECURE_CONFIG_PARAM_THREADS_PER_CPU"] = "2.5"
+        with raises(Exception) as got:
+            self.getImpl()
+        assert_exception_correct(
+            got.value,
+            ValueError(f"{MAX_THREADS} must be of type {int.__name__}")
+        )
+
+        # threads_per_cpu type check fails
+        os.environ["KBASE_SECURE_CONFIG_PARAM_MAX_THREADS"] = "10"
+        os.environ["KBASE_SECURE_CONFIG_PARAM_THREADS_PER_CPU"] = "2.8e"
+        with raises(Exception) as got:
+            self.getImpl()
+        assert_exception_correct(
+            got.value,
+            ValueError(f"{THREADS_PER_CPU} must be of type {float.__name__}")
+        )
 
     def test_GenomeInterface_check_dna_sequence_in_features(self):
         # no feature in genome
