@@ -153,6 +153,9 @@ class SaveGenomeTest(unittest.TestCase):
     def getContext(self):
         return self.__class__.ctx
 
+    def getCfg(self):
+        return self.__class__.cfg
+
     def start_test(self):
         testname = inspect.stack()[1][3]
         print(('\n*** starting test: ' + testname + ' **'))
@@ -216,8 +219,9 @@ class SaveGenomeTest(unittest.TestCase):
         # max_threads type check fails
         os.environ["KBASE_SECURE_CONFIG_PARAM_MAX_THREADS"] = "10.5"
         os.environ["KBASE_SECURE_CONFIG_PARAM_THREADS_PER_CPU"] = "2.5"
+
         with raises(Exception) as got:
-            self.getImpl()
+            GenomeFileUtil(self.getCfg())
         assert_exception_correct(
             got.value,
             ValueError(f"{MAX_THREADS} must be of type {int.__name__}")
@@ -226,8 +230,9 @@ class SaveGenomeTest(unittest.TestCase):
         # threads_per_cpu type check fails
         os.environ["KBASE_SECURE_CONFIG_PARAM_MAX_THREADS"] = "10"
         os.environ["KBASE_SECURE_CONFIG_PARAM_THREADS_PER_CPU"] = "2.8e"
+
         with raises(Exception) as got:
-            self.getImpl()
+            GenomeFileUtil(self.getCfg())
         assert_exception_correct(
             got.value,
             ValueError(f"{THREADS_PER_CPU} must be of type {float.__name__}")
