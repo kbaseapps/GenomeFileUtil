@@ -5,6 +5,7 @@ import json  # noqa: F401
 import os  # noqa: F401
 import shutil
 import time
+import traceback
 import unittest
 import urllib.error
 import urllib.parse
@@ -23,7 +24,19 @@ from GenomeFileUtil.GenomeFileUtilServer import MethodContext
 from GenomeFileUtil.authclient import KBaseAuth as _KBaseAuth
 from GenomeFileUtil.core.GenomeInterface import GenomeInterface
 from installed_clients.WorkspaceClient import Workspace as workspaceService
-from ..test.problematic_tests.conftest import assert_exception_correct
+
+
+def assert_exception_correct(got: Exception, expected: Exception):
+    """
+    Compare raised exception with expected exception.
+
+    Args:
+        got (Exception): Exception received
+        expected (Exception): Exception expected
+    """
+    err = "".join(traceback.TracebackException.from_exception(got).format())
+    assert got.args == expected.args, err
+    assert type(got) == type(expected)
 
 
 class SaveGenomeTest(unittest.TestCase):
