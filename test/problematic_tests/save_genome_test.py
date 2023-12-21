@@ -23,7 +23,7 @@ from GenomeFileUtil.GenomeFileUtilServer import MethodContext
 from GenomeFileUtil.authclient import KBaseAuth as _KBaseAuth
 from GenomeFileUtil.core.GenomeInterface import GenomeInterface
 from installed_clients.WorkspaceClient import Workspace as workspaceService
-from conftest import assert_exception_correct
+from ..test.problematic_tests.conftest import assert_exception_correct
 
 
 class SaveGenomeTest(unittest.TestCase):
