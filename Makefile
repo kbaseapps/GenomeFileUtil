@@ -56,7 +56,6 @@ build-test-script:
 test:
 	if [ ! -f /kb/module/work/token ]; then echo -e '\nOutside a docker container please run "kb-sdk test" rather than "make test"\n' && exit 1; fi
 	bash $(SCRIPTS_DIR)/$(TEST_SCRIPT_NAME)
-	cp /kb/module/.coveragerc $(TEST_DIR)/.
 	cp $(TEST_DIR)/.coverage /kb/module/work/
 	mkdir -p /kb/module/work/kb/module/lib/
 	cp -R /kb/module/lib/$(SERVICE_CAPS)/ /kb/module/work/kb/module/lib/
