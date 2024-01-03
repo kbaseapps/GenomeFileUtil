@@ -10,7 +10,6 @@ export TEST_PATH=test.core.update_taxon_assignments_test
 
 cd $script_dir/../test
 python -m nose --with-coverage --cover-package=GenomeFileUtil --cover-html --cover-html-dir=/kb/module/work/test_coverage --cover-xml --cover-xml-file=/kb/module/work/test_coverage/coverage.xml --nocapture --nologcapture $TEST_PATH
-cp /kb/module/.coveragerc .
 cp .coverage /kb/module/work/
 mkdir -p /kb/module/work/kb/module/lib/
 cp -R /kb/module/lib/GenomeFileUtil/ /kb/module/work/kb/module/lib/P
