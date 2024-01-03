@@ -52,6 +52,7 @@ build-test-script:
 	echo 'cd $$script_dir/../$(TEST_DIR)' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'python -m nose --with-coverage --cover-package=$(SERVICE_CAPS) --cover-html --cover-html-dir=/kb/module/work/test_coverage --cover-xml --cover-xml-file=/kb/module/work/test_coverage/coverage.xml --nocapture  --nologcapture .' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'returncode=$?' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
+	echo 'echo returncode' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'if [ $returncode != 0 ]; then exit $returncode; fi' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	chmod +x $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 
