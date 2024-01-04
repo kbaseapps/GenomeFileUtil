@@ -9,7 +9,8 @@ export TEST_PATH=test.problematic_tests.impl_test
 
 cd $script_dir/../test
 python -m nose --with-coverage --cover-package=GenomeFileUtil --cover-html --cover-html-dir=/kb/module/work/test_coverage --cover-xml --cover-xml-file=/kb/module/work/test_coverage/coverage.xml --nocapture --nologcapture $TEST_PATH
-cp /kb/module/.coveragerc .
+returncode=$?
+if [ $returncode != 0 ]; then exit $returncode; fi
 cp .coverage /kb/module/work/
 mkdir -p /kb/module/work/kb/module/lib/
 cp -R /kb/module/lib/GenomeFileUtil/ /kb/module/work/kb/module/lib/P

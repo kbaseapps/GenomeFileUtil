@@ -51,7 +51,6 @@ build-test-script:
 	echo 'export PYTHONPATH=$$script_dir/../$(LIB_DIR):$$PATH:$$PYTHONPATH' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'cd $$script_dir/../$(TEST_DIR)' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'python -m nose --with-coverage --cover-package=$(SERVICE_CAPS) --cover-html --cover-html-dir=/kb/module/work/test_coverage --cover-xml --cover-xml-file=/kb/module/work/test_coverage/coverage.xml --nocapture  --nologcapture .' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
-	echo 'cp /kb/module/.coveragerc .' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'cp .coverage /kb/module/work/' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'mkdir -p /kb/module/work/kb/module/lib/' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'cp -R /kb/module/lib/$(SERVICE_CAPS)/ /kb/module/work/kb/module/lib/' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
