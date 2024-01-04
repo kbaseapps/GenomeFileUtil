@@ -51,14 +51,14 @@ build-test-script:
 	echo 'export PYTHONPATH=$$script_dir/../$(LIB_DIR):$$PATH:$$PYTHONPATH' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'cd $$script_dir/../$(TEST_DIR)' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	echo 'python -m nose --with-coverage --cover-package=$(SERVICE_CAPS) --cover-html --cover-html-dir=/kb/module/work/test_coverage --cover-xml --cover-xml-file=/kb/module/work/test_coverage/coverage.xml --nocapture  --nologcapture .' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
-	echo 'returncode=$$?' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
-	echo 'if [ $$returncode != 0 ]; then exit $$returncode; fi' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
+	# echo 'returncode=$$?' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
+	# echo 'if [ $$returncode != 0 ]; then exit $$returncode; fi' >> $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	chmod +x $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 
 test:
 	if [ ! -f /kb/module/work/token ]; then echo -e '\nOutside a docker container please run "kb-sdk test" rather than "make test"\n' && exit 1; fi
-	cat $(TEST_DIR)/$(TEST_SCRIPT_NAME)
-	bash $(SCRIPTS_DIR)/$(TEST_SCRIPT_NAME)
+	# cat $(TEST_DIR)/$(TEST_SCRIPT_NAME)
+	bash $(TEST_DIR)/$(TEST_SCRIPT_NAME)
 	cp $(TEST_DIR)/.coverage /kb/module/work/
 	mkdir -p /kb/module/work/kb/module/lib/
 	cp -R /kb/module/lib/$(SERVICE_CAPS)/ /kb/module/work/kb/module/lib/
