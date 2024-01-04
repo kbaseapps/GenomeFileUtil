@@ -93,8 +93,7 @@ class UpdateTaxonAssignmentsTest(unittest.TestCase):
         })
         # Fetch the object and check the mapping
         obj = self.wsClient.get_objects2({'objects': [get_obj_params]})['data'][0]['data']
-        # self.assertTrue(taxon_key in obj['taxon_assignments'])
-        self.assertTrue(taxon_key not in obj['taxon_assignments'])
+        self.assertTrue(taxon_key in obj['taxon_assignments'])
         self.assertEqual(obj['taxon_assignments'][taxon_key], taxon_val)
         # Update the assignment we just added
         self.serviceImpl.update_taxon_assignments(self.ctx, {
