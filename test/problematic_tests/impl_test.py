@@ -16,7 +16,7 @@ class ImplTest(unittest.TestCase):
         self.cfg["scratch"] = "/kb/module/work/tmp"
         self.cfg["srv-wiz-url"] = "https://ci.kbase.us/services/service_wizard"
         self.cfg["auth-service-url"] = "https://ci.kbase.us/services/auth/api/legacy/KBase/Sessions/Login"
-        self.cfg["re_api_url"] = "https://ci.kbase.us/services/relation_engine_api"
+        self.cfg["re-api-url"] = "https://ci.kbase.us/services/relation_engine_api"
         self.cfg["KB_AUTH_TOKEN"] = os.environ.get("KB_AUTH_TOKEN", None)
 
     def tearDown(self):
