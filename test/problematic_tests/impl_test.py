@@ -27,7 +27,7 @@ class ImplTest(unittest.TestCase):
             if kbase_secure_param in os.environ:
                 del os.environ[kbase_secure_param]
 
-    def _run_test_fail(cfg, error_message):
+    def _run_test_fail(self, cfg, error_message):
         with pytest.raises(Exception) as got:
             GenomeFileUtil(cfg)
         assert_exception_correct(got.value, ValueError(error_message))
