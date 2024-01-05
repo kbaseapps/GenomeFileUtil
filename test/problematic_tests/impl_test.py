@@ -27,6 +27,11 @@ class ImplTest(unittest.TestCase):
             if kbase_secure_param in os.environ:
                 del os.environ[kbase_secure_param]
 
+    def _run_test_fail(cfg, error_message):
+        with pytest.raises(Exception) as got:
+            GenomeFileUtil(cfg)
+        assert_exception_correct(got.value, ValueError(error_message))
+
     def test_valid_catalog_param_type(self):
         os.environ["KBASE_SECURE_CONFIG_PARAM_MAX_THREADS"] = "10"
         os.environ["KBASE_SECURE_CONFIG_PARAM_THREADS_PER_CPU"] = "2.5"
@@ -35,19 +40,9 @@ class ImplTest(unittest.TestCase):
     def test_invalid_max_threads(self):
         os.environ["KBASE_SECURE_CONFIG_PARAM_MAX_THREADS"] = "10.5"
         os.environ["KBASE_SECURE_CONFIG_PARAM_THREADS_PER_CPU"] = "2.5"
-
-        with pytest.raises(Exception) as got:
-            GenomeFileUtil(self.cfg)
-        assert_exception_correct(
-            got.value, ValueError("MAX_THREADS must be of type int")
-        )
+        self._run_test_fail(self.cfg, "MAX_THREADS must be of type int")
 
     def test_invalid_threads_per_cpu(self):
         os.environ["KBASE_SECURE_CONFIG_PARAM_MAX_THREADS"] = "10"
         os.environ["KBASE_SECURE_CONFIG_PARAM_THREADS_PER_CPU"] = "2.8e"
-
-        with pytest.raises(Exception) as got:
-            GenomeFileUtil(self.cfg)
-        assert_exception_correct(
-            got.value, ValueError("THREADS_PER_CPU must be of type float")
-        )
+        self._run_test_fail(self.cfg, "THREADS_PER_CPU must be of type float")
