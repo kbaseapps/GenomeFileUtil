@@ -2,8 +2,8 @@
 script_dir=$(dirname "$(readlink -f "$0")")
 export KB_DEPLOYMENT_CONFIG=$script_dir/../deploy.cfg
 export KB_AUTH_TOKEN=`cat /kb/module/work/token`
-export PYTHONPATH=$script_dir/../lib:$PATH:$PYTHONPATH
-export PYTHONPATH=$script_dir/../test:$PATH:$PYTHONPATH
+export PYTHONPATH=$script_dir/../lib:$PYTHONPATH
+export PYTHONPATH=$script_dir/../test:$PYTHONPATH
 
 # Set TEST_PATH to run a specific test. Eg: TEST_PATH=test.core.update_taxon_assignments_test
 export TEST_PATH=test.problematic_tests.impl_test

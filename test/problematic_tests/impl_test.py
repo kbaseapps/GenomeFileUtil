@@ -12,7 +12,6 @@ class ImplTest(unittest.TestCase):
         self.cfg["workspace-url"] = "https://ci.kbase.us/services/ws"
         self.cfg["shock-url"] = "https://ci.kbase.us/services/shock-api"
         self.cfg["handle-service-url"] = "https://ci.kbase.us/services/handle_service"
-        # self.cfg["SDK_CALLBACK_URL"] = "http://ip:port"
         self.cfg["scratch"] = "/kb/module/work/tmp"
         self.cfg["srv-wiz-url"] = "https://ci.kbase.us/services/service_wizard"
         self.cfg["auth-service-url"] = "https://ci.kbase.us/services/auth/api/legacy/KBase/Sessions/Login"
