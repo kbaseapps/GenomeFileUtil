@@ -43,16 +43,14 @@ jobs:
       shell: bash
       env:
         KBASE_TEST_TOKEN: ${{ secrets.KBASE_TEST_TOKEN }}
-        # KBASE_TEST_TOKEN2: ${{ secrets.KBASE_TEST_TOKEN2 }}
+        KBASE_TEST_TOKEN2: ${{ secrets.KBASE_TEST_TOKEN2 }}
       run: |
         # Add token to config
-        echo "default test.cfg"
-        cat ./test_local/test.cfg
         sed -ie "s/^test_token=.*$/&$KBASE_TEST_TOKEN/g" ./test_local/test.cfg
+        # Change deployment env from appdev to ci
         sed -ie "s+https://appdev.kbase.us+https://ci.kbase.us+g" ./test_local/test.cfg
-        echo "updated test.cfg"
-        cat ./test_local/test.cfg
-        # echo "test_token2=$KBASE_TEST_TOKEN2" >> ./test_local/test.cfg
+        # Add second user credentials 
+        echo "test_token2=$KBASE_TEST_TOKEN2" >> ./test_local/test.cfg
 
     - name: Run tests
       if: "!contains(github.event.head_commit.message, 'skip ci')"
