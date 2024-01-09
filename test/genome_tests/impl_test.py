@@ -30,10 +30,10 @@ class ImplTest(unittest.TestCase):
         assert_exception_correct(got.value, ValueError(error_message))
 
     def test_valid_catalog_param_type(self):
-        os.environ["KBASE_SECURE_CONFIG_PARAM_MAX_THREADS"] = "10"
+        os.environ["KBASE_SECURE_CONFIG_PARAM_MAX_THREADS"] = "16"
         os.environ["KBASE_SECURE_CONFIG_PARAM_THREADS_PER_CPU"] = "2.5"
         gfu = GenomeFileUtil(self.cfg)
-        self.assertEqual(gfu.max_threads, 10)
+        self.assertEqual(gfu.max_threads, 16)
         self.assertEqual(gfu.threads_per_cpu, 2.5)
 
     def test_valid_default_catalog_param_type(self):
