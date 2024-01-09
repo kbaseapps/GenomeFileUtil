@@ -28,7 +28,7 @@ jobs:
       if: "!contains(github.event.head_commit.message, 'skip ci')"
       shell: bash
       env:
-        KBASE_TEST_TOKEN: ${{ secrets.KBASE_TEST_TOKEN }}
+        KBASE_TEST_TOKEN: ${{ secrets.KBASE_CI_TOKEN }}
       run: |
         # Verify kb_sdk_actions clone worked
         test -f "$HOME/kb_sdk_actions/bin/kb-sdk" && echo "CI files cloned"
@@ -42,8 +42,8 @@ jobs:
       if: "!contains(github.event.head_commit.message, 'skip ci')"
       shell: bash
       env:
-        KBASE_TEST_TOKEN: ${{ secrets.KBASE_TEST_TOKEN }}
-        KBASE_TEST_TOKEN2: ${{ secrets.KBASE_TEST_TOKEN2 }}
+        KBASE_TEST_TOKEN: ${{ secrets.KBASE_CI_TOKEN }}
+        KBASE_TEST_TOKEN2: ${{ secrets.KBASE_CI_TOKEN2 }}
       run: |
         # Add token to config
         sed -ie "s/^test_token=.*$/&$KBASE_TEST_TOKEN/g" ./test_local/test.cfg
