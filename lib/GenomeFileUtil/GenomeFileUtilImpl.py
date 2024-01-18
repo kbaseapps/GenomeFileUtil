@@ -10,7 +10,11 @@ from pprint import pprint
 from GenomeFileUtil.core.FastaGFFToGenome import FastaGFFToGenome
 from GenomeFileUtil.core.GenbankToGenome import GenbankToGenome
 from GenomeFileUtil.core.GenomeFeaturesToFasta import GenomeFeaturesToFasta
-from GenomeFileUtil.core.GenomeInterface import GenomeInterface
+from GenomeFileUtil.core.GenomeInterface import (
+    GenomeInterface,
+    MAX_THREADS_DEFAULT,
+    THREADS_PER_CPU_DEFAULT,
+)
 from GenomeFileUtil.core.GenomeToGFF import GenomeToGFF
 from GenomeFileUtil.core.GenomeToGenbank import GenomeToGenbank
 from installed_clients.AssemblyUtilClient import AssemblyUtil
@@ -32,6 +36,18 @@ class SDKConfig:
         self.re_api_url = config['re-api-url']
         self.raw = config
 
+
+def _validate_catalog_param_type(threads_count, var_name, default_val, expected_type):
+    """Helper function to validate catalog params type"""
+    if threads_count is None:
+        print(f"Cannot retrieve {var_name} from the catalog, set {var_name}={default_val}")
+        return default_val
+    print(f"Successfully retrieved {var_name} from the catalog!")
+    try:
+        threads_count = expected_type(threads_count)
+    except ValueError as e:
+        raise ValueError(f"{var_name} must be of type {expected_type.__name__}") from e
+    return threads_count
 #END_HEADER
 
 
@@ -64,6 +80,15 @@ class GenomeFileUtil:
         self.cfg = SDKConfig(config)
         logging.basicConfig(format='%(created)s %(levelname)s: %(message)s',
                             level=logging.INFO)
+
+        max_threads = os.environ.get("KBASE_SECURE_CONFIG_PARAM_MAX_THREADS")
+        threads_per_cpu = os.environ.get("KBASE_SECURE_CONFIG_PARAM_THREADS_PER_CPU")
+        self.max_threads = _validate_catalog_param_type(
+            max_threads, "MAX_THREADS", MAX_THREADS_DEFAULT, int
+        )
+        self.threads_per_cpu = _validate_catalog_param_type(
+            threads_per_cpu, "THREADS_PER_CPU", THREADS_PER_CPU_DEFAULT, float
+        )
         #END_CONSTRUCTOR
         pass
 
