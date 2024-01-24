@@ -217,7 +217,7 @@ class GenomeInterface:
         ws_id = self._get_int(inputs.pop(_WSID, None), _WSID)
         ws_name = inputs.pop('workspace', None)
         if (bool(ws_id) == bool(ws_name)):  # xnor
-            raise ValueError(f"Exactly one of a {_WSID} or a workspace_name must be provided")
+            raise ValueError(f"Exactly one of a '{_WSID}' or a 'workspace' parameter must be provided")
         if not ws_id:
             print(f"Translating workspace name {ws_name} to a workspace ID. Prefer submitting "
                   + "a workspace ID over a mutable workspace name that may cause race conditions")

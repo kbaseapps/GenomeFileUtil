@@ -163,7 +163,8 @@ class SaveGenomeTest(unittest.TestCase):
         invalidate_params = {'missing_workspace': 'workspace',
                              'name': 'name',
                              'data': 'data'}
-        error_msg = '"workspace" parameter is required, but missing'
+        error_msg = "Exactly one of a 'workspace_id' or " \
+            "a 'workspace' parameter must be provided"
         self.fail_save_one_genome(invalidate_params, error_msg)
 
     def test_one_genome(self):
