@@ -221,7 +221,7 @@ class GenomeInterface:
         if not ws_id:
             print(f"Translating workspace name {ws_name} to a workspace ID. Prefer submitting "
                   + "a workspace ID over a mutable workspace name that may cause race conditions")
-            ws_id = self._dfu.ws_name_to_id(ws_name)
+            ws_id = self.dfu.ws_name_to_id(ws_name)
         mass_params = {_WSID: ws_id, _INPUTS: [inputs]}
         return mass_params
 
