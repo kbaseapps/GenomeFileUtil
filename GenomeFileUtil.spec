@@ -292,6 +292,25 @@ module GenomeFileUtil {
     funcdef save_one_genome(SaveOneGenomeParams params)
                 returns (SaveGenomeResult returnVal) authentication required;
 
+    typedef structure {
+        string name;
+        KBaseGenomes.Genome data;
+        boolean hidden;
+        boolean upgrade;
+    } GenomeInput;
+
+    typedef structure {
+        int workspace_id;
+        list<GenomeInput> inputs;
+    } SaveGenomesParams;
+
+    typedef structure {
+        list<SaveGenomeResult> results;
+    } SaveGenomesResults;
+
+    funcdef save_genomes(SaveGenomesParams params)
+                returns(SaveGenomesResults results) authentication required;
+
     /*
     gff_file - object containing path to gff_file
     ws_ref - input Assembly or Genome reference

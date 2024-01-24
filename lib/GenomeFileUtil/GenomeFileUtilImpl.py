@@ -1166,6 +1166,23 @@ class GenomeFileUtil:
         # return the results
         return [returnVal]
 
+    def save_genomes(self, ctx, params):
+        """This function is the mass function of save_one_genome"""
+        # ctx is the context object
+        # return variables are: results
+        #BEGIN save_genomes
+        results = {
+            "results": GenomeInterface(self.cfg).save_genome_mass(params)
+        }
+        #END save_genomes
+
+        # At some point might do deeper type checking...
+        if not isinstance(results, dict):
+            raise ValueError('Method save_genomes return value ' +
+                             'results is not type dict as required.')
+        # return the results
+        return [results]
+
     def ws_obj_gff_to_genome(self, ctx, params):
         """
         This function takes in a workspace object of type KBaseGenomes.Genome or KBaseGenomeAnnotations.Assembly and a gff file and produces a KBaseGenomes.Genome reanotated according to the the input gff file.
