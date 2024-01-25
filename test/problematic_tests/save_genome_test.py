@@ -91,8 +91,9 @@ class SaveGenomeTest(unittest.TestCase):
 
         suffix = int(time.time() * 1000)
         cls.wsName = "test_SaveGenomeTest_" + str(suffix)
-        cls.wsClient.create_workspace({'workspace': cls.wsName})
-
+        ws_info = cls.wsClient.create_workspace({'workspace': cls.wsName})
+        print("ws_info is: ")
+        print(ws_info)
         cls.nodes_to_delete = []
         cls.prepare_data()
 
