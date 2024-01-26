@@ -28,6 +28,10 @@ from GenomeFileUtil.core.GenomeUtils import (
 MAX_MISC_FEATURE_SIZE = 10000
 MAX_PARENT_LOOKUPS = 5
 
+# catalog params
+MAX_THREADS_DEFAULT = 10
+THREADS_PER_CPU_DEFAULT = 1
+
 
 class GenbankToGenome:
     def __init__(self, config):
