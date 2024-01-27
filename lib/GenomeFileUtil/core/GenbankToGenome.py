@@ -154,29 +154,29 @@ class GenbankToGenome:
             input_directory = self.stage_input(input_params)
 
             # 2) update default params
-            params = {**self.default_params, **params}
-            self.generate_parents = params.get('generate_missing_genes')
-            self.generate_ids = params.get('generate_ids_if_needed')
-            if params.get('genetic_code'):
-                self.code_table = params['genetic_code']
+            input_params = {**self.default_params, **input_params}
+            self.generate_parents = input_params.get('generate_missing_genes')
+            self.generate_ids = input_params.get('generate_ids_if_needed')
+            if input_params.get('genetic_code'):
+                self.code_table = input_params['genetic_code']
 
             # 3) Do the upload
             files = self._find_input_files(input_directory)
             consolidated_file = self._join_files_skip_empty_lines(files)
-            genome = self.parse_genbank(consolidated_file, params)
-            if params.get('genetic_code'):
-                genome["genetic_code"] = params['genetic_code']
+            genome = self.parse_genbank(consolidated_file, input_params)
+            if input_params.get('genetic_code'):
+                genome["genetic_code"] = input_params['genetic_code']
 
-            genome_names.append(params['genome_name'])
+            # 4) clear the temp directory
+            shutil.rmtree(input_directory)
+
             genome_data.append(genome)
-            genome_meta.append(params['metadata'])
+            genome_names.append(input_params['genome_name'])
+            genome_meta.append(input_params['metadata'])
 
         results = self._save_genomes(
             workspace_id, genome_names, genome_data, genome_meta
         )
-
-        # 4) clear the temp directory
-        shutil.rmtree(input_directory)
 
         # 5) return the result
         details = [
