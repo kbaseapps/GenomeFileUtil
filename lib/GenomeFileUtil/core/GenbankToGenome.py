@@ -33,7 +33,6 @@ MAX_THREADS_DEFAULT = 10
 THREADS_PER_CPU_DEFAULT = 1
 
 _WSID = 'workspace_id'
-_WSNAME = 'workspace_name'
 _INPUTS = 'inputs'
 
 
@@ -110,9 +109,7 @@ class GenbankToGenome:
         inputs = dict(params)
         self.validate_params(inputs)
         ws_id = self._get_int(inputs.pop(_WSID, None), _WSID)
-        ws_name = inputs.pop(_WSNAME, None)
-        if (bool(ws_id) == bool(ws_name)):  # xnor
-            raise ValueError(f"Exactly one of a '{_WSID}' or a 'workspace' parameter must be provided")
+        ws_name = inputs.get('workspace_name')
         if not ws_id:
             print(f"Translating workspace name {ws_name} to a workspace ID. Prefer submitting "
                   + "a workspace ID over a mutable workspace name that may cause race conditions")
@@ -208,6 +205,8 @@ class GenbankToGenome:
 
     @staticmethod
     def validate_params(params):
+        if 'workspace_name' not in params:
+            raise ValueError('required "workspace_name" field was not defined')
         if 'genome_name' not in params:
             raise ValueError('required "genome_name" field was not defined')
         if 'file' not in params:
