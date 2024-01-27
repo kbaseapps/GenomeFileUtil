@@ -94,7 +94,7 @@ module GenomeFileUtil {
         list<GenomeSaveResult> results;
     } GenomeSaveResults;
 
-    funcdef genbank_to_genome(GenbanksToGenomesParams params)
+    funcdef genbanks_to_genomes(GenbanksToGenomesParams params)
                 returns (GenomeSaveResults results) authentication required;
 
     /*

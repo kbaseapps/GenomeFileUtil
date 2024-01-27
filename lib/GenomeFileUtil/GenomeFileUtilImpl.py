@@ -92,7 +92,6 @@ class GenomeFileUtil:
         #END_CONSTRUCTOR
         pass
 
-
     def genbank_to_genome(self, ctx, params):
         """
         :param params: instance of type "GenbankToGenomeParams" (genome_name
