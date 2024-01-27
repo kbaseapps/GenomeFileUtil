@@ -108,7 +108,7 @@ class GenbankToGenome:
 
     def _set_up_single_params(self, params):
         inputs = dict(params)
-        self._validate_genome_input_params(inputs)
+        self.validate_params(inputs)
         ws_id = self._get_int(inputs.pop(_WSID, None), _WSID)
         ws_name = inputs.pop(_WSNAME, None)
         if (bool(ws_id) == bool(ws_name)):  # xnor
