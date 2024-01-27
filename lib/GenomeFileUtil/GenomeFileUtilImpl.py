@@ -132,7 +132,7 @@ class GenomeFileUtil:
         pprint(params)
 
         importer = GenbankToGenome(self.cfg)
-        result = importer.refactored_import(ctx, params)
+        result = importer.refactored_import(params)
 
         print('import complete -- result = ')
         pprint(result)
@@ -144,6 +144,29 @@ class GenomeFileUtil:
                              'result is not type dict as required.')
         # return the results
         return [result]
+
+    def genbanks_to_genomes(self, ctx, params):
+        """This is a bulk version of `genbank_to_genome` function"""
+        # ctx is the context object
+        # return variables are: result
+        #BEGIN genbanks_to_genomes
+        print('genbanks_to_genomes -- paramaters = ')
+        pprint(params)
+
+        results = {
+            'results': GenbankToGenome(self.cfg).refactored_import_mass(params)
+        }
+
+        print('import complete -- results = ')
+        pprint(results)
+        #END genbanks_to_genomes
+
+        # At some point might do deeper type checking...
+        if not isinstance(results, dict):
+            raise ValueError('Method genbank_to_genome return value ' +
+                             'result is not type dict as required.')
+        # return the results
+        return [results]
 
     def genome_to_gff(self, ctx, params):
         """

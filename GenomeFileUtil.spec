@@ -65,6 +65,38 @@ module GenomeFileUtil {
     funcdef genbank_to_genome(GenbankToGenomeParams params)
                 returns (GenomeSaveResult result) authentication required;
 
+    typedef structure {
+        File file;
+        string genome_name;
+
+        string source;
+        string taxon_wsname;
+        string taxon_id;
+
+        string release;
+        string generate_ids_if_needed;
+        int    genetic_code;
+        string scientific_name;
+        usermeta metadata;
+        boolean generate_missing_genes;
+        string use_existing_assembly;
+    } GenbankToGenomeInput;
+
+    typedef structure {
+        int workspace_id;
+        list<GenbankToGenomeInput> inputs;
+    } GenbanksToGenomesParams;
+
+    /* Results for the genbanks_to_genomes function.
+        results - the results of the save operation in the same order as the input.
+    */
+    typedef structure {
+        list<GenomeSaveResult> results;
+    } GenomeSaveResults;
+
+    funcdef genbank_to_genome(GenbanksToGenomesParams params)
+                returns (GenomeSaveResults results) authentication required;
+
     /*
         is_gtf - optional flag switching export to GTF format (default is 0,
             which means GFF)

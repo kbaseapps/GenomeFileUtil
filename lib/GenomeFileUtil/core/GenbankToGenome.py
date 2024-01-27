@@ -32,6 +32,14 @@ MAX_PARENT_LOOKUPS = 5
 MAX_THREADS_DEFAULT = 10
 THREADS_PER_CPU_DEFAULT = 1
 
+_WSID = 'workspace_id'
+_WSNAME = 'workspace_name'
+_INPUTS = 'inputs'
+
+
+def _upa(object_info):
+    return f'{object_info[6]}/{object_info[0]}/{object_info[4]}'
+
 
 class GenbankToGenome:
     def __init__(self, config):
@@ -88,53 +96,118 @@ class GenbankToGenome:
     def messages(self):
         return "\n".join(self._messages)
 
-    def refactored_import(self, ctx, params):
-        # 1) validate parameters and extract defaults
-        self.validate_params(params)
+    def refactored_import(self, params):
+        print('validating parameters')
+        mass_params = self._set_up_single_params(params)
+        return self._refactored_import_mass(mass_params)[0]
 
-        # 2) construct the input directory staging area
-        input_directory = self.stage_input(params)
+    def refactored_import_mass(self, params):
+        print('validating parameters')
+        self._validate_mass_params(params)
+        return self._refactored_import_mass(params)
 
-        # 3) update default params
-        self.default_params.update(params)
-        params = self.default_params
-        self.generate_parents = params.get('generate_missing_genes')
-        self.generate_ids = params.get('generate_ids_if_needed')
-        if params.get('genetic_code'):
-            self.code_table = params['genetic_code']
+    def _set_up_single_params(self, params):
+        inputs = dict(params)
+        self._validate_genome_input_params(inputs)
+        ws_id = self._get_int(inputs.pop(_WSID, None), _WSID)
+        ws_name = inputs.pop(_WSNAME, None)
+        if (bool(ws_id) == bool(ws_name)):  # xnor
+            raise ValueError(f"Exactly one of a '{_WSID}' or a 'workspace' parameter must be provided")
+        if not ws_id:
+            print(f"Translating workspace name {ws_name} to a workspace ID. Prefer submitting "
+                  + "a workspace ID over a mutable workspace name that may cause race conditions")
+            ws_id = self.dfu.ws_name_to_id(ws_name)
+        mass_params = {_WSID: ws_id, _INPUTS: [inputs]}
+        return mass_params
 
-        # 4) Do the upload
-        files = self._find_input_files(input_directory)
-        consolidated_file = self._join_files_skip_empty_lines(files)
-        genome = self.parse_genbank(consolidated_file, params)
-        if params.get('genetic_code'):
-            genome["genetic_code"] = params['genetic_code']
+    def _validate_mass_params(self, params):
+        ws_id = self._get_int(params.get(_WSID), _WSID)
+        if not ws_id:
+            raise ValueError(f"{_WSID} is required")
+        inputs = params.get(_INPUTS)
+        if not inputs or type(inputs) != list:
+            raise ValueError(f"{_INPUTS} field is required and must be a non-empty list")
+        for i, inp in enumerate(inputs, start=1):
+            if type(inp) != dict:
+                raise ValueError(f"Entry #{i} in {_INPUTS} field is not a mapping as required")
+            self.validate_params(inp)
 
-        result = self.gi.save_one_genome({
-            'workspace': params['workspace_name'],
-            'name': params['genome_name'],
-            'data': genome,
-            "meta": params['metadata'],
-        })
-        ref = f"{result['info'][6]}/{result['info'][0]}/{result['info'][4]}"
-        logging.info(f"Genome saved to {ref}")
+    def _get_int(self, putative_int, name, minimum=1):
+        if putative_int is not None:
+            if type(putative_int) != int:
+                raise ValueError(f"{name} must be an integer, got: {putative_int}")
+            if putative_int < minimum:
+                raise ValueError(f"{name} must be an integer >= {minimum}")
+        return putative_int
 
-        # 5) clear the temp directory
+    def _refactored_import_mass(self, params):
+
+        workspace_id = params[_WSID]
+        inputs = params[_INPUTS]
+
+        genome_names = []
+        genome_data = []
+        genome_meta = []
+
+        for input_params in inputs:
+            # 1) construct the input directory staging area
+            input_directory = self.stage_input(input_params)
+
+            # 2) update default params
+            params = {**self.default_params, **params}
+            self.generate_parents = params.get('generate_missing_genes')
+            self.generate_ids = params.get('generate_ids_if_needed')
+            if params.get('genetic_code'):
+                self.code_table = params['genetic_code']
+
+            # 3) Do the upload
+            files = self._find_input_files(input_directory)
+            consolidated_file = self._join_files_skip_empty_lines(files)
+            genome = self.parse_genbank(consolidated_file, params)
+            if params.get('genetic_code'):
+                genome["genetic_code"] = params['genetic_code']
+
+            genome_names.append(params['genome_name'])
+            genome_data.append(genome)
+            genome_meta.append(params['metadata'])
+
+        results = self._save_genomes(
+            workspace_id, genome_names, genome_data, genome_meta
+        )
+
+        # 4) clear the temp directory
         shutil.rmtree(input_directory)
 
-        # 6) return the result
-        info = result['info']
-        details = {
-            'genome_ref': ref,
-            'genome_info': info
-        }
-
+        # 5) return the result
+        details = [
+            {'genome_ref': _upa(result["info"]), 'genome_info': result["info"]}
+            for result in results
+        ]
+        for detail in details:
+            logging.info(f"Genome saved to {detail['genome_ref']}")
         return details
+
+    def _save_genomes(
+        self,
+        workspace_id,
+        genome_names,
+        genome_data,
+        genome_meta
+    ):
+        results = [
+            self.gi.save_one_genome(
+                {
+                    'workspace': workspace_id,
+                    'name': name,
+                    'data': data,
+                    "meta": meta,
+                }
+            ) for name, data, meta in zip(genome_names, genome_data, genome_meta)
+        ]
+        return results
 
     @staticmethod
     def validate_params(params):
-        if 'workspace_name' not in params:
-            raise ValueError('required "workspace_name" field was not defined')
         if 'genome_name' not in params:
             raise ValueError('required "genome_name" field was not defined')
         if 'file' not in params:
