@@ -109,7 +109,9 @@ class GenbankToGenome:
         inputs = dict(params)
         self.validate_params(inputs)
         ws_id = self._get_int(inputs.pop(_WSID, None), _WSID)
-        ws_name = inputs.get('workspace_name')
+        ws_name = inputs.pop('workspace_name', None)
+        if (bool(ws_id) == bool(ws_name)):  # xnor
+            raise ValueError(f"Exactly one of a '{_WSID}' or a 'workspace' parameter must be provided")
         if not ws_id:
             print(f"Translating workspace name {ws_name} to a workspace ID. Prefer submitting "
                   + "a workspace ID over a mutable workspace name that may cause race conditions")
@@ -160,7 +162,9 @@ class GenbankToGenome:
             # 3) Do the upload
             files = self._find_input_files(input_directory)
             consolidated_file = self._join_files_skip_empty_lines(files)
-            genome = self.parse_genbank(consolidated_file, input_params)
+            genome = self.parse_genbank(
+                workspace_id, consolidated_file, input_params
+            )
             if input_params.get('genetic_code'):
                 genome["genetic_code"] = input_params['genetic_code']
 
@@ -205,8 +209,6 @@ class GenbankToGenome:
 
     @staticmethod
     def validate_params(params):
-        if 'workspace_name' not in params:
-            raise ValueError('required "workspace_name" field was not defined')
         if 'genome_name' not in params:
             raise ValueError('required "genome_name" field was not defined')
         if 'file' not in params:
@@ -282,7 +284,7 @@ class GenbankToGenome:
 
         return input_directory
 
-    def parse_genbank(self, file_path, params):
+    def parse_genbank(self, workspace_id, file_path, params):
         logging.info("Saving original file to shock")
         shock_res = self.dfu.file_to_shock({
             'file_path': file_path,
@@ -290,7 +292,7 @@ class GenbankToGenome:
             'pack': 'gzip',
         })
         # Write and save assembly file
-        assembly_ref = self._save_assembly(file_path, params)
+        assembly_ref = self._save_assembly(workspace_id, file_path, params)
         assembly_data = self.dfu.get_objects(
             {'object_refs': [assembly_ref],
              'ignore_errors': 0})['data'][0]['data']
@@ -395,7 +397,7 @@ class GenbankToGenome:
         logging.info(f"Feature Counts: {genome['feature_counts']}")
         return genome
 
-    def _save_assembly(self, genbank_file, params):
+    def _save_assembly(self, workspace_id, genbank_file, params):
         """Convert genbank file to fasta and sve as assembly"""
         contigs = Bio.SeqIO.parse(genbank_file, "genbank")
         assembly_id = f"{params['genome_name']}_assembly"
@@ -443,7 +445,7 @@ class GenbankToGenome:
         Bio.SeqIO.write(out_contigs, fasta_file, "fasta")
         assembly_ref = self.aUtil.save_assembly_from_fasta(
             {'file': {'path': fasta_file},
-             'workspace_name': params['workspace_name'],
+             'workspace_id': workspace_id,
              'assembly_name': assembly_id,
              'type': params.get('genome_type', 'isolate'),
              'contig_info': extra_info})
