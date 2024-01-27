@@ -32,6 +32,9 @@ class GenomeFileUtilTest(unittest.TestCase):
             cls.cfg[nameval[0]] = nameval[1]
         cls.wsURL = cls.cfg['workspace-url']
         cls.wsClient = workspaceService(cls.wsURL, token=token)
+        suffix = int(time.time() * 1000)
+        cls.wsName = "test_GenomeFileUtil_" + str(suffix)
+        cls.wsID = cls.wsClient.create_workspace({'workspace': cls.wsName})[0]
         cls.serviceImpl = GenomeFileUtil(cls.cfg)
 
     @classmethod
@@ -40,17 +43,11 @@ class GenomeFileUtilTest(unittest.TestCase):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print('Test workspace was deleted')
 
-    def getWsClient(self):
-        return self.__class__.wsClient
+    def getWsID(self):
+        return self.__class__.wsID
 
     def getWsName(self):
-        if hasattr(self.__class__, 'wsName'):
-            return self.__class__.wsName
-        suffix = int(time.time() * 1000)
-        wsName = "test_GenomeFileUtil_" + str(suffix)
-        self.getWsClient().create_workspace({'workspace': wsName})
-        self.__class__.wsName = wsName
-        return wsName
+        return self.__class__.wsName
 
     def getImpl(self):
         return self.__class__.serviceImpl
@@ -167,3 +164,28 @@ class GenomeFileUtilTest(unittest.TestCase):
         self.assertIsNotNone(result['genome_ref'])
         self.assertTrue(int(
             result['genome_info'][10]['Number of Protein Encoding Genes']) > 0)
+
+    def test_genbanks_to_genomes(self):
+        genome_name1 = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
+        genome_name2 = "GCF_000970185.1_ASM97018v1_genomic.gbff.gz"
+        results = self.getImpl().genbanks_to_genomes(
+            self.getContext(),
+            {
+                "workspace_id": self.getWsID(),
+                "inputs": [
+                    {
+                        "file": {"path": f"data/gbff/{genome_name1}"},
+                        "genome_name": genome_name1,
+                        'generate_ids_if_needed': 1
+                    },
+                    {
+                        "file": {"path": f"data/gbff/{genome_name2}"},
+                        "genome_name": genome_name2,
+                        'generate_ids_if_needed': 1
+                    },
+                ]
+            }
+        )[0]['results']
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0]['genome_info'][1], genome_name1)
+        self.assertEqual(results[1]['genome_info'][1], genome_name2)
