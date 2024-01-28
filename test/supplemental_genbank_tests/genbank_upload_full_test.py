@@ -167,7 +167,7 @@ class GenomeFileUtilTest(unittest.TestCase):
 
     def test_genbanks_to_genomes(self):
         genome_name1 = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
-        # genome_name2 = "GCF_000970185.1_ASM97018v1_genomic.gbff.gz"
+        genome_name2 = "GCF_000970185.1_ASM97018v1_genomic.gbff.gz"
         results = self.getImpl().genbanks_to_genomes(
             self.getContext(),
             {
@@ -176,14 +176,14 @@ class GenomeFileUtilTest(unittest.TestCase):
                     {
                         "file": {"path": f"data/gbff/{genome_name1}"},
                         "genome_name": genome_name1
+                    },
+                    {
+                        "file": {"path": f"data/gbff/{genome_name2}"},
+                        "genome_name": genome_name2
                     }
-                    # {
-                    #     "file": {"path": f"data/gbff/{genome_name2}"},
-                    #     "genome_name": genome_name2
-                    # },
                 ]
             }
         )[0]['results']
-        self.assertEqual(len(results), 1)
+        self.assertEqual(len(results), 2)
         self.assertEqual(results[0]['genome_info'][1], genome_name1)
-        # self.assertEqual(results[1]['genome_info'][1], genome_name2)
+        self.assertEqual(results[1]['genome_info'][1], genome_name2)

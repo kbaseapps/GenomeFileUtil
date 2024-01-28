@@ -47,11 +47,15 @@ class GenbankToGenome:
         self.dfu = DataFileUtil(config.callbackURL)
         self.aUtil = AssemblyUtil(config.callbackURL)
         self.ws = Workspace(config.workspaceURL)
+        self.re_api_url = config.re_api_url
+        yml_text = open('/kb/module/kbase.yml').read()
+        self.version = re.search("module-version:\n\W+(.+)\n", yml_text).group(1)
+        self.reset_attributes()
+
+    def reset_attributes(self):
         self._messages = []
         self.time_string = str(datetime.datetime.fromtimestamp(
             time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
-        yml_text = open('/kb/module/kbase.yml').read()
-        self.version = re.search("module-version:\n\W+(.+)\n", yml_text).group(1)
         self.generate_parents = False
         self.generate_ids = False
         self.genes = OrderedDict()
@@ -73,7 +77,6 @@ class GenbankToGenome:
         self.excluded_features = ('source', 'exon', 'fasta_record')
         self.ont_mappings = load_ontology_mappings('/kb/module/data')
         self.code_table = 11
-        self.re_api_url = config.re_api_url
         # dict with feature 'id's that have been used more than once.
         self.used_twice_identifiers = {}
         self.default_params = {
@@ -168,8 +171,9 @@ class GenbankToGenome:
             if input_params.get('genetic_code'):
                 genome["genetic_code"] = input_params['genetic_code']
 
-            # 4) clear the temp directory
+            # 4) clear the temp directory and reset attributes
             shutil.rmtree(input_directory)
+            self.reset_attributes()
 
             genome_data.append(genome)
             genome_names.append(input_params['genome_name'])
