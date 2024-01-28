@@ -176,12 +176,10 @@ class GenomeFileUtilTest(unittest.TestCase):
                     {
                         "file": {"path": f"data/gbff/{genome_name1}"},
                         "genome_name": genome_name1,
-                        'generate_ids_if_needed': 1
                     },
                     {
                         "file": {"path": f"data/gbff/{genome_name2}"},
                         "genome_name": genome_name2,
-                        'generate_ids_if_needed': 1
                     },
                 ]
             }
