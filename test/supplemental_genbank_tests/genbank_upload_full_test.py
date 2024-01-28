@@ -242,7 +242,10 @@ class GenomeFileUtilTest(unittest.TestCase):
             params, "inputs field is required and must be a non-empty list"
         )
 
-        params = {"inputs": [["data/gbff/genome_name", "genome_name"]]}
+        params = {
+            "workspace_id": self.getWsID(),
+            "inputs": [["genome_file_path", "genome_name"]]
+        }
         self._run_test_fail(
             params, "Entry #1 in inputs field is not a mapping as required"
         )
