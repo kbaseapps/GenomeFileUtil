@@ -145,7 +145,38 @@ class GenomeFileUtil:
         return [result]
 
     def genbanks_to_genomes(self, ctx, params):
-        """This is a bulk version of `genbank_to_genome` function"""
+        """
+        :param params: instance of type "GenbanksToGenomesParams" -> structure:
+           parameter "workspace_id" of Long, parameter "inputs" of list of
+           type "GenbankToGenomeInput" (genome_name - becomes the name of the
+           object source - Source of the file typically something like RefSeq
+           or Ensembl taxon_ws_name - where the reference taxons are :
+           ReferenceTaxons taxon_id - if defined, will try to link the Genome
+           to the specified taxonomy id in lieu of performing the lookup
+           during upload release - Release or version number of the data per
+           example Ensembl has numbered releases of all their data: Release 31
+           generate_ids_if_needed - If field used for feature id is not there,
+           generate ids (default behavior is raising an exception) genetic_code
+           - Genetic code of organism. Overwrites determined GC from taxon
+           object scientific_name - will be used to set the scientific name of
+           the genome and link to a taxon generate_missing_genes - If the file
+           has CDS or mRNA with no corresponding gene, generate a spoofed gene.
+           use_existing_assembly - Supply an existing assembly reference) ->
+           structure: parameter "file" of type "File" -> structure: parameter
+           "path" of String, parameter "shock_id" of String, parameter
+           "ftp_url" of String, parameter "genome_name" of String, parameter
+           "source" of String, parameter "taxon_wsname" of String, parameter
+           "taxon_id" of String, parameter "release" of String, parameter
+           "generate_ids_if_needed" of String, parameter "genetic_code" of
+           Long, parameter "scientific_name" of String, parameter "metadata"
+           of type "usermeta" -> mapping from String to String, parameter
+           "generate_missing_genes" of type "boolean" (A boolean - 0 for false,
+           1 for true. @range (0, 1)), parameter "use_existing_assembly" of
+           String
+        :returns: instance of type "GenomeSaveResults" -> structure: parameter
+           "results" of list of type "GenomeSaveResult" -> structure: parameter
+           "genome_ref" of String
+        """
         # ctx is the context object
         # return variables are: result
         #BEGIN genbanks_to_genomes
