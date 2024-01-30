@@ -127,11 +127,11 @@ class GenomeFileUtil:
         # ctx is the context object
         # return variables are: result
         #BEGIN genbank_to_genome
-        print('genbank_to_genome -- paramaters = ')
+        print('genbank_to_genome -- parameters = ')
         pprint(params)
 
         importer = GenbankToGenome(self.cfg)
-        result = importer.refactored_import(params)
+        result = importer.import_genbank(params)
 
         print('import complete -- result = ')
         pprint(result)
@@ -180,15 +180,9 @@ class GenomeFileUtil:
         # ctx is the context object
         # return variables are: result
         #BEGIN genbanks_to_genomes
-        print('genbanks_to_genomes -- paramaters = ')
-        pprint(params)
-
         results = {
-            'results': GenbankToGenome(self.cfg).refactored_import_mass(params)
+            'results': GenbankToGenome(self.cfg).import_genbank_mass(params)
         }
-
-        print('import complete -- results = ')
-        pprint(results)
         #END genbanks_to_genomes
 
         # At some point might do deeper type checking...
@@ -217,7 +211,7 @@ class GenomeFileUtil:
         # ctx is the context object
         # return variables are: result
         #BEGIN genome_to_gff
-        print('genome_to_gff -- paramaters = ')
+        print('genome_to_gff -- parameters = ')
         pprint(params)
 
         exporter = GenomeToGFF(self.cfg)
@@ -286,7 +280,7 @@ class GenomeFileUtil:
         # ctx is the context object
         # return variables are: result
         #BEGIN genome_to_genbank
-        print('genome_to_genbank -- paramaters = ')
+        print('genome_to_genbank -- parameters = ')
         pprint(params)
 
         exporter = GenomeToGenbank(self.cfg)
@@ -381,7 +375,7 @@ class GenomeFileUtil:
         # ctx is the context object
         # return variables are: output
         #BEGIN export_genome_as_genbank
-        print('export_genome_as_genbank -- paramaters = ')
+        print('export_genome_as_genbank -- parameters = ')
 
         # validate parameters
         if 'input_ref' not in params:
@@ -525,7 +519,7 @@ class GenomeFileUtil:
         # ctx is the context object
         # return variables are: output
         #BEGIN export_genome_features_protein_to_fasta
-        print('export_genome_features_protein_to_fasta -- paramaters = ')
+        print('export_genome_features_protein_to_fasta -- parameters = ')
 
         # validate parameters
         if 'input_ref' not in params:

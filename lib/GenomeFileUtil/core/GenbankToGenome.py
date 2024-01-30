@@ -98,15 +98,15 @@ class GenbankToGenome:
     def messages(self):
         return "\n".join(self._messages)
 
-    def refactored_import(self, params):
+    def import_genbank(self, params):
         print('validating parameters')
         mass_params = self._set_up_single_params(params)
-        return self._refactored_import_mass(mass_params)[0]
+        return self._import_genbank_mass(mass_params)[0]
 
-    def refactored_import_mass(self, params):
+    def import_genbank_mass(self, params):
         print('validating parameters')
         self._validate_mass_params(params)
-        return self._refactored_import_mass(params)
+        return self._import_genbank_mass(params)
 
     def _set_up_single_params(self, params):
         inputs = dict(params)
@@ -142,7 +142,7 @@ class GenbankToGenome:
                 raise ValueError(f"{name} must be an integer >= {minimum}")
         return putative_int
 
-    def _refactored_import_mass(self, params):
+    def _import_genbank_mass(self, params):
 
         workspace_id = params[_WSID]
         inputs = params[_INPUTS]
