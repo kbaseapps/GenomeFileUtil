@@ -40,7 +40,7 @@ def _upa(object_info):
     return f'{object_info[6]}/{object_info[0]}/{object_info[4]}'
 
 
-class Genome:
+class _Genome:
     def __init__(self, cfg):
         self.time_string = str(datetime.datetime.fromtimestamp(
             time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
@@ -149,7 +149,7 @@ class GenbankToGenome:
 
         for input_params in inputs:
 
-            genome_obj = Genome(self.cfg)
+            genome_obj = _Genome(self.cfg)
 
             # 1) construct the input directory staging area
             input_directory = self.stage_input(input_params)
