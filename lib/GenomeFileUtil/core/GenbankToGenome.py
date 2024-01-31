@@ -40,20 +40,8 @@ def _upa(object_info):
     return f'{object_info[6]}/{object_info[0]}/{object_info[4]}'
 
 
-class GenbankToGenome:
-    def __init__(self, config):
-        self.cfg = config
-        self.gi = GenomeInterface(config)
-        self.dfu = DataFileUtil(config.callbackURL)
-        self.aUtil = AssemblyUtil(config.callbackURL)
-        self.ws = Workspace(config.workspaceURL)
-        self.re_api_url = config.re_api_url
-        yml_text = open('/kb/module/kbase.yml').read()
-        self.version = re.search("module-version:\n\W+(.+)\n", yml_text).group(1)
-        self.reset_attributes()
-
-    def reset_attributes(self):
-        self._messages = []
+class Genome:
+    def __init__(self, cfg):
         self.time_string = str(datetime.datetime.fromtimestamp(
             time.time()).strftime('%Y_%m_%d_%H_%M_%S'))
         self.generate_parents = False
@@ -81,12 +69,12 @@ class GenbankToGenome:
         self.used_twice_identifiers = {}
         self.default_params = {
             'source': 'Genbank',
-            'taxon_wsname': self.cfg.raw['taxon-workspace-name'],
-            'taxon_lookup_obj_name': self.cfg.raw['taxon-lookup-object-name'],
+            'taxon_wsname': cfg.raw['taxon-workspace-name'],
+            'taxon_lookup_obj_name': cfg.raw['taxon-lookup-object-name'],
 
-            'ontology_wsname': self.cfg.raw['ontology-workspace-name'],
-            'ontology_GO_obj_name': self.cfg.raw['ontology-gene-ontology-obj-name'],
-            'ontology_PO_obj_name': self.cfg.raw['ontology-plant-ontology-obj-name'],
+            'ontology_wsname': cfg.raw['ontology-workspace-name'],
+            'ontology_GO_obj_name': cfg.raw['ontology-gene-ontology-obj-name'],
+            'ontology_PO_obj_name': cfg.raw['ontology-plant-ontology-obj-name'],
 
             'release': None,
             'genetic_code': 11,
@@ -94,9 +82,17 @@ class GenbankToGenome:
             'metadata': {}
         }
 
-    @property
-    def messages(self):
-        return "\n".join(self._messages)
+
+class GenbankToGenome:
+    def __init__(self, config):
+        self.cfg = config
+        self.gi = GenomeInterface(config)
+        self.dfu = DataFileUtil(config.callbackURL)
+        self.aUtil = AssemblyUtil(config.callbackURL)
+        self.ws = Workspace(config.workspaceURL)
+        self.re_api_url = config.re_api_url
+        yml_text = open('/kb/module/kbase.yml').read()
+        self.version = re.search("module-version:\n\W+(.+)\n", yml_text).group(1)
 
     def import_genbank(self, params):
         print('validating parameters')
@@ -152,28 +148,30 @@ class GenbankToGenome:
         genome_meta = []
 
         for input_params in inputs:
+
+            genome_obj = Genome(self.cfg)
+
             # 1) construct the input directory staging area
             input_directory = self.stage_input(input_params)
 
             # 2) update default params
-            input_params = {**self.default_params, **input_params}
-            self.generate_parents = input_params.get('generate_missing_genes')
-            self.generate_ids = input_params.get('generate_ids_if_needed')
+            input_params = {**genome_obj.default_params, **input_params}
+            genome_obj.generate_parents = input_params.get('generate_missing_genes')
+            genome_obj.generate_ids = input_params.get('generate_ids_if_needed')
             if input_params.get('genetic_code'):
-                self.code_table = input_params['genetic_code']
+                genome_obj.code_table = input_params['genetic_code']
 
             # 3) Do the upload
             files = self._find_input_files(input_directory)
             consolidated_file = self._join_files_skip_empty_lines(files)
             genome = self.parse_genbank(
-                workspace_id, consolidated_file, input_params
+                workspace_id, consolidated_file, input_params, genome_obj
             )
             if input_params.get('genetic_code'):
                 genome["genetic_code"] = input_params['genetic_code']
 
-            # 4) clear the temp directory and reset attributes
+            # 4) clear the temp directory
             shutil.rmtree(input_directory)
-            self.reset_attributes()
 
             genome_data.append(genome)
             genome_names.append(input_params['genome_name'])
@@ -288,7 +286,7 @@ class GenbankToGenome:
 
         return input_directory
 
-    def parse_genbank(self, workspace_id, file_path, params):
+    def parse_genbank(self, workspace_id, file_path, params, genome_obj):
         logging.info("Saving original file to shock")
         shock_res = self.dfu.file_to_shock({
             'file_path': file_path,
@@ -296,7 +294,9 @@ class GenbankToGenome:
             'pack': 'gzip',
         })
         # Write and save assembly file
-        assembly_ref = self._save_assembly(workspace_id, file_path, params)
+        assembly_ref = self._save_assembly(
+            workspace_id, file_path, params, genome_obj
+        )
         assembly_data = self.dfu.get_objects(
             {'object_refs': [assembly_ref],
              'ignore_errors': 0})['data'][0]['data']
@@ -346,13 +346,13 @@ class GenbankToGenome:
                     genome['scientific_name'] = params['scientific_name']
                 else:
                     genome['scientific_name'] = organism
-                self.code_table = genome['genetic_code']
+                genome_obj.code_table = genome['genetic_code']
                 genome["molecule_type"] = r_annot.get('molecule_type', 'DNA')
                 genome['notes'] = r_annot.get('comment', "").replace('\\n', '\n')
 
-            self._parse_features(record, genome['source'])
+            self._parse_features(record, genome['source'], genome_obj)
 
-        genome.update(self.get_feature_lists())
+        genome.update(self.get_feature_lists(genome_obj))
 
         genome['num_contigs'] = len(genome['contig_ids'])
         # add dates
@@ -364,44 +364,51 @@ class GenbankToGenome:
                 genome['external_source_origination_date'] += " _ " + \
                     time.strftime("%d-%b-%Y", dates[-1])
 
-        if self.ontologies_present:
-            genome['ontologies_present'] = dict(self.ontologies_present)
-            genome["ontology_events"] = self.ontology_events
-        genome['feature_counts'] = dict(self.feature_counts)
+        if genome_obj.ontologies_present:
+            genome['ontologies_present'] = dict(genome_obj.ontologies_present)
+            genome["ontology_events"] = genome_obj.ontology_events
+        genome['feature_counts'] = dict(genome_obj.feature_counts)
         # can't serialize a set
         genome['publications'] = list(genome['publications'])
 
-        if len(genome['cdss']) and (self.defects['cds_seq_not_matching'] /
+        if len(genome['cdss']) and (genome_obj.defects['cds_seq_not_matching'] /
                                     float(len(genome['cdss'])) > 0.02):
-            self.genome_warnings.append(warnings["genome_inc_translation"].format(
-                self.defects['cds_seq_not_matching'], len(genome['cdss'])))
-            self.genome_suspect = 1
+            genome_obj.genome_warnings.append(
+                warnings["genome_inc_translation"].format(
+                    genome_obj.defects['cds_seq_not_matching'], len(genome['cdss'])
+                )
+            )
+            genome_obj.genome_suspect = 1
 
-        if self.defects['bad_parent_loc']:
-            self.genome_warnings.append(
-                f"There were {self.defects['bad_parent_loc']} parent/child "
+        if genome_obj.defects['bad_parent_loc']:
+            genome_obj.genome_warnings.append(
+                f"There were {genome_obj.defects['bad_parent_loc']} parent/child "
                 "relationships that were not able to be determined. Some of "
                 "these may have splice variants that may be valid relationships."
             )
 
-        if self.defects['spoofed_genes']:
-            self.genome_warnings.append(warnings['spoofed_genome'].format(
-                self.defects['spoofed_genes']))
+        if genome_obj.defects['spoofed_genes']:
+            genome_obj.genome_warnings.append(
+                warnings['spoofed_genome'].format(genome_obj.defects['spoofed_genes'])
+            )
             genome['suspect'] = 1
 
-        if self.defects['not_trans_spliced']:
-            self.genome_warnings.append(warnings['genome_not_trans_spliced']
-                                        .format(self.defects['not_trans_spliced']))
+        if genome_obj.defects['not_trans_spliced']:
+            genome_obj.genome_warnings.append(
+                warnings['genome_not_trans_spliced'].format(
+                    genome_obj.defects['not_trans_spliced']
+                )
+            )
             genome['suspect'] = 1
 
-        if self.genome_warnings:
-            genome['warnings'] = self.genome_warnings
-        if self.genome_suspect:
+        if genome_obj.genome_warnings:
+            genome['warnings'] = genome_obj.genome_warnings
+        if genome_obj.genome_suspect:
             genome['suspect'] = 1
         logging.info(f"Feature Counts: {genome['feature_counts']}")
         return genome
 
-    def _save_assembly(self, workspace_id, genbank_file, params):
+    def _save_assembly(self, workspace_id, genbank_file, params, genome_obj):
         """Convert genbank file to fasta and sve as assembly"""
         contigs = Bio.SeqIO.parse(genbank_file, "genbank")
         assembly_id = f"{params['genome_name']}_assembly"
@@ -412,11 +419,11 @@ class GenbankToGenome:
         for in_contig in contigs:
             if in_contig.annotations.get('topology', "") == 'circular':
                 extra_info[in_contig.id]['is_circ'] = 1
-                self.circ_contigs.add(in_contig.id)
+                genome_obj.circ_contigs.add(in_contig.id)
             elif in_contig.annotations.get('topology', "") == 'linear':
                 extra_info[in_contig.id]['is_circ'] = 0
             out_contigs.append(in_contig)
-            self.contig_seq[in_contig.id] = in_contig.seq.upper()
+            genome_obj.contig_seq[in_contig.id] = in_contig.seq.upper()
 
         assembly_ref = params.get("use_existing_assembly")
         if assembly_ref:
@@ -430,9 +437,9 @@ class GenbankToGenome:
                 raise ValueError(f"{assembly_ref} is not a reference to an assembly")
             unmatched_ids = list()
             unmatched_ids_md5s = list()
-            for current_contig in self.contig_seq.keys():
+            for current_contig in genome_obj.contig_seq.keys():
                 current_contig_md5 = hashlib.md5(
-                    str(self.contig_seq[current_contig]).encode('utf8')
+                    str(genome_obj.contig_seq[current_contig]).encode('utf8')
                 ).hexdigest()
                 if current_contig in ret['data']['contigs']:
                     if current_contig_md5 != ret['data']['contigs'][current_contig]['md5']:
@@ -531,7 +538,7 @@ class GenbankToGenome:
         logging.info(f"Parsed {len(pub_list)} publication records")
         return set(pub_list)
 
-    def _get_id(self, feat, tags=None):
+    def _get_id(self, feat, genome_obj, tags=None):
         """Assign a id to a feature based on the first tag that exists"""
         _id = ""
         if not tags:
@@ -543,19 +550,19 @@ class GenbankToGenome:
 
         if not _id:
             if feat.type == 'gene':
-                if not self.generate_ids:
+                if not genome_obj.generate_ids:
                     raise ValueError(f"Unable to find a valid id for gene "
                                      f"among these tags: {', '.join(tags)}. Correct the "
                                      f"file or rerun with generate_ids\n {feat}")
-                self.orphan_types['gene'] += 1
-                _id = f"gene_{self.orphan_types['gene']}"
+                genome_obj.orphan_types['gene'] += 1
+                _id = f"gene_{genome_obj.orphan_types['gene']}"
             if 'rna' in feat.type.lower() or feat.type in {'CDS', 'sig_peptide',
                                                            'five_prime_UTR', 'three_prime_UTR'}:
-                _id = f"gene_{self.orphan_types['gene']}"
+                _id = f"gene_{genome_obj.orphan_types['gene']}"
 
         return _id
 
-    def _parse_features(self, record, source):
+    def _parse_features(self, record, source, genome_obj):
         def _location(feat):
             """Convert to KBase style location objects"""
             strand_trans = ("", "+", "-")
@@ -585,27 +592,29 @@ class GenbankToGenome:
                     reverse=(in_feature.location.strand == -1)):
                 return
 
-            if record.id in self.circ_contigs and \
+            if record.id in genome_obj.circ_contigs and \
                     in_feature.location.start == 0 \
                     and in_feature.location.end == len(record):
-                self.features_spaning_zero.add(out_feat['id'])
+                genome_obj.features_spaning_zero.add(out_feat['id'])
                 return
 
-            if parent and parent['id'] in self.features_spaning_zero:
+            if parent and parent['id'] in genome_obj.features_spaning_zero:
                 return
 
             _warn(warnings['not_trans_spliced'])
-            self.defects['not_trans_spliced'] += 1
+            genome_obj.defects['not_trans_spliced'] += 1
 
         for in_feature in record.features:
-            if in_feature.type in self.excluded_features:
-                self.skiped_features[in_feature.type] += 1
+            if in_feature.type in genome_obj.excluded_features:
+                genome_obj.skiped_features[in_feature.type] += 1
                 continue
-            feat_seq = self._get_seq(in_feature, record.id)
+            feat_seq = self._get_seq(in_feature, record.id, genome_obj)
             if source == "Ensembl":
-                _id = self._get_id(in_feature, ['gene', 'locus_tag'])
+                _id = self._get_id(
+                    in_feature, genome_obj, ['gene', 'locus_tag']
+                )
             else:
-                _id = self._get_id(in_feature)
+                _id = self._get_id(in_feature, genome_obj)
 
             # The following is common to all the feature types
             out_feat = {
@@ -621,9 +630,9 @@ class GenbankToGenome:
             # validate input feature
             # note that end is the larger number regardless of strand
             if int(in_feature.location.end) > len(record):
-                self.genome_warnings.append(
+                genome_obj.genome_warnings.append(
                     warnings["coordinates_off_end"].format(out_feat['id']))
-                self.genome_suspect = 1
+                genome_obj.genome_suspect = 1
                 continue
 
             for piece in in_feature.location.parts:
@@ -631,7 +640,7 @@ class GenbankToGenome:
                         or not isinstance(piece.end, ExactPosition):
                     _warn(warnings["non_exact_coordinates"])
 
-            self.feature_counts[in_feature.type] += 1
+            genome_obj.feature_counts[in_feature.type] += 1
 
             # add optional fields
             if 'note' in in_feature.qualifiers:
@@ -639,7 +648,7 @@ class GenbankToGenome:
 
             out_feat.update(self._get_aliases_flags_functions(in_feature))
 
-            ont, db_xrefs = self._get_ontology_db_xrefs(in_feature)
+            ont, db_xrefs = self._get_ontology_db_xrefs(in_feature, genome_obj)
             if ont:
                 out_feat['ontology_terms'] = ont
             if db_xrefs:
@@ -649,25 +658,31 @@ class GenbankToGenome:
                 out_feat['inference_data'] = parse_inferences(
                     in_feature.qualifiers['inference'])
 
-            _check_suspect_location(self.genes.get(_id))
+            _check_suspect_location(genome_obj.genes.get(_id))
 
             # add type specific features
             if in_feature.type == 'CDS':
-                self.process_cds(_id, feat_seq, in_feature, out_feat)
+                self.process_cds(
+                    _id, feat_seq, in_feature, out_feat, genome_obj
+                )
 
             elif in_feature.type == 'gene':
-                self.process_gene(_id, out_feat)
+                self.process_gene(_id, out_feat, genome_obj)
 
             elif in_feature.type == 'mRNA':
-                self.process_mrna(_id, out_feat)
+                self.process_mrna(_id, out_feat, genome_obj)
 
             else:
-                self.noncoding.append(self.process_noncoding(_id, in_feature.type, out_feat))
+                genome_obj.noncoding.append(
+                    self.process_noncoding(
+                        _id, in_feature.type, out_feat, genome_obj
+                    )
+                )
 
-    def get_feature_lists(self):
+    def get_feature_lists(self, genome_obj):
         """sort genes into their final arrays"""
         coding = []
-        for g in self.genes.values():
+        for g in genome_obj.genes.values():
             if len(g['cdss']):
                 if g['mrnas'] and len(g['mrnas']) != len(g['cdss']):
                     msg = "The length of the mrna and cdss arrays are not equal"
@@ -681,17 +696,21 @@ class GenbankToGenome:
                     del g['mrnas']
                 del g['type']
                 coding.append(g)
-                self.feature_counts["protein_encoding_gene"] += 1
+                genome_obj.feature_counts["protein_encoding_gene"] += 1
             else:
                 del g['mrnas'], g['cdss']
-                self.noncoding.append(g)
-                self.feature_counts["non_coding_genes"] += 1
+                genome_obj.noncoding.append(g)
+                genome_obj.feature_counts["non_coding_genes"] += 1
 
-        self.feature_counts["non_coding_features"] = len(self.noncoding)
-        return {'features': coding, 'non_coding_features': self.noncoding,
-                'cdss': list(self.cdss.values()), 'mrnas': list(self.mrnas.values())}
+        genome_obj.feature_counts["non_coding_features"] = len(genome_obj.noncoding)
+        return {
+            'features': coding,
+            'non_coding_features': genome_obj.noncoding,
+            'cdss': list(genome_obj.cdss.values()),
+            'mrnas': list(genome_obj.mrnas.values()),
+        }
 
-    def _get_seq(self, feat, contig):
+    def _get_seq(self, feat, contig, genome_obj):
         """Extract the DNA sequence for a feature"""
         seq = []
         for part in feat.location.parts:
@@ -703,67 +722,67 @@ class GenbankToGenome:
                 part_contig = contig
 
             if strand >= 0:
-                seq.append(str(self.contig_seq[part_contig]
+                seq.append(str(genome_obj.contig_seq[part_contig]
                                [part.start:part.end]))
             else:
-                seq.append(str(self.contig_seq[part_contig]
+                seq.append(str(genome_obj.contig_seq[part_contig]
                                [part.start:part.end].reverse_complement()))
         return "".join(seq)
 
-    def _create_ontology_event(self, ontology_type):
+    def _create_ontology_event(self, ontology_type, genome_obj):
         """Creates the ontology_event if necessary
         Returns the index of the ontology event back."""
-        if ontology_type not in self.ont_mappings:
+        if ontology_type not in genome_obj.ont_mappings:
             raise ValueError(f"{ontology_type} is not a supported ontology")
 
-        if "event_index" not in self.ont_mappings[ontology_type]:
-            self.ont_mappings[ontology_type]['event_index'] = len(self.ontology_events)
+        if "event_index" not in genome_obj.ont_mappings[ontology_type]:
+            genome_obj.ont_mappings[ontology_type]['event_index'] = len(genome_obj.ontology_events)
             if ontology_type == "GO":
                 ontology_ref = "KBaseOntology/gene_ontology"
             elif ontology_type == "PO":
                 ontology_ref = "KBaseOntology/plant_ontology"
             else:
                 ontology_ref = f"KBaseOntology/{ontology_type.lower()}_ontology"
-            self.ontology_events.append({
+            genome_obj.ontology_events.append({
                 "method": "GenomeFileUtils Genbank uploader from annotations",
                 "method_version": self.version,
-                "timestamp": self.time_string,
+                "timestamp": genome_obj.time_string,
                 "id": ontology_type,
                 "ontology_ref": ontology_ref
             })
 
-        return self.ont_mappings[ontology_type]['event_index']
+        return genome_obj.ont_mappings[ontology_type]['event_index']
 
-    def _get_ontology_db_xrefs(self, feature):
+    def _get_ontology_db_xrefs(self, feature, genome_obj):
         """Splits the ontology info from the other db_xrefs"""
         ontology = defaultdict(dict)
         db_xrefs = []
         for key in ("GO_process", "GO_function", "GO_component"):
-            ontology_event_index = self._create_ontology_event("GO")
+            ontology_event_index = self._create_ontology_event("GO", genome_obj)
             for term in feature.qualifiers.get(key, []):
                 sp = term.split(" - ")
                 ontology['GO'][sp[0]] = [ontology_event_index]
-                self.ontologies_present['GO'][sp[0]] = self.ont_mappings['GO'].get(sp[0], '')
+                genome_obj.ontologies_present['GO'][sp[0]] = genome_obj.ont_mappings['GO'].get(sp[0], '')
 
         for ref in feature.qualifiers.get('db_xref', []):
             if ref.startswith('GO:'):
-                ontology['GO'][ref] = [self._create_ontology_event("GO")]
-                self.ontologies_present['GO'][ref] = self.ont_mappings['GO'].get(ref, '')
+                ontology['GO'][ref] = [self._create_ontology_event("GO", genome_obj)]
+                genome_obj.ontologies_present['GO'][ref] = genome_obj.ont_mappings['GO'].get(ref, '')
             elif ref.startswith('PO:'):
-                ontology['PO'][ref] = [self._create_ontology_event("PO")]
-                self.ontologies_present['PO'][ref] = self.ont_mappings['PO'].get(ref, '')
+                ontology['PO'][ref] = [self._create_ontology_event("PO", genome_obj)]
+                genome_obj.ontologies_present['PO'][ref] = genome_obj.ont_mappings['PO'].get(ref, '')
             elif ref.startswith('KO:'):
-                ontology['KO'][ref] = [self._create_ontology_event("KO")]
-                self.ontologies_present['KO'][ref] = self.ont_mappings['KO'].get(ref, '')
+                ontology['KO'][ref] = [self._create_ontology_event("KO", genome_obj)]
+                genome_obj.ontologies_present['KO'][ref] = genome_obj.ont_mappings['KO'].get(ref, '')
             elif ref.startswith('COG'):
-                ontology['COG'][ref] = [self._create_ontology_event("COG")]
-                self.ontologies_present['COG'][ref] = self.ont_mappings['COG'].get(ref, '')
+                ontology['COG'][ref] = [self._create_ontology_event("COG", genome_obj)]
+                genome_obj.ontologies_present['COG'][ref] = genome_obj.ont_mappings['COG'].get(ref, '')
             elif ref.startswith('PF'):
-                ontology['PFAM'][ref] = [self._create_ontology_event("PFAM")]
-                self.ontologies_present['PFAM'][ref] = self.ont_mappings['PFAM'].get(ref, '')
+                ontology['PFAM'][ref] = [self._create_ontology_event("PFAM", genome_obj)]
+                genome_obj.ontologies_present['PFAM'][ref] = genome_obj.ont_mappings['PFAM'].get(ref, '')
             elif ref.startswith('TIGR'):
-                ontology['TIGRFAM'][ref] = [self._create_ontology_event("TIGRFAM")]
-                self.ontologies_present['TIGRFAM'][ref] = self.ont_mappings['TIGRFAM'].get(ref, '')
+                ontology['TIGRFAM'][ref] = [self._create_ontology_event("TIGRFAM", genome_obj)]
+                genome_obj.ontologies_present['TIGRFAM'][ref] = genome_obj.ont_mappings['TIGRFAM'].get(ref, '')
             elif ":" not in ref:
                 db_xrefs.append(tuple(["Unknown_Source", ref]))
             else:
@@ -790,118 +809,120 @@ class GenbankToGenome:
 
         return result
 
-    def _find_parent_gene(self, potential_id, feature):
+    def _find_parent_gene(self, potential_id, feature, genome_obj):
         """Unfortunately, Genbank files don't have a parent ID and the features can be out of
         order at times. To account for this, the this function works backwards from the end of
         list of IDs and stops when if finds a parent with valid coordinates or it hits the maximum
         number of tries"""
-        if potential_id in self.genes:
+        if potential_id in genome_obj.genes:
             lookup_attempts = 0
             while lookup_attempts < MAX_PARENT_LOOKUPS:
-                if is_parent(self.genes[potential_id], feature):
+                if is_parent(genome_obj.genes[potential_id], feature):
                     return potential_id
 
                 lookup_attempts += 1
                 try:
-                    potential_id = list(self.genes.keys())[-(lookup_attempts + 1)]
+                    potential_id = list(genome_obj.genes.keys())[-(lookup_attempts + 1)]
                 except IndexError:
                     break  # no more genes that could match exist
 
-            self.defects['bad_parent_loc'] += 1
+            genome_obj.defects['bad_parent_loc'] += 1
         return None
 
-    def assign_new_id(self, _id):
+    def assign_new_id(self, _id, genome_obj):
         """given a feature id that has already been used, add a unique modifier to it"""
-        _id_modifier =  self.used_twice_identifiers.get(_id, 1)
-        self.used_twice_identifiers[_id] = _id_modifier + 1
+        _id_modifier = genome_obj.used_twice_identifiers.get(_id, 1)
+        genome_obj.used_twice_identifiers[_id] = _id_modifier + 1
         return _id + "." + str(_id_modifier)
 
-    def process_gene(self, _id, out_feat):
+    def process_gene(self, _id, out_feat, genome_obj):
         out_feat.update({
             "id": _id,
             "type": 'gene',
             "mrnas": [],
             'cdss': [],
         })
-        if _id in self.genes:
-            _id = self.assign_new_id(_id)
+        if _id in genome_obj.genes:
+            _id = self.assign_new_id(_id, genome_obj)
             out_feat.update({"id": _id})
             # raise ValueError(f"Duplicate gene ID: {_id}")
-        self.genes[_id] = out_feat
+        genome_obj.genes[_id] = out_feat
 
-    def process_noncoding(self, gene_id, feat_type, out_feat):
+    def process_noncoding(self, gene_id, feat_type, out_feat, genome_obj):
         out_feat["type"] = feat_type
 
         # this prevents big misc_features from blowing up the genome size
         if out_feat['dna_sequence_length'] > MAX_MISC_FEATURE_SIZE:
             del out_feat['dna_sequence']
 
-        gene_id = self._find_parent_gene(gene_id, out_feat)
+        gene_id = self._find_parent_gene(gene_id, out_feat, genome_obj)
         if gene_id:
-            if 'children' not in self.genes[gene_id]:
-                self.genes[gene_id]['children'] = []
-            out_feat['id'] += "_" + str(len(self.genes[gene_id]['children']) + 1)
-            self.genes[gene_id]['children'].append(out_feat['id'])
+            if 'children' not in genome_obj.genes[gene_id]:
+                genome_obj.genes[gene_id]['children'] = []
+            out_feat['id'] += "_" + str(len(genome_obj.genes[gene_id]['children']) + 1)
+            genome_obj.genes[gene_id]['children'].append(out_feat['id'])
             out_feat['parent_gene'] = gene_id
         else:
-            self.orphan_types[feat_type] += 1
-            out_feat['id'] += "_" + str(self.orphan_types[feat_type])
+            genome_obj.orphan_types[feat_type] += 1
+            out_feat['id'] += "_" + str(genome_obj.orphan_types[feat_type])
 
         return out_feat
 
-    def process_mrna(self, gene_id, out_feat):
-        if gene_id not in self.genes and self.generate_parents:
-            self.process_gene(gene_id, copy.copy(out_feat))
+    def process_mrna(self, gene_id, out_feat, genome_obj):
+        if gene_id not in genome_obj.genes and genome_obj.generate_parents:
+            self.process_gene(gene_id, copy.copy(out_feat), genome_obj)
 
-        gene_id = self._find_parent_gene(gene_id, out_feat)
+        gene_id = self._find_parent_gene(gene_id, out_feat, genome_obj)
         if gene_id:
-            out_feat['id'] = "_".join((gene_id, "mRNA", str(len(self.genes[gene_id]['mrnas']) + 1)))
-            self.genes[gene_id]['mrnas'].append(out_feat['id'])
+            out_feat['id'] = "_".join(
+                (gene_id, "mRNA", str(len(genome_obj.genes[gene_id]['mrnas']) + 1))
+            )
+            genome_obj.genes[gene_id]['mrnas'].append(out_feat['id'])
             out_feat['parent_gene'] = gene_id
         else:
-            self.orphan_types['mrna'] += 1
-            out_feat['id'] = f"mRNA_{self.orphan_types['mrna']}"
+            genome_obj.orphan_types['mrna'] += 1
+            out_feat['id'] = f"mRNA_{genome_obj.orphan_types['mrna']}"
             out_feat['warnings'] = out_feat.get('warnings', []) + [
                 'Unable to find parent gene for ' + str(out_feat['id'])]
 
-        self.mrnas[out_feat['id']] = out_feat
+        genome_obj.mrnas[out_feat['id']] = out_feat
 
-    def process_cds(self, gene_id, feat_seq, in_feature, out_feat):
+    def process_cds(self, gene_id, feat_seq, in_feature, out_feat, genome_obj):
         # Associate CDS with parents
         cds_warnings = out_feat.get('warnings', [])
-        validated_gene_id = self._find_parent_gene(gene_id, out_feat)
+        validated_gene_id = self._find_parent_gene(gene_id, out_feat, genome_obj)
         if validated_gene_id:
             out_feat['id'] = "_".join((validated_gene_id, "CDS",
-                                       str(len(self.genes[validated_gene_id]['cdss']) + 1)))
-            self.genes[validated_gene_id]['cdss'].append(out_feat['id'])
+                                       str(len(genome_obj.genes[validated_gene_id]['cdss']) + 1)))
+            genome_obj.genes[validated_gene_id]['cdss'].append(out_feat['id'])
             out_feat['parent_gene'] = validated_gene_id
-        elif self.generate_parents and gene_id not in self.genes:
+        elif genome_obj.generate_parents and gene_id not in genome_obj.genes:
             new_feat = copy.copy(out_feat)
             new_feat['id'] = gene_id
             new_feat['warnings'] = [warnings['spoofed_gene']]
-            self.orphan_types['gene'] += 1
-            self.defects['spoofed_genes'] += 1
-            self.process_gene(new_feat['id'], new_feat)
+            genome_obj.orphan_types['gene'] += 1
+            genome_obj.defects['spoofed_genes'] += 1
+            self.process_gene(new_feat['id'], new_feat, genome_obj)
 
-            out_feat['id'] = "_".join((gene_id, "CDS", str(len(self.genes[gene_id]['cdss']) + 1)))
-            self.genes[gene_id]['cdss'].append(out_feat['id'])
+            out_feat['id'] = "_".join((gene_id, "CDS", str(len(genome_obj.genes[gene_id]['cdss']) + 1)))
+            genome_obj.genes[gene_id]['cdss'].append(out_feat['id'])
             out_feat['parent_gene'] = gene_id
         else:
-            self.orphan_types['cds'] += 1
-            out_feat['id'] = f"CDS_{self.orphan_types['cds']}"
+            genome_obj.orphan_types['cds'] += 1
+            out_feat['id'] = f"CDS_{genome_obj.orphan_types['cds']}"
             cds_warnings.append(f"Unable to find parent gene for {out_feat['id']}")
 
         # there is a 1 to 1 relationship of mRNA to CDS so XXX_mRNA_1 will match XXX_CDS_1
         mrna_id = out_feat["id"].replace('CDS', 'mRNA')
-        if mrna_id in self.mrnas:
-            if not is_parent(self.mrnas[mrna_id], out_feat):
+        if mrna_id in genome_obj.mrnas:
+            if not is_parent(genome_obj.mrnas[mrna_id], out_feat):
                 cds_warnings.append(warnings['cds_mrna_cds'].format(mrna_id))
-                self.mrnas[mrna_id]['warnings'] = self.mrnas[mrna_id].get(
+                genome_obj.mrnas[mrna_id]['warnings'] = genome_obj.mrnas[mrna_id].get(
                     'warnings', []) + [warnings['cds_mrna_mrna']]
-                self.defects['bad_parent_loc'] += 1
+                genome_obj.defects['bad_parent_loc'] += 1
             else:
                 out_feat['parent_mrna'] = mrna_id
-                self.mrnas[mrna_id]['cds'] = out_feat['id']
+                genome_obj.mrnas[mrna_id]['cds'] = out_feat['id']
 
         # process protein
         prot_seq = in_feature.qualifiers.get("translation", [""])[0]
@@ -910,16 +931,16 @@ class GenbankToGenome:
         if prot_seq and abs(len(prot_seq) * 3 - len(feat_seq)) > 4:
             cds_warnings.append(warnings["inconsistent_CDS_length"].format(len(feat_seq),
                                                                            len(prot_seq)))
-            self.genome_warnings.append(
+            genome_obj.genome_warnings.append(
                 warnings['genome_inc_CDS_length'].format(
                     out_feat['id'], len(feat_seq), len(prot_seq)))
-            self.genome_suspect = 1
+            genome_obj.genome_suspect = 1
 
         try:
             if prot_seq and prot_seq != Seq.translate(
-                    feat_seq, self.code_table, cds=True).strip("*"):
+                    feat_seq, genome_obj.code_table, cds=True).strip("*"):
                 cds_warnings.append(warnings["inconsistent_translation"])
-                self.defects['cds_seq_not_matching'] += 1
+                genome_obj.defects['cds_seq_not_matching'] += 1
 
         except TranslationError as e:
             cds_warnings.append("Unable to verify protein sequence:" + str(e))
@@ -927,7 +948,7 @@ class GenbankToGenome:
         if not prot_seq:
             try:
                 prot_seq = Seq.translate(
-                        feat_seq, self.code_table, cds=True).strip("*")
+                        feat_seq, genome_obj.code_table, cds=True).strip("*")
                 cds_warnings.append(warnings["no_translation_supplied"])
 
             except TranslationError as e:
@@ -940,9 +961,11 @@ class GenbankToGenome:
         })
 
         if out_feat.get('parent_gene'):
-            propagate_cds_props_to_gene(out_feat, self.genes[out_feat['parent_gene']])
+            propagate_cds_props_to_gene(
+                out_feat, genome_obj.genes[out_feat['parent_gene']]
+            )
 
         if cds_warnings:
             out_feat['warnings'] = cds_warnings
 
-        self.cdss[out_feat['id']] = out_feat
+        genome_obj.cdss[out_feat['id']] = out_feat
