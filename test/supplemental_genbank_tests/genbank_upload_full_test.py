@@ -183,7 +183,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         }
         self._run_test_fail(
             params,
-            "Exactly one of a 'workspace_id' or a 'workspace' parameter must be provided",
+            "Exactly one of a 'workspace_id' or a 'workspace_name' parameter must be provided",
             False,
         )
 
