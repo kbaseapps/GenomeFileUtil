@@ -536,7 +536,7 @@ class GenbankToGenome:
             extra_infos.append(extra_info)
             types.append(genome_type)
 
-        results = self.aUtil.save_assemblies_from_fastas(
+        assembly_refs = self.aUtil.save_assemblies_from_fastas(
             {
                 'workspace_id': workspace_id,
                 'inputs': [
@@ -553,7 +553,7 @@ class GenbankToGenome:
         )
         name2upa = {
             assembly_id: result["upa"] for assembly_id, result in zip(
-                assembly_ids, results
+                assembly_ids, assembly_refs["results"]
             )
         }
 
