@@ -192,7 +192,7 @@ class GenbankToGenome:
             genome = self._parse_genbank(
                 consolidated_files[idx],
                 input_params,
-                genome_obj[idx],
+                genome_objs[idx],
                 assemblies_ref[idx],
                 assemblies_data[idx],
                 file_handles[idx],
@@ -506,7 +506,7 @@ class GenbankToGenome:
                 self._validate_existing_assembly(
                     assembly_ref, genome_objs[idx]
                 )
-                logging.info(f"Using supplied assembly: {assembly_ref}")
+                # use supplied assembly
                 name2ref[assembly_id] = assembly_ref
             else:
                 name2ref[assembly_id] = None
@@ -556,6 +556,8 @@ class GenbankToGenome:
                 assembly_ids, assembly_refs["results"]
             )
         }
+
+        logging.info(f"Assemblies saved to {workspace_id}")
 
         for key, val in name2upa.items():
             name2ref[key] = val
