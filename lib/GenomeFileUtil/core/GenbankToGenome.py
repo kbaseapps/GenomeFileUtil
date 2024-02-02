@@ -178,14 +178,20 @@ class GenbankToGenome:
 
         # Save files to shock mass
         file_handles = self._save_files_to_blobstore(consolidated_files)
+        print(f"len(file_handles) = {len(file_handles)}")
 
         # Write and save assembly file
         assemblies_ref = self._save_assemblies(
             workspace_id, consolidated_files, inputs, genome_objs
         )
+        print(f"len(assemblies_ref) = {len(assemblies_ref)}")
 
         # Get assembly data
         assemblies_data = self._get_assemblies_data(assemblies_ref)
+        print(f"len(assemblies_data) = {len(assemblies_data)}")
+
+        print(f"len(consolidated_files) = {len(consolidated_files)}")
+        print(f"len(input_directories) = {len(input_directories)}")
 
         for idx, input_params in enumerate(inputs):
 
@@ -208,11 +214,16 @@ class GenbankToGenome:
             workspace_id, genome_names, genome_data, genome_meta
         )
 
+        print(f"len(results) = {len(results)}")
+
         # 5) return the result
         details = [
             {'genome_ref': _upa(result["info"]), 'genome_info': result["info"]}
             for result in results
         ]
+
+        print(f"len(details) = {len(details)}")
+
         return details
 
     def _save_genomes(

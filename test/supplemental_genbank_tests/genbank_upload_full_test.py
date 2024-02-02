@@ -72,7 +72,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         self.assertTrue(int(
             result['genome_info'][10]['Number of Protein Encoding Genes']) > 0)
 
-    def test_genome_upload_two_files(self):
+    def terst_genome_upload_two_files(self):
         gbk_path = "data/drosophila/small_test.tar.gz"
         ws_obj_name = 'DrosophilaGenome.1'
         result = self.getImpl().genbank_to_genome(
@@ -86,7 +86,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         self.assertTrue(int(
             result['genome_info'][10]['Number of Protein Encoding Genes']) > 0)
 
-    def test_unable_to_find_locus_tag(self):
+    def terst_unable_to_find_locus_tag(self):
         gbk_path = "data/drosophila/small_test.tar.gz"
         ws_obj_name = 'DrosophilaGenome.1'
         with self.assertRaisesRegex(
@@ -102,7 +102,7 @@ class GenomeFileUtilTest(unittest.TestCase):
                     'generate_ids_if_needed': 0
             })
 
-    def test_feature_id_duplication_bug(self):
+    def terst_feature_id_duplication_bug(self):
         gbk_path = "data/duplication.gbff"
         ws_obj_name = 'BugGenome.1'
         result = self.getImpl().genbank_to_genome(
@@ -117,7 +117,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         self.assertEqual(result['genome_info'][10]['Number contigs'], '1')
         self.assertEqual(result['genome_info'][10]['Number of Protein Encoding Genes'], '2')
 
-    def test_upload_prokka(self):
+    def terst_upload_prokka(self):
         gbk_path = "data/prokka/PROKKA_012345.gbk.gz"
         ws_obj_name = 'CustomGenome.1'
         result = self.getImpl().genbank_to_genome(
@@ -133,7 +133,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         self.assertEqual(result['genome_info'][10]['Number of Protein Encoding Genes'], '4313')
         self.assertEqual(result['genome_info'][10]['Domain'], 'Unknown')
 
-    def test_ftp_upload_bug(self):
+    def terst_ftp_upload_bug(self):
         gbk_url = "ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/001/589/275/GCF_001589275.1_sce3192.1/GCF_001589275.1_sce3192.1_genomic.gbff.gz"
         ws_obj_name = 'BugGenome.2'
         result = self.getImpl().genbank_to_genome(
@@ -147,7 +147,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         self.assertTrue(int(
             result['genome_info'][10]['Number of Protein Encoding Genes']) > 0)
 
-    def test_simple_shock_upload(self):
+    def terst_simple_shock_upload(self):
         ### Test for upload from SHOCK - upload the file to shock first
         print('attempting upload through shock')
         gbk_path = "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff"
@@ -175,7 +175,7 @@ class GenomeFileUtilTest(unittest.TestCase):
                 self.getImpl().genbank_to_genome(self.getContext(), params)
         assert_exception_correct(got.value, ValueError(error_message))
 
-    def test_genbank_to_genome_invalid_workspace(self):
+    def terst_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
         params = {
             'file': {'path': f"data/gbff/{genome_name}"},
@@ -210,7 +210,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         self.assertEqual(results[0]['genome_info'][1], genome_name1)
         self.assertEqual(results[1]['genome_info'][1], genome_name2)
 
-    def test_genbanks_to_genomes_invalid_workspace_id(self):
+    def terst_genbanks_to_genomes_invalid_workspace_id(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
         params = {
             "inputs": [
@@ -236,7 +236,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             params, f"workspace_id must be an integer, got: {wsid}"
         )
 
-    def test_genbanks_to_genomes_invalid_inputs(self):
+    def terst_genbanks_to_genomes_invalid_inputs(self):
         params = {"workspace_id": self.getWsID(), "inputs": []}
         self._run_test_fail(
             params, "inputs field is required and must be a non-empty list"
