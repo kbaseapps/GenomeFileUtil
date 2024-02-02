@@ -231,18 +231,28 @@ class GenbankToGenome:
         workspace_id,
         genome_names,
         genome_data,
-        genome_meta
+        genome_meta,
     ):
-        results = [
-            self.gi.save_one_genome(
-                {
-                    'workspace': workspace_id,
-                    'name': name,
-                    'data': data,
-                    "meta": meta,
-                }
-            ) for name, data, meta in zip(genome_names, genome_data, genome_meta)
-        ]
+        print("inside _save_genomes function")
+        print("--------------------------------------------")
+        print(f"len(genome_names) = {len(genome_names)}")
+        print(f"len(genome_data) = {len(genome_data)}")
+        print(f"len(genome_meta) = {len(genome_meta)}")
+        try:
+            results = [
+                self.gi.save_one_genome(
+                    {
+                        'workspace': workspace_id,
+                        'name': name,
+                        'data': data,
+                        "meta": meta,
+                    }
+                ) for name, data, meta in zip(genome_names, genome_data, genome_meta)
+            ]
+        except Exception as e:
+            raise ValueError(f"Some is wrong from {e}")
+        print(f"len(results) = {len(results)}")
+        print("--------------------------------------------")
         return results
 
     @staticmethod
