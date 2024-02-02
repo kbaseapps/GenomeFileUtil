@@ -155,12 +155,13 @@ class GenbankToGenome:
         for idx, input_params in enumerate(inputs):
 
             genome_obj = _Genome(self.cfg)
+            genome_names.append(input_params['genome_name'])
 
-            # 1) construct the input directory staging area
+            # construct the input directory staging area
             input_directory = self._stage_input(input_params)
             input_directories.append(input_directory)
 
-            # 2) update default params
+            # update default params
             input_params = {**genome_obj.default_params, **input_params}
             genome_meta.append(input_params['metadata'])
             inputs[idx] = input_params
@@ -171,27 +172,21 @@ class GenbankToGenome:
                 genome_obj.code_table = input_params['genetic_code']
             genome_objs.append(genome_obj)
 
-            # 3) Do the upload
+            # do the upload
             files = self._find_input_files(input_directory)
             consolidated_file = self._join_files_skip_empty_lines(files)
             consolidated_files.append(consolidated_file)
 
-        # Save files to shock mass
+        # save files to shock mass
         file_handles = self._save_files_to_blobstore(consolidated_files)
-        print(f"len(file_handles) = {len(file_handles)}")
 
-        # Write and save assembly file
+        # write and save assembly file
         assemblies_ref = self._save_assemblies(
             workspace_id, consolidated_files, inputs, genome_objs
         )
-        print(f"len(assemblies_ref) = {len(assemblies_ref)}")
 
-        # Get assembly data
+        # get assembly data
         assemblies_data = self._get_assemblies_data(assemblies_ref)
-        print(f"len(assemblies_data) = {len(assemblies_data)}")
-
-        print(f"len(consolidated_files) = {len(consolidated_files)}")
-        print(f"len(input_directories) = {len(input_directories)}")
 
         for idx, input_params in enumerate(inputs):
 
@@ -207,22 +202,19 @@ class GenbankToGenome:
                 genome["genetic_code"] = input_params['genetic_code']
             genome_data.append(genome)
 
-            # 4) clear the temp directory
+            # clear the temp directory
             shutil.rmtree(input_directories[idx])
 
+        # save genomes
         results = self._save_genomes(
             workspace_id, genome_names, genome_data, genome_meta
         )
 
-        print(f"len(results) = {len(results)}")
-
-        # 5) return the result
+        # return the result
         details = [
             {'genome_ref': _upa(result["info"]), 'genome_info': result["info"]}
             for result in results
         ]
-
-        print(f"len(details) = {len(details)}")
 
         return details
 
@@ -233,26 +225,17 @@ class GenbankToGenome:
         genome_data,
         genome_meta,
     ):
-        print("inside _save_genomes function")
-        print("--------------------------------------------")
-        print(f"len(genome_names) = {len(genome_names)}")
-        print(f"len(genome_data) = {len(genome_data)}")
-        print(f"len(genome_meta) = {len(genome_meta)}")
-        try:
-            results = [
-                self.gi.save_one_genome(
-                    {
-                        'workspace': workspace_id,
-                        'name': name,
-                        'data': data,
-                        "meta": meta,
-                    }
-                ) for name, data, meta in zip(genome_names, genome_data, genome_meta)
-            ]
-        except Exception as e:
-            raise ValueError(f"Some is wrong from {e}")
-        print(f"len(results) = {len(results)}")
-        print("--------------------------------------------")
+        results = [
+            self.gi.save_one_genome(
+                {
+                    'workspace': workspace_id,
+                    'name': name,
+                    'data': data,
+                    "meta": meta,
+                }
+            ) for name, data, meta in zip(genome_names, genome_data, genome_meta)
+        ]
+
         return results
 
     @staticmethod
