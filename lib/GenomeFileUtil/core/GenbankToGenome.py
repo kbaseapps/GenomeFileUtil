@@ -154,9 +154,6 @@ class GenbankToGenome:
 
         for idx, input_params in enumerate(inputs):
 
-            genome_meta.append(input_params['metadata'])
-            genome_names.append(input_params['genome_name'])
-
             genome_obj = _Genome(self.cfg)
 
             # 1) construct the input directory staging area
@@ -165,12 +162,14 @@ class GenbankToGenome:
 
             # 2) update default params
             input_params = {**genome_obj.default_params, **input_params}
+            genome_meta.append(input_params['metadata'])
+            inputs[idx] = input_params
+
             genome_obj.generate_parents = input_params.get('generate_missing_genes')
             genome_obj.generate_ids = input_params.get('generate_ids_if_needed')
             if input_params.get('genetic_code'):
                 genome_obj.code_table = input_params['genetic_code']
             genome_objs.append(genome_obj)
-            inputs[idx] = input_params
 
             # 3) Do the upload
             files = self._find_input_files(input_directory)
