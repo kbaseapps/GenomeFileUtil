@@ -24,7 +24,7 @@ from installed_clients.WorkspaceClient import Workspace
 
 # Used to store and pass around configuration URLs more easily
 class SDKConfig:
-    def __init__(self, config):
+    def __init__(self, config, version):
         self.workspaceURL = config['workspace-url']
         self.shockURL = config['shock-url']
         self.handleURL = config['handle-service-url']
@@ -35,6 +35,7 @@ class SDKConfig:
         self.authServiceUrl = config['auth-service-url']
         self.re_api_url = config['re-api-url']
         self.raw = config
+        self.version = version
 
 
 def _validate_catalog_param_type(threads_count, var_name, default_val, expected_type):
@@ -77,7 +78,7 @@ class GenomeFileUtil:
     # be found
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
-        self.cfg = SDKConfig(config)
+        self.cfg = SDKConfig(config, self.VERSION)
         logging.basicConfig(format='%(created)s %(levelname)s: %(message)s',
                             level=logging.INFO)
 
@@ -95,7 +96,8 @@ class GenomeFileUtil:
     def genbank_to_genome(self, ctx, params):
         """
         :param params: instance of type "GenbankToGenomeParams" (genome_name
-           - becomes the name of the object workspace_name - the name of the
+           - becomes the name of the object. workspace_id - the immutable,
+           numeric ID of the target workspace. workspace_name - the name of the
            workspace it gets saved to. source - Source of the file typically
            something like RefSeq or Ensembl taxon_ws_name - where the
            reference taxons are : ReferenceTaxons taxon_id - if defined, will

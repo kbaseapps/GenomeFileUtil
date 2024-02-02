@@ -21,6 +21,8 @@ module GenomeFileUtil {
 
     /*
     genome_name - becomes the name of the object
+    workspace_id - the immutable, numeric ID of the target workspace. Always prefer
+        providing the ID over the name.
     workspace_name - the name of the workspace it gets saved to.
     source - Source of the file typically something like RefSeq or Ensembl
     taxon_ws_name - where the reference taxons are : ReferenceTaxons
@@ -42,6 +44,7 @@ module GenomeFileUtil {
     typedef structure {
         File file;
 
+        int workspace_id;
         string genome_name;
         string workspace_name;
 
