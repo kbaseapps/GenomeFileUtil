@@ -24,7 +24,7 @@ from installed_clients.WorkspaceClient import Workspace
 
 # Used to store and pass around configuration URLs more easily
 class SDKConfig:
-    def __init__(self, config, version):
+    def __init__(self, config, version=None):
         self.workspaceURL = config['workspace-url']
         self.shockURL = config['shock-url']
         self.handleURL = config['handle-service-url']
