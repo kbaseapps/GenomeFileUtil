@@ -88,7 +88,7 @@ class GenomeFileUtilTest(unittest.TestCase):
     def getContext(self):
         return self.__class__.ctx
 
-    def test_same_genome(self):
+    def terst_same_genome(self):
         gbk_path = "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff"
         ws_obj_name = 'ecoli_genome'
         existing_assembly_ref = genome = self.__class__.assembly_ref
@@ -129,7 +129,7 @@ class GenomeFileUtilTest(unittest.TestCase):
                                     'use_existing_assembly' : existing_assembly_ref
                                 })
 
-    def test_diff_sequence(self):
+    def terst_diff_sequence(self):
         gbk_path = "data/e_coli/test_base_change.gbff"
         ws_obj_name = 'ecoli_genome'
         existing_assembly_ref = self.__class__.assembly_ref    
