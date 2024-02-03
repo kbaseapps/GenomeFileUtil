@@ -561,7 +561,6 @@ class GenbankToGenome:
                 name2ref[key] = val
 
         logging.info(f"Assemblies saved to {workspace_id}")
-
         return list(name2ref.values())
 
     def _find_input_files(self, input_directory):
