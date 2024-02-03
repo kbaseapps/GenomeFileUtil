@@ -502,75 +502,65 @@ class GenbankToGenome:
         genome_objs,
     ):
         name2ref = {}
-        inputs_mass = []
-        genome_objs_mass = []
-        genbank_files_mass = []
-
-        print("inside _save_assemblies: ")
-        print(inputs)
-
-        for idx, params in enumerate(inputs):
-            assembly_id = f"{params['genome_name']}_assembly"
-            assembly_ref = params.get("use_existing_assembly")
-            if assembly_ref:
-                self._validate_existing_assembly(
-                    assembly_ref, genome_objs[idx]
-                )
-                # use supplied assembly
-                name2ref[assembly_id] = assembly_ref
-            else:
-                name2ref[assembly_id] = None
-                inputs_mass.append(params)
-                genome_objs_mass.append(genome_objs[idx])
-                genbank_files_mass.append(genbank_files[idx])
-
         assembly_ids = []
         fasta_files = []
         extra_infos = []
         types = []
 
         for genbank_file, params, genome_obj in zip(
-            genbank_files_mass, inputs_mass, genome_objs_mass
+            genbank_files, inputs, genome_objs
         ):
             contigs = Bio.SeqIO.parse(genbank_file, "genbank")
             assembly_id = f"{params['genome_name']}_assembly"
             fasta_file = f"{self.cfg.sharedFolder}/{assembly_id}.fasta"
-            genome_type = params.get('genome_type', 'isolate')
+
             out_contigs, extra_info = self._get_contigs_and_extra_info(
                 contigs, genome_obj
             )
-            Bio.SeqIO.write(out_contigs, fasta_file, "fasta")
 
-            assembly_ids.append(assembly_id)
-            fasta_files.append(fasta_file)
-            extra_infos.append(extra_info)
-            types.append(genome_type)
+            assembly_ref = params.get("use_existing_assembly")
+            if assembly_ref:
+                self._validate_existing_assembly(
+                    assembly_ref, genome_obj
+                )
+                # use supplied assembly
+                name2ref[assembly_id] = assembly_ref
+            else:
+                name2ref[assembly_id] = None
+                Bio.SeqIO.write(out_contigs, fasta_file, "fasta")
+                genome_type = params.get('genome_type', 'isolate')
+                assembly_ids.append(assembly_id)
+                fasta_files.append(fasta_file)
+                extra_infos.append(extra_info)
+                types.append(genome_type)
 
-        assembly_refs = self.aUtil.save_assemblies_from_fastas(
-            {
-                'workspace_id': workspace_id,
-                'inputs': [
-                    {
-                        'file': fasta_file,
-                        'assembly_name': assembly_name,
-                        'type': type_info,
-                        'contig_info': contig_info,
-                    } for fasta_file, assembly_name, type_info, contig_info in zip(
-                        fasta_files, assembly_ids, types, extra_infos
-                    )
-                ]
-            }
-        )
-        name2upa = {
-            assembly_id: result["upa"] for assembly_id, result in zip(
-                assembly_ids, assembly_refs["results"]
+        if assembly_ids:
+
+            assembly_refs = self.aUtil.save_assemblies_from_fastas(
+                {
+                    'workspace_id': workspace_id,
+                    'inputs': [
+                        {
+                            'file': fasta_file,
+                            'assembly_name': assembly_name,
+                            'type': type_info,
+                            'contig_info': contig_info,
+                        } for fasta_file, assembly_name, type_info, contig_info in zip(
+                            fasta_files, assembly_ids, types, extra_infos
+                        )
+                    ]
+                }
             )
-        }
+            name2upa = {
+                assembly_id: result["upa"] for assembly_id, result in zip(
+                    assembly_ids, assembly_refs["results"]
+                )
+            }
+
+            for key, val in name2upa.items():
+                name2ref[key] = val
 
         logging.info(f"Assemblies saved to {workspace_id}")
-
-        for key, val in name2upa.items():
-            name2ref[key] = val
 
         return list(name2ref.values())
 
