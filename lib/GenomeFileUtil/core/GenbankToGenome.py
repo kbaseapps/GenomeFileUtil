@@ -180,8 +180,6 @@ class GenbankToGenome:
         # save files to shock mass
         file_handles = self._save_files_to_blobstore(consolidated_files)
 
-        print("outside _save_assemblies inputs: ")
-        print(inputs)
         # write and save assembly file
         assemblies_ref = self._save_assemblies(
             workspace_id, consolidated_files, inputs, genome_objs
@@ -475,7 +473,6 @@ class GenbankToGenome:
                     unmatched_ids_md5s.append(current_contig)
             else:
                 unmatched_ids.append(current_contig)
-        print(f"unmatched_ids is {unmatched_ids}")
         if len(unmatched_ids) > 0:
             raise ValueError(warnings['assembly_ref_extra_contigs'].format(", ".join(unmatched_ids)))
         if len(unmatched_ids_md5s) > 0:
