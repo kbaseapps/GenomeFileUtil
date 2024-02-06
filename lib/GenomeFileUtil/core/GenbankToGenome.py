@@ -107,7 +107,7 @@ class GenbankToGenome:
     def _set_up_single_params(self, params):
         # avoid side effects and keep variables in params unmodfied
         inputs = dict(params)
-        self.validate_params(inputs)
+        self._validate_params(inputs)
         ws_id = self._get_int(inputs.pop(_WSID, None), _WSID)
         ws_name = inputs.pop(_WSNAME, None)
         if (bool(ws_id) == bool(ws_name)):  # xnor
@@ -129,7 +129,7 @@ class GenbankToGenome:
         for i, inp in enumerate(inputs, start=1):
             if type(inp) != dict:
                 raise ValueError(f"Entry #{i} in {_INPUTS} field is not a mapping as required")
-            self.validate_params(inp)
+            self._validate_params(inp)
 
     def _get_int(self, putative_int, name, minimum=1):
         if putative_int is not None:
@@ -238,8 +238,7 @@ class GenbankToGenome:
 
         return results
 
-    @staticmethod
-    def validate_params(params):
+    def _validate_params(params):
         if 'genome_name' not in params:
             raise ValueError('required "genome_name" field was not defined')
         if 'file' not in params:
