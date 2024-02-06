@@ -238,7 +238,7 @@ class GenbankToGenome:
 
         return results
 
-    def _validate_params(params):
+    def _validate_params(self, params):
         if 'genome_name' not in params:
             raise ValueError('required "genome_name" field was not defined')
         if 'file' not in params:
