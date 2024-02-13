@@ -236,6 +236,17 @@ class GenomeFileUtilTest(unittest.TestCase):
             params, f"workspace_id must be an integer, got: {wsid}"
         )
 
+        params = {
+            "workspace_id": 0,
+            "inputs": [
+                {
+                    'file': {'path': f"data/gbff/{genome_name}"},
+                    'genome_name': genome_name,
+                }
+            ]
+        }
+        self._run_test_fail(params, "workspace_id must be an integer >= 1")
+
     def test_genbanks_to_genomes_invalid_inputs(self):
         params = {"workspace_id": self.getWsID(), "inputs": []}
         self._run_test_fail(

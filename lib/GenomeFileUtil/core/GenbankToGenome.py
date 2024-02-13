@@ -69,7 +69,7 @@ class _Genome:
         # dict with feature 'id's that have been used more than once.
         self.used_twice_identifiers = {}
 
-        # metadata for genome upload
+        # related info for genome process and upload
         self.genome_name = None
         self.genome_data = None
         self.genome_meta = None
@@ -80,6 +80,7 @@ class _Genome:
         self.extra_info = None
         self.assembly_ref = None
         self.assembly_path = None
+
 
 class GenbankToGenome:
     def __init__(self, config):
@@ -135,18 +136,16 @@ class GenbankToGenome:
         if not ws_id:
             raise ValueError(f"{_WSID} is required")
         inputs = params.get(_INPUTS)
-        if not inputs or type(inputs) != list:
+        if not inputs or type(inputs) is not list:
             raise ValueError(f"{_INPUTS} field is required and must be a non-empty list")
         for i, inp in enumerate(inputs, start=1):
-            if type(inp) != dict:
-                raise ValueError(
-                    f"Entry #{i}: {inp} in {_INPUTS} field is not a mapping as required"
-                )
+            if type(inp) is not dict:
+                raise ValueError(f"Entry #{i}: {inp} in {_INPUTS} field is not a mapping as required")
             self._validate_params(inp)
 
     def _get_int(self, putative_int, name, minimum=1):
         if putative_int is not None:
-            if type(putative_int) != int:
+            if type(putative_int) is not int:
                 raise ValueError(f"{name} must be an integer, got: {putative_int}")
             if putative_int < minimum:
                 raise ValueError(f"{name} must be an integer >= {minimum}")
