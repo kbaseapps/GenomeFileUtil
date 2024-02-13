@@ -324,6 +324,13 @@ class GenbankToGenome:
                 'ignore_errors': 0
             }
         )
+        print("*" * 50)
+        print(f"dfu_results: {results}")
+        ws_results = self.ws.get_objects2(
+            {'objects': [{'ref': assembly_refs[0]}]})['data']
+        print("*" * 50)
+        print(f"ws_results: {ws_results}")
+        print("*" * 50)
         return [object_data["info"][10] for object_data in results["data"]]
 
     def _parse_genbank(self, params, genome_obj):
