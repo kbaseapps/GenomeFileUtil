@@ -317,21 +317,14 @@ class GenbankToGenome:
         for genome_obj, file_handle in zip(genome_objs, file_handles):
             genome_obj.file_handle = file_handle
 
-    def _get_objects_metadata(self, assembly_refs):
+    def _get_objects_data(self, assembly_refs):
         results = self.dfu.get_objects(
             {
                 'object_refs': assembly_refs,
                 'ignore_errors': 0
             }
         )
-        print("*" * 50)
-        print(f"dfu_results: {results}")
-        ws_results = self.ws.get_objects2(
-            {'objects': [{'ref': assembly_refs[0]}]})['data']
-        print("*" * 50)
-        print(f"ws_results: {ws_results}")
-        print("*" * 50)
-        return [object_data["info"][10] for object_data in results["data"]]
+        return [result["data"] for result in results["data"]]
 
     def _parse_genbank(self, params, genome_obj):
         genome = {
@@ -503,12 +496,12 @@ class GenbankToGenome:
 
         if ref2genome:
             assembly_refs = list(ref2genome.keys())
-            genomes_meta = self._get_objects_metadata(assembly_refs)
+            genomes_meta = self._get_objects_data(assembly_refs)
             for assembly_ref, object_info_meta in zip(assembly_refs, genomes_meta):
                 genome = ref2genome[assembly_ref]
-                genome.gc_content = object_info_meta["GC content"]
-                genome.dna_size = object_info_meta["Size"]
-                genome.md5 = object_info_meta["MD5"]
+                genome.gc_content = object_info_meta["gc_content"]
+                genome.dna_size = object_info_meta["dna_size"]
+                genome.md5 = object_info_meta["md5"]
 
     def _save_assemblies(self, workspace_id, genome_objs):
         id2genome = {}
@@ -552,8 +545,8 @@ class GenbankToGenome:
                 object_info_meta = result["object_info"][10]
                 genome = id2genome[assembly_id]
                 genome.assembly_ref = result["upa"]
-                genome.gc_content = object_info_meta["GC content"]
-                genome.dna_size = object_info_meta["Size"]
+                genome.gc_content = float(object_info_meta["GC content"])
+                genome.dna_size = int(object_info_meta["Size"])
                 genome.md5 = object_info_meta["MD5"]
 
             logging.info(f"Assemblies saved to {workspace_id}")
