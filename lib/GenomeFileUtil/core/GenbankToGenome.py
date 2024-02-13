@@ -494,16 +494,17 @@ class GenbankToGenome:
                 genome_obj.assembly_ref = assembly_ref
                 genome_obj.assembly_path = None
 
-        assembly_refs = list(ref2genome.keys())
-        genomes_meta = self._get_objects_metadata(assembly_refs)
-        for assembly_ref, object_info_meta in zip(assembly_refs, genomes_meta):
-            genome = ref2genome[assembly_ref]
-            genome.gc_content = object_info_meta["gc_content"]
-            genome.dna_size = object_info_meta["dna_size"]
-            genome.md5 = object_info_meta["md5"]
+        if ref2genome:
+            assembly_refs = list(ref2genome.keys())
+            genomes_meta = self._get_objects_metadata(assembly_refs)
+            for assembly_ref, object_info_meta in zip(assembly_refs, genomes_meta):
+                genome = ref2genome[assembly_ref]
+                genome.gc_content = object_info_meta["gc_content"]
+                genome.dna_size = object_info_meta["dna_size"]
+                genome.md5 = object_info_meta["md5"]
 
     def _save_assemblies(self, workspace_id, genome_objs):
-        id2node = {}
+        id2genome = {}
         bulk_inputs = []
         assembly_ids = []
         for genome_obj in genome_objs:
@@ -527,27 +528,28 @@ class GenbankToGenome:
                 }
             )
             # map id to genome_object
-            id2node[genome_obj.assembly_id] = genome_obj
+            id2genome[genome_obj.assembly_id] = genome_obj
             assembly_ids.append(genome_obj.assembly_id)
 
-        assembly_refs = self.aUtil.save_assemblies_from_fastas(
-            {
-                'workspace_id': workspace_id,
-                'inputs': bulk_inputs,
-            }
-        )
+        if id2genome:
+            assembly_refs = self.aUtil.save_assemblies_from_fastas(
+                {
+                    'workspace_id': workspace_id,
+                    'inputs': bulk_inputs,
+                }
+            )
 
-        for assembly_id, result in zip(
-            assembly_ids, assembly_refs["results"]
-        ):
-            object_info_meta = result["object_info"][10]
-            genome = id2node[assembly_id]
-            genome.assembly_ref = result["upa"]
-            genome.gc_content = object_info_meta["gc_content"]
-            genome.dna_size = object_info_meta["dna_size"]
-            genome.md5 = object_info_meta["md5"]
+            for assembly_id, result in zip(
+                assembly_ids, assembly_refs["results"]
+            ):
+                object_info_meta = result["object_info"][10]
+                genome = id2genome[assembly_id]
+                genome.assembly_ref = result["upa"]
+                genome.gc_content = object_info_meta["gc_content"]
+                genome.dna_size = object_info_meta["dna_size"]
+                genome.md5 = object_info_meta["md5"]
 
-        logging.info(f"Assemblies saved to {workspace_id}")
+            logging.info(f"Assemblies saved to {workspace_id}")
 
     def _find_input_files(self, input_directory):
         logging.info("Scanning for Genbank Format files.")
