@@ -505,7 +505,6 @@ class GenbankToGenome:
     def _save_assemblies(self, workspace_id, genome_objs):
         id2genome = {}
         bulk_inputs = []
-        assembly_ids = []
         for genome_obj in genome_objs:
             if genome_obj.assembly_ref:
                 continue
@@ -528,7 +527,6 @@ class GenbankToGenome:
             )
             # map id to genome_object
             id2genome[genome_obj.assembly_id] = genome_obj
-            assembly_ids.append(genome_obj.assembly_id)
 
         if id2genome:
             assembly_refs = self.aUtil.save_assemblies_from_fastas(
@@ -536,11 +534,10 @@ class GenbankToGenome:
                     'workspace_id': workspace_id,
                     'inputs': bulk_inputs,
                 }
-            )
+            )["results"]
 
-            for assembly_id, result in zip(
-                assembly_ids, assembly_refs["results"]
-            ):
+            for result in assembly_refs:
+                assembly_id = result["object_info"][1]
                 object_info_meta = result["object_info"][10]
                 genome = id2genome[assembly_id]
                 genome.assembly_ref = result["upa"]
@@ -877,8 +874,7 @@ class GenbankToGenome:
 
         return dict(ontology), sorted(db_xrefs)
 
-    @staticmethod
-    def _get_aliases_flags_functions(feat):
+    def _get_aliases_flags_functions(self, feat):
         """Get the values for aliases flags and features from qualifiers"""
         alias_keys = {'locus_tag', 'old_locus_tag', 'protein_id',
                       'transcript_id', 'gene', 'EC_number', 'gene_synonym'}
