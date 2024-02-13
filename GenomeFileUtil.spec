@@ -65,8 +65,15 @@ module GenomeFileUtil {
         string genome_ref;
     } GenomeSaveResult;
 
+    typedef structure {
+        string genome_ref;
+        string assembly_ref;
+        string assembly_path;
+        Workspace.object_info genome_info;
+    } GenbankToGenomeSaveResult;
+
     funcdef genbank_to_genome(GenbankToGenomeParams params)
-                returns (GenomeSaveResult result) authentication required;
+                returns (GenbankToGenomeSaveResult result) authentication required;
 
     typedef structure {
         File file;
@@ -94,11 +101,11 @@ module GenomeFileUtil {
         results - the results of the save operation in the same order as the input.
     */
     typedef structure {
-        list<GenomeSaveResult> results;
-    } GenomeSaveResults;
+        list<GenbankToGenomeSaveResult> results;
+    } GenbanksToGenomesSaveResults;
 
     funcdef genbanks_to_genomes(GenbanksToGenomesParams params)
-                returns (GenomeSaveResults results) authentication required;
+                returns (GenbanksToGenomesSaveResults results) authentication required;
 
     /*
         is_gtf - optional flag switching export to GTF format (default is 0,

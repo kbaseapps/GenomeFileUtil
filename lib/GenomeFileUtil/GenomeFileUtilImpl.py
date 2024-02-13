@@ -67,9 +67,9 @@ class GenomeFileUtil:
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "0.11.0"
+    VERSION = "0.11.6"
     GIT_URL = "git@github.com:kbaseapps/GenomeFileUtil.git"
-    GIT_COMMIT_HASH = "77015bd3f47ec19a4e44bcd67a9b97833df70420"
+    GIT_COMMIT_HASH = "eb8aac11745d8f3224de02ada493aab320ffa462"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -93,38 +93,86 @@ class GenomeFileUtil:
         #END_CONSTRUCTOR
         pass
 
+
     def genbank_to_genome(self, ctx, params):
         """
         :param params: instance of type "GenbankToGenomeParams" (genome_name
-           - becomes the name of the object. workspace_id - the immutable,
-           numeric ID of the target workspace. workspace_name - the name of the
-           workspace it gets saved to. source - Source of the file typically
-           something like RefSeq or Ensembl taxon_ws_name - where the
-           reference taxons are : ReferenceTaxons taxon_id - if defined, will
-           try to link the Genome to the specified taxonomy id in lieu of
-           performing the lookup during upload release - Release or version
-           number of the data per example Ensembl has numbered releases of
-           all their data: Release 31 generate_ids_if_needed - If field used
-           for feature id is not there, generate ids (default behavior is
-           raising an exception) genetic_code - Genetic code of organism.
-           Overwrites determined GC from taxon object scientific_name - will
-           be used to set the scientific name of the genome and link to a
-           taxon generate_missing_genes - If the file has CDS or mRNA with no
+           - becomes the name of the object workspace_id - the immutable,
+           numeric ID of the target workspace. Always prefer providing the ID
+           over the name. workspace_name - the name of the workspace it gets
+           saved to. source - Source of the file typically something like
+           RefSeq or Ensembl taxon_ws_name - where the reference taxons are :
+           ReferenceTaxons taxon_id - if defined, will try to link the Genome
+           to the specified taxonomy id in lieu of performing the lookup
+           during upload release - Release or version number of the data per
+           example Ensembl has numbered releases of all their data: Release
+           31 generate_ids_if_needed - If field used for feature id is not
+           there, generate ids (default behavior is raising an exception)
+           genetic_code - Genetic code of organism. Overwrites determined GC
+           from taxon object scientific_name - will be used to set the
+           scientific name of the genome and link to a taxon
+           generate_missing_genes - If the file has CDS or mRNA with no
            corresponding gene, generate a spoofed gene. use_existing_assembly
            - Supply an existing assembly reference) -> structure: parameter
            "file" of type "File" -> structure: parameter "path" of String,
            parameter "shock_id" of String, parameter "ftp_url" of String,
-           parameter "genome_name" of String, parameter "workspace_name" of
-           String, parameter "source" of String, parameter "taxon_wsname" of
-           String, parameter "taxon_id" of String, parameter "release" of
-           String, parameter "generate_ids_if_needed" of String, parameter
-           "genetic_code" of Long, parameter "scientific_name" of String,
-           parameter "metadata" of type "usermeta" -> mapping from String to
-           String, parameter "generate_missing_genes" of type "boolean" (A
-           boolean - 0 for false, 1 for true. @range (0, 1)), parameter
+           parameter "workspace_id" of Long, parameter "genome_name" of
+           String, parameter "workspace_name" of String, parameter "source"
+           of String, parameter "taxon_wsname" of String, parameter
+           "taxon_id" of String, parameter "release" of String, parameter
+           "generate_ids_if_needed" of String, parameter "genetic_code" of
+           Long, parameter "scientific_name" of String, parameter "metadata"
+           of type "usermeta" -> mapping from String to String, parameter
+           "generate_missing_genes" of type "boolean" (A boolean - 0 for
+           false, 1 for true. @range (0, 1)), parameter
            "use_existing_assembly" of String
-        :returns: instance of type "GenomeSaveResult" -> structure: parameter
-           "genome_ref" of String
+        :returns: instance of type "GenbankToGenomeSaveResult" -> structure:
+           parameter "genome_ref" of String, parameter "assembly_ref" of
+           String, parameter "assembly_path" of String, parameter
+           "genome_info" of type "object_info" (Information about an object,
+           including user provided metadata. obj_id objid - the numerical id
+           of the object. obj_name name - the name of the object. type_string
+           type - the type of the object. timestamp save_date - the save date
+           of the object. obj_ver ver - the version of the object. username
+           saved_by - the user that saved or copied the object. ws_id wsid -
+           the workspace containing the object. ws_name workspace - the
+           workspace containing the object. string chsum - the md5 checksum
+           of the object. int size - the size of the object in bytes.
+           usermeta meta - arbitrary user-supplied metadata about the
+           object.) -> tuple of size 11: parameter "objid" of type "obj_id"
+           (The unique, permanent numerical ID of an object.), parameter
+           "name" of type "obj_name" (A string used as a name for an object.
+           Any string consisting of alphanumeric characters and the
+           characters |._- that is not an integer is acceptable.), parameter
+           "type" of type "type_string" (A type string. Specifies the type
+           and its version in a single string in the format
+           [module].[typename]-[major].[minor]: module - a string. The module
+           name of the typespec containing the type. typename - a string. The
+           name of the type as assigned by the typedef statement. major - an
+           integer. The major version of the type. A change in the major
+           version implies the type has changed in a non-backwards compatible
+           way. minor - an integer. The minor version of the type. A change
+           in the minor version implies that the type has changed in a way
+           that is backwards compatible with previous type definitions. In
+           many cases, the major and minor versions are optional, and if not
+           provided the most recent version will be used. Example:
+           MyModule.MyType-3.1), parameter "save_date" of type "timestamp" (A
+           time in the format YYYY-MM-DDThh:mm:ssZ, where Z is either the
+           character Z (representing the UTC timezone) or the difference in
+           time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500
+           (EST time) 2013-04-03T08:56:32+0000 (UTC time)
+           2013-04-03T08:56:32Z (UTC time)), parameter "version" of Long,
+           parameter "saved_by" of type "username" (Login name of a KBase
+           user account.), parameter "wsid" of type "ws_id" (The unique,
+           permanent numerical ID of a workspace.), parameter "workspace" of
+           type "ws_name" (A string used as a name for a workspace. Any
+           string consisting of alphanumeric characters and "_", ".", or "-"
+           that is not an integer is acceptable. The name may optionally be
+           prefixed with the workspace owner's user name and a colon, e.g.
+           kbasetest:my_workspace.), parameter "chsum" of String, parameter
+           "size" of Long, parameter "meta" of type "usermeta" (User provided
+           metadata about an object. Arbitrary key-value pairs provided by
+           the user.) -> mapping from String to String
         """
         # ctx is the context object
         # return variables are: result
@@ -148,39 +196,73 @@ class GenomeFileUtil:
 
     def genbanks_to_genomes(self, ctx, params):
         """
-        :param params: instance of type "GenbanksToGenomesParams" -> structure:
-           parameter "workspace_id" of Long, parameter "inputs" of list of
-           type "GenbankToGenomeInput" (genome_name - becomes the name of the
-           object source - Source of the file typically something like RefSeq
-           or Ensembl taxon_ws_name - where the reference taxons are :
-           ReferenceTaxons taxon_id - if defined, will try to link the Genome
-           to the specified taxonomy id in lieu of performing the lookup
-           during upload release - Release or version number of the data per
-           example Ensembl has numbered releases of all their data: Release 31
-           generate_ids_if_needed - If field used for feature id is not there,
-           generate ids (default behavior is raising an exception) genetic_code
-           - Genetic code of organism. Overwrites determined GC from taxon
-           object scientific_name - will be used to set the scientific name of
-           the genome and link to a taxon generate_missing_genes - If the file
-           has CDS or mRNA with no corresponding gene, generate a spoofed gene.
-           use_existing_assembly - Supply an existing assembly reference) ->
-           structure: parameter "file" of type "File" -> structure: parameter
-           "path" of String, parameter "shock_id" of String, parameter
-           "ftp_url" of String, parameter "genome_name" of String, parameter
-           "source" of String, parameter "taxon_wsname" of String, parameter
-           "taxon_id" of String, parameter "release" of String, parameter
-           "generate_ids_if_needed" of String, parameter "genetic_code" of
-           Long, parameter "scientific_name" of String, parameter "metadata"
-           of type "usermeta" -> mapping from String to String, parameter
-           "generate_missing_genes" of type "boolean" (A boolean - 0 for false,
-           1 for true. @range (0, 1)), parameter "use_existing_assembly" of
-           String
-        :returns: instance of type "GenomeSaveResults" -> structure: parameter
-           "results" of list of type "GenomeSaveResult" -> structure: parameter
-           "genome_ref" of String
+        :param params: instance of type "GenbanksToGenomesParams" ->
+           structure: parameter "workspace_id" of Long, parameter "inputs" of
+           list of type "GenbankToGenomeInput" -> structure: parameter "file"
+           of type "File" -> structure: parameter "path" of String, parameter
+           "shock_id" of String, parameter "ftp_url" of String, parameter
+           "genome_name" of String, parameter "source" of String, parameter
+           "taxon_wsname" of String, parameter "taxon_id" of String,
+           parameter "release" of String, parameter "generate_ids_if_needed"
+           of String, parameter "genetic_code" of Long, parameter
+           "scientific_name" of String, parameter "metadata" of type
+           "usermeta" -> mapping from String to String, parameter
+           "generate_missing_genes" of type "boolean" (A boolean - 0 for
+           false, 1 for true. @range (0, 1)), parameter
+           "use_existing_assembly" of String
+        :returns: instance of type "GenbanksToGenomesSaveResults" (Results
+           for the genbanks_to_genomes function. results - the results of the
+           save operation in the same order as the input.) -> structure:
+           parameter "results" of list of type "GenbankToGenomeSaveResult" ->
+           structure: parameter "genome_ref" of String, parameter
+           "assembly_ref" of String, parameter "assembly_path" of String,
+           parameter "genome_info" of type "object_info" (Information about
+           an object, including user provided metadata. obj_id objid - the
+           numerical id of the object. obj_name name - the name of the
+           object. type_string type - the type of the object. timestamp
+           save_date - the save date of the object. obj_ver ver - the version
+           of the object. username saved_by - the user that saved or copied
+           the object. ws_id wsid - the workspace containing the object.
+           ws_name workspace - the workspace containing the object. string
+           chsum - the md5 checksum of the object. int size - the size of the
+           object in bytes. usermeta meta - arbitrary user-supplied metadata
+           about the object.) -> tuple of size 11: parameter "objid" of type
+           "obj_id" (The unique, permanent numerical ID of an object.),
+           parameter "name" of type "obj_name" (A string used as a name for
+           an object. Any string consisting of alphanumeric characters and
+           the characters |._- that is not an integer is acceptable.),
+           parameter "type" of type "type_string" (A type string. Specifies
+           the type and its version in a single string in the format
+           [module].[typename]-[major].[minor]: module - a string. The module
+           name of the typespec containing the type. typename - a string. The
+           name of the type as assigned by the typedef statement. major - an
+           integer. The major version of the type. A change in the major
+           version implies the type has changed in a non-backwards compatible
+           way. minor - an integer. The minor version of the type. A change
+           in the minor version implies that the type has changed in a way
+           that is backwards compatible with previous type definitions. In
+           many cases, the major and minor versions are optional, and if not
+           provided the most recent version will be used. Example:
+           MyModule.MyType-3.1), parameter "save_date" of type "timestamp" (A
+           time in the format YYYY-MM-DDThh:mm:ssZ, where Z is either the
+           character Z (representing the UTC timezone) or the difference in
+           time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500
+           (EST time) 2013-04-03T08:56:32+0000 (UTC time)
+           2013-04-03T08:56:32Z (UTC time)), parameter "version" of Long,
+           parameter "saved_by" of type "username" (Login name of a KBase
+           user account.), parameter "wsid" of type "ws_id" (The unique,
+           permanent numerical ID of a workspace.), parameter "workspace" of
+           type "ws_name" (A string used as a name for a workspace. Any
+           string consisting of alphanumeric characters and "_", ".", or "-"
+           that is not an integer is acceptable. The name may optionally be
+           prefixed with the workspace owner's user name and a colon, e.g.
+           kbasetest:my_workspace.), parameter "chsum" of String, parameter
+           "size" of Long, parameter "meta" of type "usermeta" (User provided
+           metadata about an object. Arbitrary key-value pairs provided by
+           the user.) -> mapping from String to String
         """
         # ctx is the context object
-        # return variables are: result
+        # return variables are: results
         #BEGIN genbanks_to_genomes
         results = {
             'results': GenbankToGenome(self.cfg).import_genbank_mass(params)
@@ -189,8 +271,8 @@ class GenomeFileUtil:
 
         # At some point might do deeper type checking...
         if not isinstance(results, dict):
-            raise ValueError('Method genbank_to_genome return value ' +
-                             'result is not type dict as required.')
+            raise ValueError('Method genbanks_to_genomes return value ' +
+                             'results is not type dict as required.')
         # return the results
         return [results]
 
@@ -903,7 +985,7 @@ class GenomeFileUtil:
            String, parameter "eco" of String, parameter "ontologies_present"
            of mapping from String to mapping from String to String, parameter
            "features" of list of type "Feature" (Structure for a single CDS
-           encoding ???gene??? of a genome ONLY PUT GENES THAT HAVE A
+           encoding “gene” of a genome ONLY PUT GENES THAT HAVE A
            CORRESPONDING CDS IN THIS ARRAY NOTE: Sequence is optional.
            Ideally we can keep it in here, but Recognize due to space
            constraints another solution may be needed. We may want to add
