@@ -65,10 +65,30 @@ module GenomeFileUtil {
         string genome_ref;
     } GenomeSaveResult;
 
+    /* Information about an object, including user provided metadata.
+        objid - the numerical id of the object.
+        name - the name of the object.
+        type - the type of the object.
+        save_date - the save date of the object.
+        ver - the version of the object.
+        saved_by - the user that saved or copied the object.
+        wsid - the id of the workspace containing the object.
+        workspace - the name of the workspace containing the object.
+        chsum - the md5 checksum of the object.
+        size - the size of the object in bytes.
+        meta - arbitrary user-supplied metadata about
+            the object.
+    */
+
+    typedef tuple<int objid, string name, string type, string save_date,
+        int version, string saved_by, int wsid, string workspace, string chsum,
+        int size, mapping<string, string> meta> object_info;
+
     typedef structure {
         string genome_ref;
         string assembly_ref;
         string assembly_path;
+        object_info assembly_info;
         Workspace.object_info genome_info;
     } GenbankToGenomeSaveResult;
 

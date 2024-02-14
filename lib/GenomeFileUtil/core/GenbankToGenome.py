@@ -323,6 +323,7 @@ class GenbankToGenome:
                 'ignore_errors': 0
             }
         )
+        print(f"results is: {results}")
         return [result["data"] for result in results["data"]]
 
     def _parse_genbank(self, params, genome_obj):
