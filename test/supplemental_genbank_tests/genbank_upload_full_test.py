@@ -8,6 +8,7 @@ from configparser import ConfigParser
 from installed_clients.DataFileUtilClient import DataFileUtil
 from GenomeFileUtil.GenomeFileUtilImpl import GenomeFileUtil
 from GenomeFileUtil.GenomeFileUtilServer import MethodContext
+from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.WorkspaceClient import Workspace as workspaceService
 from conftest import assert_exception_correct
 
@@ -38,12 +39,16 @@ class GenomeFileUtilTest(unittest.TestCase):
         cls.wsName = "test_GenomeFileUtil_" + str(suffix)
         cls.wsID = cls.wsClient.create_workspace({'workspace': cls.wsName})[0]
         cls.serviceImpl = GenomeFileUtil(cls.cfg)
+        cls.dfUtil = DataFileUtil(os.environ['SDK_CALLBACK_URL'])
 
     @classmethod
     def tearDownClass(cls):
         if hasattr(cls, 'wsName'):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print('Test workspace was deleted')
+
+    def getDfuClient(self):
+        return self.__class__.dfUtil
 
     def getWsID(self):
         return self.__class__.wsID
@@ -175,6 +180,10 @@ class GenomeFileUtilTest(unittest.TestCase):
                 self.getImpl().genbank_to_genome(self.getContext(), params)
         assert_exception_correct(got.value, ValueError(error_message))
 
+    def _get_objects_data(self, refs):
+        results = self.getDfuClient().get_objects({'object_refs': refs})
+        return [result["info"] for result in results["data"]]
+
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
         params = {
@@ -206,9 +215,19 @@ class GenomeFileUtilTest(unittest.TestCase):
                 ]
             }
         )[0]['results']
+
         self.assertEqual(len(results), 2)
         self.assertEqual(results[0]['genome_info'][1], genome_name1)
         self.assertEqual(results[1]['genome_info'][1], genome_name2)
+
+        assembly_infos = [result['assembly_info'] for result in results]
+        genome_infos = [result['genome_info'] for result in results]
+
+        assembly_refs = [result['assembly_ref'] for result in results]
+        genome_refs = [result['genome_ref'] for result in results]
+
+        self.assertEqual(assembly_infos, self._get_objects_data(assembly_refs))
+        self.assertEqual(genome_infos, self._get_objects_data(genome_refs))
 
     def test_genbanks_to_genomes_invalid_workspace_id(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
