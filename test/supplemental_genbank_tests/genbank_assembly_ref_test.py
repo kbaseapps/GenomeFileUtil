@@ -108,7 +108,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         genome = data_file_cli.get_objects({'object_refs': [result['genome_ref']]})['data'][0]['data']
         self.assertTrue(genome['assembly_ref'] == existing_assembly_ref, "Same file did not keep the same assembly ref")   
 
-    def terst_diff_contigs(self):
+    def test_diff_contigs(self):
         gbk_path = "data/e_coli/GCF_000005845.2_ASM584v2_altered_genomic.gbff"
         ws_obj_name = 'ecoli_genome'
         existing_assembly_ref = self.__class__.assembly_ref
@@ -129,7 +129,7 @@ class GenomeFileUtilTest(unittest.TestCase):
                                     'use_existing_assembly' : existing_assembly_ref
                                 })
 
-    def terst_diff_sequence(self):
+    def test_diff_sequence(self):
         gbk_path = "data/e_coli/test_base_change.gbff"
         ws_obj_name = 'ecoli_genome'
         existing_assembly_ref = self.__class__.assembly_ref    

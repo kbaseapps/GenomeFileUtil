@@ -80,6 +80,7 @@ class _Genome:
         self.extra_info = None
         self.assembly_ref = None
         self.assembly_path = None
+        self.assembly_info = None
 
 
 class GenbankToGenome:
@@ -206,6 +207,7 @@ class GenbankToGenome:
                 'genome_info': result["info"],
                 'assembly_ref': genome_obj.assembly_ref,
                 'assembly_path': genome_obj.assembly_path,
+                'assembly_info': genome_obj.assembly_info,
             }
             for genome_obj, result in zip(genome_objs, results)
         ]
@@ -323,8 +325,7 @@ class GenbankToGenome:
                 'ignore_errors': 0
             }
         )
-        print(f"results is: {results}")
-        return [result["data"] for result in results["data"]]
+        return [result for result in results["data"]]
 
     def _parse_genbank(self, params, genome_obj):
         genome = {
@@ -496,12 +497,15 @@ class GenbankToGenome:
 
         if ref2genome:
             assembly_refs = list(ref2genome.keys())
-            genomes_meta = self._get_objects_data(assembly_refs)
-            for assembly_ref, object_info_meta in zip(assembly_refs, genomes_meta):
+            results = self._get_objects_data(assembly_refs)
+            for assembly_ref, result in zip(assembly_refs, results):
+                object_data = result["data"]
+                assembly_info = result["info"]
                 genome = ref2genome[assembly_ref]
-                genome.gc_content = object_info_meta["gc_content"]
-                genome.dna_size = object_info_meta["dna_size"]
-                genome.md5 = object_info_meta["md5"]
+                genome.assembly_info = assembly_info
+                genome.gc_content = object_data["gc_content"]
+                genome.dna_size = object_data["dna_size"]
+                genome.md5 = object_data["md5"]
 
     def _save_assemblies(self, workspace_id, genome_objs):
         id2genome = {}
@@ -538,9 +542,11 @@ class GenbankToGenome:
             )["results"]
 
             for result in assembly_refs:
-                assembly_id = result["object_info"][1]
-                object_info_meta = result["object_info"][10]
+                assembly_info = result["object_info"]
+                assembly_id = assembly_info[1]
+                object_info_meta = assembly_info[10]
                 genome = id2genome[assembly_id]
+                genome.assembly_info = assembly_info
                 genome.assembly_ref = result["upa"]
                 genome.gc_content = float(object_info_meta["GC content"])
                 genome.dna_size = int(object_info_meta["Size"])
