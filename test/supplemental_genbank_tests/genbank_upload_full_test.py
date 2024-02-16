@@ -280,3 +280,15 @@ class GenomeFileUtilTest(unittest.TestCase):
             params,
             "Entry #1 in inputs field is not a mapping as required",
         )
+
+    def test_genbanks_to_genomes_invalid_params(self):
+        params = {
+            "workspace_id": self.getWsID(),
+            "inputs": [
+                {"genome": "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"}
+            ]
+        }
+        self._run_test_fail(
+            params,
+            "required 'genome_name' field was not defined",
+        )
