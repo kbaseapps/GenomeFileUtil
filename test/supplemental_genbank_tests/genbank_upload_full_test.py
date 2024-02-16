@@ -290,5 +290,5 @@ class GenomeFileUtilTest(unittest.TestCase):
         }
         self._run_test_fail(
             params,
-            "required 'genome_name' field was not defined",
+            "Entry #1 in inputs field has invalid params",
         )
