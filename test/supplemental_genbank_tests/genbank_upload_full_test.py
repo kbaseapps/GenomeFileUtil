@@ -278,5 +278,5 @@ class GenomeFileUtilTest(unittest.TestCase):
         }
         self._run_test_fail(
             params,
-            "Entry #1: ['genome_file_path', 'genome_name'] in inputs field is not a mapping as required",
+            "Entry #1 in inputs field is not a mapping as required",
         )

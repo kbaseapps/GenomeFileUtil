@@ -65,16 +65,8 @@ module GenomeFileUtil {
         string genome_ref;
     } GenomeSaveResult;
 
-    typedef structure {
-        string genome_ref;
-        string assembly_ref;
-        string assembly_path;
-        Workspace.object_info assembly_info;
-        Workspace.object_info genome_info;
-    } GenbankToGenomeSaveResult;
-
     funcdef genbank_to_genome(GenbankToGenomeParams params)
-                returns (GenbankToGenomeSaveResult result) authentication required;
+                returns (GenomeSaveResult result) authentication required;
 
     typedef structure {
         File file;
@@ -97,6 +89,14 @@ module GenomeFileUtil {
         int workspace_id;
         list<GenbankToGenomeInput> inputs;
     } GenbanksToGenomesParams;
+
+    typedef structure {
+        string genome_ref;
+        string assembly_ref;
+        string assembly_path;
+        Workspace.object_info assembly_info;
+        Workspace.object_info genome_info;
+    } GenbankToGenomeSaveResult;
 
     /* Results for the genbanks_to_genomes function.
         results - the results of the save operation in the same order as the input.

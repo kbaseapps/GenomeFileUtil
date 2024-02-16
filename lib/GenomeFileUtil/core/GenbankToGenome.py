@@ -76,7 +76,7 @@ class _Genome:
         self.genome_type = None
         self.consolidated_file = None
         self.input_directory = None
-        self.file_handle = None
+        self.handle_service_output = None
         self.extra_info = None
         self.assembly_ref = None
         self.assembly_path = None
@@ -141,8 +141,11 @@ class GenbankToGenome:
             raise ValueError(f"{_INPUTS} field is required and must be a non-empty list")
         for i, inp in enumerate(inputs, start=1):
             if type(inp) is not dict:
-                raise ValueError(f"Entry #{i}: {inp} in {_INPUTS} field is not a mapping as required")
-            self._validate_params(inp)
+                raise ValueError(f"Entry #{i} in {_INPUTS} field is not a mapping as required")
+            try:
+                self._validate_params(inp)
+            except Exception as e:
+                raise ValueError(f"Entry #{i} in {_INPUTS} field has invalid params") from e
 
     def _get_int(self, putative_int, name, minimum=1):
         if putative_int is not None:
@@ -187,10 +190,11 @@ class GenbankToGenome:
 
         self._get_contigs_and_validate_existing_assembly(genome_objs)
 
-        self._save_files_to_blobstore_and_set_file_handles(genome_objs)
+        self._save_files_to_blobstore_and_set_handle_service_output(genome_objs)
 
         self._save_assemblies(workspace_id, genome_objs)
 
+        # TODO parse genbank files before the assemblies are saved
         for input_params, genome_obj in zip(inputs, genome_objs):
             self._parse_genbank(input_params, genome_obj)
 
@@ -304,9 +308,9 @@ class GenbankToGenome:
 
         return input_directory
 
-    def _save_files_to_blobstore_and_set_file_handles(self, genome_objs):
+    def _save_files_to_blobstore_and_set_handle_service_output(self, genome_objs):
         logging.info("Saving original files to shock")
-        file_handles = self.dfu.file_to_shock_mass(
+        handle_service_outputs = self.dfu.file_to_shock_mass(
             [
                 {
                     'file_path': genome_obj.consolidated_file,
@@ -315,8 +319,10 @@ class GenbankToGenome:
                 } for genome_obj in genome_objs
             ]
         )
-        for genome_obj, file_handle in zip(genome_objs, file_handles):
-            genome_obj.file_handle = file_handle
+        for genome_obj, handle_service_output in zip(
+            genome_objs, handle_service_outputs
+        ):
+            genome_obj.handle_service_output = handle_service_output
 
     def _get_objects_data(self, assembly_refs):
         results = self.dfu.get_objects(
@@ -335,7 +341,7 @@ class GenbankToGenome:
             "gc_content": genome_obj.gc_content,
             "dna_size": genome_obj.dna_size,
             "md5": genome_obj.md5,
-            "genbank_handle_ref": genome_obj.file_handle['handle']['hid'],
+            "genbank_handle_ref": genome_obj.handle_service_output['handle']['hid'],
             "publications": set(),
             "contig_ids": [],
             "contig_lengths": [],
