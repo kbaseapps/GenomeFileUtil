@@ -282,6 +282,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         )
 
     def test_genbanks_to_genomes_invalid_params(self):
+        e = 'required "genome_name" field was not defined'
         params = {
             "workspace_id": self.getWsID(),
             "inputs": [
@@ -290,5 +291,5 @@ class GenomeFileUtilTest(unittest.TestCase):
         }
         self._run_test_fail(
             params,
-            "Entry #1 in inputs field has invalid params",
+            f"Entry #1 in inputs field has invalid params: {e}",
         )

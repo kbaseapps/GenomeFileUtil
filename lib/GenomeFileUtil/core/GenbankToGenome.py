@@ -145,7 +145,7 @@ class GenbankToGenome:
             try:
                 self._validate_params(inp)
             except Exception as e:
-                raise ValueError(f"Entry #{i} in {_INPUTS} field has invalid params") from e
+                raise ValueError(f"Entry #{i} in {_INPUTS} field has invalid params: {e}") from e
 
     def _get_int(self, putative_int, name, minimum=1):
         if putative_int is not None:
@@ -188,7 +188,7 @@ class GenbankToGenome:
             # gather all objects
             genome_objs.append(genome_obj)
 
-        self._get_contigs_and_validate_existing_assembly(genome_objs)
+        self._load_contigs_for_and_validate_existing_assemblies(genome_objs)
 
         self._save_files_to_blobstore_and_set_handle_service_output(genome_objs)
 
@@ -438,6 +438,19 @@ class GenbankToGenome:
 
         genome_obj.genome_data = genome
 
+    def _get_contigs_and_extra_info(self, contigs, genome_obj):
+        out_contigs = []
+        extra_info = defaultdict(dict)
+        for in_contig in contigs:
+            if in_contig.annotations.get('topology', "") == 'circular':
+                extra_info[in_contig.id]['is_circ'] = 1
+                genome_obj.circ_contigs.add(in_contig.id)
+            elif in_contig.annotations.get('topology', "") == 'linear':
+                extra_info[in_contig.id]['is_circ'] = 0
+            out_contigs.append(in_contig)
+            genome_obj.contig_seq[in_contig.id] = in_contig.seq.upper()
+        return out_contigs, extra_info
+
     def _validate_existing_assembly(self, assembly_ref, genome_obj):
         if not re.match("\d+\/\d+\/\d+", assembly_ref):
             raise ValueError(f"Assembly ref: {assembly_ref} is not a valid format. Must"
@@ -461,20 +474,7 @@ class GenbankToGenome:
         if len(unmatched_ids_md5s) > 0:
             raise ValueError(warnings["assembly_ref_diff_seq"].format(", ".join(unmatched_ids_md5s)))
 
-    def _get_contigs_and_extra_info(self, contigs, genome_obj):
-        out_contigs = []
-        extra_info = defaultdict(dict)
-        for in_contig in contigs:
-            if in_contig.annotations.get('topology', "") == 'circular':
-                extra_info[in_contig.id]['is_circ'] = 1
-                genome_obj.circ_contigs.add(in_contig.id)
-            elif in_contig.annotations.get('topology', "") == 'linear':
-                extra_info[in_contig.id]['is_circ'] = 0
-            out_contigs.append(in_contig)
-            genome_obj.contig_seq[in_contig.id] = in_contig.seq.upper()
-        return out_contigs, extra_info
-
-    def _get_contigs_and_validate_existing_assembly(self, genome_objs):
+    def _load_contigs_for_and_validate_existing_assemblies(self, genome_objs):
         ref2genome = {}
         for genome_obj in genome_objs:
             assembly_ref = genome_obj.use_existing_assembly
