@@ -323,7 +323,7 @@ class GenbankToGenome:
 
     def _get_objects_data(self, assembly_refs):
         assembly_objs_spec = [{"ref": ref} for ref in assembly_refs]
-        assembly_objs_info = Workspace.get_object_info3(
+        assembly_objs_info = self.ws.get_object_info3(
             {"objects": assembly_objs_spec, "includeMetadata": 1})["infos"]
         return assembly_objs_info
 
