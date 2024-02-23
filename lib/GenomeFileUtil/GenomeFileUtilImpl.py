@@ -138,6 +138,8 @@ class GenomeFileUtil:
         importer = GenbankToGenome(self.cfg)
         result = importer.import_genbank(params)
 
+        # genome_info is left in the results, although not documented in the spec, for backwards compatibility
+        # It should only be documented in the spec if all the other methods that use the same return structure
         for key in ['assembly_ref', 'assembly_path', 'assembly_info']:
             result.pop(key, None)
 

@@ -199,6 +199,7 @@ class GenbankToGenome:
             self._parse_genbank(input_params, genome_obj)
 
             # clear the temp directory
+            # TODO move with parse genbank function into for loop above and save disk space
             shutil.rmtree(genome_obj.input_directory)
 
         # TODO make an internal mass function save_genomes
@@ -279,8 +280,6 @@ class GenbankToGenome:
 
         if 'shock_id' in file and file['shock_id'] is not None:
             # handle shock file
-            logging.info(
-                f'Downloading file from SHOCK node: {self.cfg.shockURL} - {file["shock_id"]}')
             sys.stdout.flush()
             file_name = self.dfu.shock_to_file({
                                     'file_path': input_directory,
@@ -289,7 +288,6 @@ class GenbankToGenome:
             genbank_file_path = os.path.join(input_directory, file_name)
 
         if 'ftp_url' in file and file['ftp_url'] is not None:
-            logging.info('Downloading file from: ' + str(file['ftp_url']))
             local_file_path = self.dfu.download_web_file({
                 'file_url': file['ftp_url'],
                 'download_type': 'FTP'
@@ -300,7 +298,6 @@ class GenbankToGenome:
 
         # extract the file if it is compressed
         if genbank_file_path is not None:
-            logging.info("staged input file =" + genbank_file_path)
             self.dfu.unpack_file({'file_path': genbank_file_path})
 
         else:
@@ -325,13 +322,10 @@ class GenbankToGenome:
             genome_obj.handle_service_output = handle_service_output
 
     def _get_objects_data(self, assembly_refs):
-        results = self.dfu.get_objects(
-            {
-                'object_refs': assembly_refs,
-                'ignore_errors': 0
-            }
-        )
-        return [result for result in results["data"]]
+        assembly_objs_spec = [{"ref": ref} for ref in assembly_refs]
+        assembly_objs_info = Workspace.get_object_info3(
+            {"objects": assembly_objs_spec, "includeMetadata": 1})["infos"]
+        return assembly_objs_info
 
     def _parse_genbank(self, params, genome_obj):
         genome = {
@@ -363,7 +357,6 @@ class GenbankToGenome:
         contigs = Bio.SeqIO.parse(genome_obj.consolidated_file, "genbank")
         for record in contigs:
             r_annot = record.annotations
-            logging.info("parsing contig: " + record.id)
             try:
                 dates.append(time.strptime(r_annot.get('date'), "%d-%b-%Y"))
             except (TypeError, ValueError):
@@ -443,16 +436,13 @@ class GenbankToGenome:
         if params.get('genetic_code'):
             genome['genetic_code'] = params['genetic_code']
 
-        logging.info(f"Feature Counts: {genome['feature_counts']}")
         genome_obj.genome_data = genome
 
     def _validate_existing_assembly(self, assembly_ref, genome_obj):
         if not re.match("\d+\/\d+\/\d+", assembly_ref):
             raise ValueError(f"Assembly ref: {assembly_ref} is not a valid format. Must"
                                 f" be in numerical <ws>/<object>/<version> format.")
-        ret = self.dfu.get_objects(
-            {'object_refs': [assembly_ref]}
-        )['data'][0]
+        ret = self.dfu.get_objects({'object_refs': [assembly_ref]})['data'][0]
         if "KBaseGenomeAnnotations.Assembly" not in ret['info'][2]:
             raise ValueError(f"{assembly_ref} is not a reference to an assembly")
         unmatched_ids = list()
@@ -503,15 +493,18 @@ class GenbankToGenome:
 
         if ref2genome:
             assembly_refs = list(ref2genome.keys())
-            results = self._get_objects_data(assembly_refs)
-            for assembly_ref, result in zip(assembly_refs, results):
-                object_data = result["data"]
-                assembly_info = result["info"]
+            assembly_objs_info = self._get_objects_data(assembly_refs)
+            for assembly_ref, assembly_info in zip(
+                assembly_refs, assembly_objs_info
+            ):
                 genome = ref2genome[assembly_ref]
-                genome.assembly_info = assembly_info
-                genome.gc_content = object_data["gc_content"]
-                genome.dna_size = object_data["dna_size"]
-                genome.md5 = object_data["md5"]
+                self._set_gc_content_dna_size_and_md5(genome, assembly_info)
+
+    def _set_gc_content_dna_size_and_md5(self, genome, assembly_info):
+        genome.assembly_info = assembly_info
+        genome.gc_content = float(assembly_info[10]["GC content"])
+        genome.dna_size = int(assembly_info[10]["Size"])
+        genome.md5 = assembly_info[10]["MD5"]
 
     def _save_assemblies(self, workspace_id, genome_objs):
         id2genome = {}
@@ -549,23 +542,16 @@ class GenbankToGenome:
 
             for result in assembly_refs:
                 assembly_info = result["object_info"]
-                assembly_id = assembly_info[1]
-                object_info_meta = assembly_info[10]
-                genome = id2genome[assembly_id]
-                genome.assembly_info = assembly_info
+                genome = id2genome[assembly_info[1]]
                 genome.assembly_ref = result["upa"]
-                genome.gc_content = float(object_info_meta["GC content"])
-                genome.dna_size = int(object_info_meta["Size"])
-                genome.md5 = object_info_meta["MD5"]
+                self._set_gc_content_dna_size_and_md5(genome, assembly_info)
 
-            logging.info(f"Assemblies saved to {workspace_id}")
+            logging.info(f"{len(id2genome)} assemblies saved to {workspace_id}")
 
     def _find_input_files(self, input_directory):
-        logging.info("Scanning for Genbank Format files.")
         valid_extensions = [".gbff", ".gbk", ".gb", ".genbank", ".dat", ".gbf"]
 
         files = os.listdir(os.path.abspath(input_directory))
-        logging.info("Genbank Files : " + ", ".join(files))
         genbank_files = [x for x in files if
                          os.path.splitext(x)[-1].lower() in valid_extensions]
 
@@ -573,8 +559,6 @@ class GenbankToGenome:
             raise Exception(
                 f"The input directory does not have any files with one of the "
                 f"following extensions {','.join(valid_extensions)}.")
-
-        logging.info(f"Found {len(genbank_files)} genbank files")
 
         input_files = []
         for genbank_file in genbank_files:
@@ -632,7 +616,6 @@ class GenbankToGenome:
                     in_pub.title,
                     f"http://www.ncbi.nlm.nih.gov/pubmed/{in_pub.pubmed_id}"]
             pub_list.append(tuple(out_pub))
-        logging.info(f"Parsed {len(pub_list)} publication records")
         return set(pub_list)
 
     def _get_id(self, feat, genome_obj, tags=None):
