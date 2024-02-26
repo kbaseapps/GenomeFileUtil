@@ -439,7 +439,6 @@ class GenbankToGenome:
         genome_obj.genome_data = genome
 
     def _get_contigs_and_extra_info(self, contigs, genome_obj):
-        out_contigs = []
         extra_info = defaultdict(dict)
         for in_contig in contigs:
             if in_contig.annotations.get('topology', "") == 'circular':
@@ -447,9 +446,8 @@ class GenbankToGenome:
                 genome_obj.circ_contigs.add(in_contig.id)
             elif in_contig.annotations.get('topology', "") == 'linear':
                 extra_info[in_contig.id]['is_circ'] = 0
-            out_contigs.append(in_contig)
             genome_obj.contig_seq[in_contig.id] = in_contig.seq.upper()
-        return out_contigs, extra_info
+        return extra_info
 
     def _validate_existing_assembly(self, assembly_ref, genome_obj):
         if not re.match("\d+\/\d+\/\d+", assembly_ref):
@@ -480,7 +478,7 @@ class GenbankToGenome:
             assembly_ref = genome_obj.use_existing_assembly
             if assembly_ref:
                 contigs = Bio.SeqIO.parse(genome_obj.consolidated_file, "genbank")
-                _, extra_info = self._get_contigs_and_extra_info(
+                extra_info = self._get_contigs_and_extra_info(
                     contigs, genome_obj
                 )
                 self._validate_existing_assembly(
@@ -516,11 +514,11 @@ class GenbankToGenome:
             genome_obj.assembly_id = f"{genome_obj.genome_name}_assembly"
             genome_obj.assembly_path = f"{self.cfg.sharedFolder}/{genome_obj.assembly_id}.fasta"
 
-            out_contigs, genome_obj.extra_info = self._get_contigs_and_extra_info(
+            genome_obj.extra_info = self._get_contigs_and_extra_info(
                 contigs, genome_obj
             )
 
-            Bio.SeqIO.write(out_contigs, genome_obj.assembly_path, "fasta")
+            Bio.SeqIO.write(contigs, genome_obj.assembly_path, "fasta")
             bulk_inputs.append(
                 {
                     'file': genome_obj.assembly_path,
