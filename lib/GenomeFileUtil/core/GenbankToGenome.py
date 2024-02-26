@@ -510,15 +510,21 @@ class GenbankToGenome:
         for genome_obj in genome_objs:
             if genome_obj.assembly_ref:
                 continue
+
+            # contigs is an iterator
             contigs = Bio.SeqIO.parse(genome_obj.consolidated_file, "genbank")
             genome_obj.assembly_id = f"{genome_obj.genome_name}_assembly"
             genome_obj.assembly_path = f"{self.cfg.sharedFolder}/{genome_obj.assembly_id}.fasta"
 
+            # populate contig_seq
             genome_obj.extra_info = self._get_contigs_and_extra_info(
                 contigs, genome_obj
             )
 
-            Bio.SeqIO.write(contigs, genome_obj.assembly_path, "fasta")
+            # Output as fasta file
+            contigs_output = Bio.SeqIO.parse(genome_obj.consolidated_file, "genbank")
+            Bio.SeqIO.write(contigs_output, genome_obj.assembly_path, "fasta")
+
             bulk_inputs.append(
                 {
                     'file': genome_obj.assembly_path,
