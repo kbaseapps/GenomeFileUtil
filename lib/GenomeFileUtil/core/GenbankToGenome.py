@@ -321,7 +321,7 @@ class GenbankToGenome:
         ):
             genome_obj.handle_service_output = handle_service_output
 
-    def _get_objects_data(self, assembly_refs):
+    def _get_objects_info(self, assembly_refs):
         assembly_objs_spec = [{"ref": ref} for ref in assembly_refs]
         assembly_objs_info = self.ws.get_object_info3(
             {"objects": assembly_objs_spec, "includeMetadata": 1})["infos"]
@@ -493,7 +493,7 @@ class GenbankToGenome:
 
         if ref2genome:
             assembly_refs = list(ref2genome.keys())
-            assembly_objs_info = self._get_objects_data(assembly_refs)
+            assembly_objs_info = self._get_objects_info(assembly_refs)
             for assembly_ref, assembly_info in zip(
                 assembly_refs, assembly_objs_info
             ):
