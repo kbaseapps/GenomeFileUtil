@@ -172,7 +172,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         for idx, res in enumerate(results):
             assert object_version_pattern.match("/".join(res['genome_ref'].split("/")[-2:]))
             # Check relevant object info fields
-            obj = self.ws.get_object_info3(
+            obj = self.wsClient.get_object_info3(
                 {'objects': [{'ref': res['genome_ref'], 'includeMetadata': 1}]}
             )
             info = obj['infos'][0]
@@ -186,8 +186,21 @@ class GenomeFileUtilTest(unittest.TestCase):
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
         params = {
-            'file': {'path': f"data/gbff/{genome_name}"},
-            'genome_name': genome_name,
+            "file": {'path': f"data/gbff/{genome_name}"},
+            "genome_name": genome_name,
+        }
+        self._run_test_fail(
+            params,
+            "Exactly one of a 'workspace_id' or a 'workspace_name' parameter must be provided",
+        )
+
+    def test_genbank_to_genome_fail_both_workspace_id_and_workspace_name(self):
+        genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
+        params = {
+            "workspace_id": self.wsID,
+            "workspace_name": self.wsName,
+            "file": {'path': f"data/gbff/{genome_name}"},
+            "genome_name": genome_name,
         }
         self._run_test_fail(
             params,
