@@ -178,10 +178,10 @@ class GenomeFileUtilTest(unittest.TestCase):
                     "includeMetadata": 1,
                 }
             )
+            info = obj['infos'][0]
             print("-----------------")
             print(f"info is: {info}")
             print("-----------------")
-            info = obj['infos'][0]
             assert info == res['genome_info']
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
