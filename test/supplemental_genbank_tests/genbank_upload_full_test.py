@@ -1,5 +1,6 @@
 import os
 import pytest
+import re
 import shutil
 import time
 import unittest
@@ -39,7 +40,6 @@ class GenomeFileUtilTest(unittest.TestCase):
         cls.wsName = "test_GenomeFileUtil_" + str(suffix)
         cls.wsID = cls.wsClient.create_workspace({'workspace': cls.wsName})[0]
         cls.serviceImpl = GenomeFileUtil(cls.cfg)
-        cls.dfUtil = DataFileUtil(os.environ['SDK_CALLBACK_URL'])
 
     @classmethod
     def tearDownClass(cls):
@@ -47,30 +47,15 @@ class GenomeFileUtilTest(unittest.TestCase):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print('Test workspace was deleted')
 
-    def getDfuClient(self):
-        return self.__class__.dfUtil
-
-    def getWsID(self):
-        return self.__class__.wsID
-
-    def getWsName(self):
-        return self.__class__.wsName
-
-    def getImpl(self):
-        return self.__class__.serviceImpl
-
-    def getContext(self):
-        return self.__class__.ctx
-
     def test_genome_upload_fungi(self):
         gbk_path = "data/fungi/GCF_000002945.1_ASM294v2_genomic.gbff.gz"
         ws_obj_name = 'FungiGenome.1'
-        result = self.getImpl().genbank_to_genome(
-            self.getContext(),
+        result = self.serviceImpl.genbank_to_genome(
+            self.ctx,
             {
               'file': {
                   'path': gbk_path},
-              'workspace_name': self.getWsName(),
+              'workspace_name': self.wsName,
               'genome_name': ws_obj_name,
               'generate_ids_if_needed': 1
             })[0]
@@ -80,11 +65,11 @@ class GenomeFileUtilTest(unittest.TestCase):
     def test_genome_upload_two_files(self):
         gbk_path = "data/drosophila/small_test.tar.gz"
         ws_obj_name = 'DrosophilaGenome.1'
-        result = self.getImpl().genbank_to_genome(
-            self.getContext(),
+        result = self.serviceImpl.genbank_to_genome(
+            self.ctx,
             {
               'file': {'path': gbk_path},
-              'workspace_name': self.getWsName(),
+              'workspace_name': self.wsName,
               'genome_name': ws_obj_name,
               'generate_ids_if_needed': 1
             })[0]
@@ -98,11 +83,11 @@ class GenomeFileUtilTest(unittest.TestCase):
                         ValueError, 
                         "Unable to find a valid id for gene among these tags: locus_tag," + \
                         " kbase_id. Correct the file or rerun with generate_ids"):
-            self.getImpl().genbank_to_genome(
-                self.getContext(),
+            self.serviceImpl.genbank_to_genome(
+                self.ctx,
                 {
                     'file': {'path': gbk_path},
-                    'workspace_name': self.getWsName(),
+                    'workspace_name': self.wsName,
                     'genome_name': ws_obj_name,
                     'generate_ids_if_needed': 0
             })
@@ -110,11 +95,11 @@ class GenomeFileUtilTest(unittest.TestCase):
     def test_feature_id_duplication_bug(self):
         gbk_path = "data/duplication.gbff"
         ws_obj_name = 'BugGenome.1'
-        result = self.getImpl().genbank_to_genome(
-            self.getContext(),
+        result = self.serviceImpl.genbank_to_genome(
+            self.ctx,
             {
                 'file': {'path': gbk_path},
-                'workspace_name': self.getWsName(),
+                'workspace_name': self.wsName,
                 'genome_name': ws_obj_name,
                 'generate_ids_if_needed': 1,
                 'generate_missing_genes': 1
@@ -125,11 +110,11 @@ class GenomeFileUtilTest(unittest.TestCase):
     def test_upload_prokka(self):
         gbk_path = "data/prokka/PROKKA_012345.gbk.gz"
         ws_obj_name = 'CustomGenome.1'
-        result = self.getImpl().genbank_to_genome(
-            self.getContext(),
+        result = self.serviceImpl.genbank_to_genome(
+            self.ctx,
             {
                 'file': {'path': gbk_path},
-                'workspace_name': self.getWsName(),
+                'workspace_name': self.wsName,
                 'genome_name': ws_obj_name,
                 'generate_ids_if_needed': 1,
                 "generate_missing_genes": 1
@@ -141,11 +126,11 @@ class GenomeFileUtilTest(unittest.TestCase):
     def test_ftp_upload_bug(self):
         gbk_url = "ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/001/589/275/GCF_001589275.1_sce3192.1/GCF_001589275.1_sce3192.1_genomic.gbff.gz"
         ws_obj_name = 'BugGenome.2'
-        result = self.getImpl().genbank_to_genome(
-            self.getContext(),
+        result = self.serviceImpl.genbank_to_genome(
+            self.ctx,
             {
                 'file': {'ftp_url': gbk_url },
-                'workspace_name': self.getWsName(),
+                'workspace_name': self.wsName,
                 'genome_name': ws_obj_name,
                 'generate_ids_if_needed': 1
             })[0]
@@ -163,9 +148,9 @@ class GenomeFileUtilTest(unittest.TestCase):
         })['shock_id']
         print("Running test")
         ws_obj_name2 = 'MyGenome.2'
-        result = self.getImpl().genbank_to_genome(self.getContext(), {
+        result = self.serviceImpl.genbank_to_genome(self.ctx, {
                 'file': {'shock_id': shock_id},
-                'workspace_name': self.getWsName(),
+                'workspace_name': self.wsName,
                 'genome_name': ws_obj_name2,
             })[0]
         self.assertIsNotNone(result['genome_ref'])
@@ -175,15 +160,27 @@ class GenomeFileUtilTest(unittest.TestCase):
     def _run_test_fail(self, params, error_message, mass=True):
         with pytest.raises(Exception) as got:
             if mass:
-                self.getImpl().genbanks_to_genomes(self.getContext(), params)
+                self.serviceImpl.genbanks_to_genomes(self.ctx, params)
             else:
-                self.getImpl().genbank_to_genome(self.getContext(), params)
+                self.serviceImpl.genbank_to_genome(self.ctx, params)
         assert_exception_correct(got.value, ValueError(error_message))
 
-    def _get_objects_data(self, refs):
-        results = self.getDfuClient().get_objects({'object_refs': refs})
-        return [result["info"] for result in results["data"]]
-
+    def _check_result_object_info_fields(self, results, file_names, object_metas):
+        object_version_pattern = re.compile(r'^[0-9]+\/1$')
+        for idx, res in enumerate(results):
+            assert object_version_pattern.match("/".join(res['upa'].split("/")[-2:]))
+            # Check relevant object info fields
+            obj = self.ws.get_object_info3(
+                {'objects': [{'ref': res['genome_ref'], 'includeMetadata': 1}]}
+            )
+            info = obj['infos'][0]
+            assert info == res['genome_info']
+            assert info[1] == file_names[idx]
+            assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
+            assert info[6] == self.wsID
+            print(info[10])
+            assert info[10] == object_metas[idx]
+    
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
         params = {
@@ -199,35 +196,31 @@ class GenomeFileUtilTest(unittest.TestCase):
     def test_genbanks_to_genomes(self):
         genome_name1 = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
         genome_name2 = "GCF_000970185.1_ASM97018v1_genomic.gbff.gz"
-        results = self.getImpl().genbanks_to_genomes(
-            self.getContext(),
+        
+        file_names = [genome_name1, genome_name2]
+        object_metas = {}
+        
+        results = self.serviceImpl.genbanks_to_genomes(
+            self.ctx,
             {
-                "workspace_id": self.getWsID(),
+                "workspace_id": self.wsID,
                 "inputs": [
                     {
                         "file": {"path": f"data/gbff/{genome_name1}"},
-                        "genome_name": genome_name1
+                        "genome_name": genome_name1,
+                        "metadata": {"foo": "bar"},
                     },
                     {
                         "file": {"path": f"data/gbff/{genome_name2}"},
-                        "genome_name": genome_name2
+                        "genome_name": genome_name2,
+                        "metadata": {"bar": "foo"},
                     }
                 ]
             }
         )[0]['results']
 
         self.assertEqual(len(results), 2)
-        self.assertEqual(results[0]['genome_info'][1], genome_name1)
-        self.assertEqual(results[1]['genome_info'][1], genome_name2)
-
-        assembly_infos = [result['assembly_info'] for result in results]
-        genome_infos = [result['genome_info'] for result in results]
-
-        assembly_refs = [result['assembly_ref'] for result in results]
-        genome_refs = [result['genome_ref'] for result in results]
-
-        self.assertEqual(assembly_infos, self._get_objects_data(assembly_refs))
-        self.assertEqual(genome_infos, self._get_objects_data(genome_refs))
+        self._check_result_object_info_fields(results, file_names, object_metas)
 
     def test_genbanks_to_genomes_invalid_workspace_id(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
@@ -241,7 +234,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         }
         self._run_test_fail(params, "workspace_id is required")
 
-        wsid = float(self.getWsID())
+        wsid = float(self.wsID)
         params = {
             "workspace_id": wsid,
             "inputs": [
@@ -267,13 +260,13 @@ class GenomeFileUtilTest(unittest.TestCase):
         self._run_test_fail(params, "workspace_id must be an integer >= 1")
 
     def test_genbanks_to_genomes_invalid_inputs(self):
-        params = {"workspace_id": self.getWsID(), "inputs": []}
+        params = {"workspace_id": self.wsID, "inputs": []}
         self._run_test_fail(
             params, "inputs field is required and must be a non-empty list"
         )
 
         params = {
-            "workspace_id": self.getWsID(),
+            "workspace_id": self.wsID,
             "inputs": [["genome_file_path", "genome_name"]]
         }
         self._run_test_fail(
@@ -284,7 +277,7 @@ class GenomeFileUtilTest(unittest.TestCase):
     def test_genbanks_to_genomes_invalid_params(self):
         e = 'required "genome_name" field was not defined'
         params = {
-            "workspace_id": self.getWsID(),
+            "workspace_id": self.wsID,
             "inputs": [
                 {"genome": "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"}
             ]
