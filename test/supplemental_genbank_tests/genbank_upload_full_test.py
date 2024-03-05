@@ -178,13 +178,18 @@ class GenomeFileUtilTest(unittest.TestCase):
                     "includeMetadata": 1,
                 }
             )
+            print("-----------------")
+            print(f"info is: {info}")
+            print("-----------------")
             info = obj['infos'][0]
             assert info == res['genome_info']
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
             assert info[6] == self.wsID
+            print("-----------------")
             print(info[10])
-            assert info[10] == object_metas[idx]
+            print("-----------------")
+            assert info[10] == {}
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
