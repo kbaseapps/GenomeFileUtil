@@ -173,7 +173,10 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert object_version_pattern.match("/".join(res['genome_ref'].split("/")[-2:]))
             # Check relevant object info fields
             obj = self.wsClient.get_object_info3(
-                {'objects': [{'ref': res['genome_ref'], 'includeMetadata': 1}]}
+                {
+                    "objects": [{'ref': res['genome_ref']}],
+                    "includeMetadata": 1,
+                }
             )
             info = obj['infos'][0]
             assert info == res['genome_info']
@@ -206,6 +209,17 @@ class GenomeFileUtilTest(unittest.TestCase):
             params,
             "Exactly one of a 'workspace_id' or a 'workspace_name' parameter must be provided",
         )
+
+    # def test_genbank_to_genome(self):
+    #     genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
+    #     result = self.serviceImpl.genbank_to_genome(
+    #         self.ctx,
+    #         {
+    #             "workspace_id": self.wsID,
+    #             "file": {"path": f"data/gbff/{genome_name}"},
+    #             "genome_name": genome_name,
+    #         })[0]
+    #     self._check_result_object_info_fields(result, genome_name, object_metas)
 
     def test_genbanks_to_genomes(self):
         genome_name1 = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
