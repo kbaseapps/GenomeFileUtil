@@ -81,6 +81,7 @@ class _Genome:
         self.assembly_ref = None
         self.assembly_path = None
         self.assembly_info = None
+        self.input_params = None
 
 
 class GenbankToGenome:
@@ -171,8 +172,8 @@ class GenbankToGenome:
 
             # update default params
             input_params = {**self.default_params, **input_params}
+            genome_obj.input_params = input_params
             genome_obj.genome_meta = input_params['metadata']
-            inputs[idx] = input_params
 
             genome_obj.genome_type = input_params.get('genome_type', 'isolate')
             genome_obj.generate_parents = input_params.get('generate_missing_genes')
@@ -195,8 +196,8 @@ class GenbankToGenome:
         self._save_assemblies(workspace_id, genome_objs)
 
         # TODO parse genbank files before the assemblies are saved
-        for input_params, genome_obj in zip(inputs, genome_objs):
-            self._parse_genbank(input_params, genome_obj)
+        for genome_obj in genome_objs:
+            self._parse_genbank(genome_obj)
 
             # clear the temp directory
             # TODO move with parse genbank function into for loop above and save disk space
@@ -327,7 +328,8 @@ class GenbankToGenome:
             {"objects": assembly_objs_spec, "includeMetadata": 1})["infos"]
         return assembly_objs_info
 
-    def _parse_genbank(self, params, genome_obj):
+    def _parse_genbank(self, genome_obj):
+        params = genome_obj.input_params
         genome = {
             "id": params['genome_name'],
             "original_source_file_name": os.path.basename(genome_obj.consolidated_file),
