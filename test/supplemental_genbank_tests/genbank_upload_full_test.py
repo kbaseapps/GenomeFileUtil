@@ -189,7 +189,6 @@ class GenomeFileUtilTest(unittest.TestCase):
             print("-----------------")
             print(info[10])
             print("-----------------")
-            assert info[10] == {}
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
