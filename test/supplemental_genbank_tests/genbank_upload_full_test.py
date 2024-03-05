@@ -157,18 +157,20 @@ class GenomeFileUtilTest(unittest.TestCase):
         self.assertTrue(int(
             result['genome_info'][10]['Number of Protein Encoding Genes']) > 0)
 
-    def _run_test_fail(self, params, error_message, mass=True):
+    def _run_test_fail(self, params, error_message):
         with pytest.raises(Exception) as got:
-            if mass:
-                self.serviceImpl.genbanks_to_genomes(self.ctx, params)
-            else:
-                self.serviceImpl.genbank_to_genome(self.ctx, params)
+            self.serviceImpl.genbank_to_genome(self.ctx, params)
+        assert_exception_correct(got.value, ValueError(error_message))
+
+    def _run_test_fail_mass(self, params, error_message):
+        with pytest.raises(Exception) as got:
+            self.serviceImpl.genbanks_to_genomes(self.ctx, params)
         assert_exception_correct(got.value, ValueError(error_message))
 
     def _check_result_object_info_fields(self, results, file_names, object_metas):
         object_version_pattern = re.compile(r'^[0-9]+\/1$')
         for idx, res in enumerate(results):
-            assert object_version_pattern.match("/".join(res['upa'].split("/")[-2:]))
+            assert object_version_pattern.match("/".join(res['genome_ref'].split("/")[-2:]))
             # Check relevant object info fields
             obj = self.ws.get_object_info3(
                 {'objects': [{'ref': res['genome_ref'], 'includeMetadata': 1}]}
@@ -180,7 +182,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert info[6] == self.wsID
             print(info[10])
             assert info[10] == object_metas[idx]
-    
+
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
         params = {
@@ -190,7 +192,6 @@ class GenomeFileUtilTest(unittest.TestCase):
         self._run_test_fail(
             params,
             "Exactly one of a 'workspace_id' or a 'workspace_name' parameter must be provided",
-            False,
         )
 
     def test_genbanks_to_genomes(self):
@@ -232,7 +233,7 @@ class GenomeFileUtilTest(unittest.TestCase):
                 }
             ]
         }
-        self._run_test_fail(params, "workspace_id is required")
+        self._run_test_fail_mass(params, "workspace_id is required")
 
         wsid = float(self.wsID)
         params = {
@@ -244,7 +245,7 @@ class GenomeFileUtilTest(unittest.TestCase):
                 }
             ]
         }
-        self._run_test_fail(
+        self._run_test_fail_mass(
             params, f"workspace_id must be an integer, got: {wsid}"
         )
 
@@ -257,11 +258,11 @@ class GenomeFileUtilTest(unittest.TestCase):
                 }
             ]
         }
-        self._run_test_fail(params, "workspace_id must be an integer >= 1")
+        self._run_test_fail_mass(params, "workspace_id must be an integer >= 1")
 
     def test_genbanks_to_genomes_invalid_inputs(self):
         params = {"workspace_id": self.wsID, "inputs": []}
-        self._run_test_fail(
+        self._run_test_fail_mass(
             params, "inputs field is required and must be a non-empty list"
         )
 
@@ -269,7 +270,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             "workspace_id": self.wsID,
             "inputs": [["genome_file_path", "genome_name"]]
         }
-        self._run_test_fail(
+        self._run_test_fail_mass(
             params,
             "Entry #1 in inputs field is not a mapping as required",
         )
@@ -282,7 +283,7 @@ class GenomeFileUtilTest(unittest.TestCase):
                 {"genome": "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"}
             ]
         }
-        self._run_test_fail(
+        self._run_test_fail_mass(
             params,
             f"Entry #1 in inputs field has invalid params: {e}",
         )
