@@ -167,7 +167,13 @@ class GenomeFileUtilTest(unittest.TestCase):
             self.serviceImpl.genbanks_to_genomes(self.ctx, params)
         assert_exception_correct(got.value, ValueError(error_message))
 
-    def _check_result_object_info_fields(self, results, file_names, object_metas):
+    def _check_result_object_info_fields_and_provenance(
+        self,
+        results,
+        file_names,
+        object_metas,
+        expected_provenance,
+    ):
         object_version_pattern = re.compile(r'^[0-9]+\/1$')
         for idx, res in enumerate(results):
             assert object_version_pattern.match("/".join(res['genome_ref'].split("/")[-2:]))
@@ -188,10 +194,20 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
 
             # check provenance
-            provenance = data["provenance"]
+            provenance = data["provenance"][0]
             print("-------------")
             print(f"prov: {provenance}")
             print("-------------")
+            retrieved_provenance = {
+                'provenance': [
+                    {
+                        'service': provenance['service'],
+                        'method': provenance['method'],
+                        'method_params': provenance['method_params'],
+                    }
+                ]
+            }
+            assert retrieved_provenance == expected_provenance
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
@@ -228,6 +244,17 @@ class GenomeFileUtilTest(unittest.TestCase):
                 "temp": "curr",
             }
         ]
+
+        expected_provenance = {
+            'provenance': [
+                {
+                    'service': 'GenomeFileUtil',
+                    'method': 'run_local_tests',
+                    'method_params': [],
+                }
+            ]
+        }
+
         result = self.serviceImpl.genbank_to_genome(
             self.ctx,
             {
@@ -236,7 +263,9 @@ class GenomeFileUtilTest(unittest.TestCase):
                 "genome_name": genome_name,
                 "metadata": {"temp": "curr"},
             })
-        self._check_result_object_info_fields(result, [genome_name], object_metas)
+        self._check_result_object_info_fields_and_provenance(
+            result, [genome_name], object_metas, expected_provenance
+        )
 
     def test_genbanks_to_genomes(self):
         genome_name1 = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
@@ -260,6 +289,16 @@ class GenomeFileUtilTest(unittest.TestCase):
             }
         ]
 
+        expected_provenance = {
+            'provenance': [
+                {
+                    'service': 'GenomeFileUtil',
+                    'method': 'run_local_tests',
+                    'method_params': [],
+                }
+            ]
+        }
+
         results = self.serviceImpl.genbanks_to_genomes(
             self.ctx,
             {
@@ -280,7 +319,9 @@ class GenomeFileUtilTest(unittest.TestCase):
         )[0]['results']
 
         self.assertEqual(len(results), 2)
-        self._check_result_object_info_fields(results, file_names, object_metas)
+        self._check_result_object_info_fields_and_provenance(
+            results, file_names, object_metas, expected_provenance
+        )
 
     def test_genbanks_to_genomes_invalid_workspace_id(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
