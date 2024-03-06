@@ -171,18 +171,23 @@ class GenomeFileUtilTest(unittest.TestCase):
         object_version_pattern = re.compile(r'^[0-9]+\/1$')
         for idx, res in enumerate(results):
             assert object_version_pattern.match("/".join(res['genome_ref'].split("/")[-2:]))
-            obj = self.wsClient.get_object_info3(
-                {
-                    "objects": [{'ref': res['genome_ref']}],
-                    "includeMetadata": 1,
-                }
-            )
-            info = obj['infos'][0]
+            data = self.wsClient.get_objects2({"objects": [{'ref': res['genome_ref']}]})["data"][0]
+            # check info
+            info = data["info"]
+            print("-------------")
+            print(f"info: {info}")
+            print("-------------")
             assert info == res['genome_info']
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
             assert info[6] == self.wsID
             assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
+
+            # check provenance
+            provenance = data["provenance"]
+            print("-------------")
+            print(f"prov: {provenance}")
+            print("-------------")
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
@@ -214,7 +219,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             {
                 "GC content": "0.41421",
                 "Size": "4142816",
-                "Number contigs": "1",
+                "N Contigs": "1",
                 "MD5": "cf47d74f66a16dffcbaa7a05eb9eec70",
                 "temp": "curr",
             }
@@ -238,14 +243,14 @@ class GenomeFileUtilTest(unittest.TestCase):
             {
                 "GC content": "0.41457",
                 "Size": "4096482",
-                "Number contigs": "1",
+                "N Contigs": "1",
                 "MD5": "949a0fe665048cb917c8cf74f75c74b7",
                 "foo": "bar",
             },
             {
                 "GC content": "0.41487",
                 "Size": "4066551",
-                "Number contigs": "1",
+                "N Contigs": "1",
                 "MD5": "d33802829ba0686714a5d74280527615",
                 "bar": "foo",
             }
