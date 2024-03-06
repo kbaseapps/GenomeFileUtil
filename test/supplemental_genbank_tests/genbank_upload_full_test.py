@@ -188,6 +188,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
             assert info[6] == self.wsID
             print("-----------")
+            print(f"info is {info}")
             print(f"info is {info[10]}")
             print(f"object_meta is {object_metas[idx]}")
             print([info[10].get(k) == v for k, v in object_metas[idx].items()])
@@ -219,14 +220,14 @@ class GenomeFileUtilTest(unittest.TestCase):
         )
 
     def test_genbank_to_genome(self):
-        genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
+        genome_name = "GCF_000970205.1_ASM97020v1_genomic.gbff.gz"
         object_metas = [
             {
                 "GC content": "0.41457",
                 "Size": "4096482",
                 "Number contigs": "1",
                 "MD5": "949a0fe665048cb917c8cf74f75c74b7",
-                "foo": "bar",
+                "temp": "curr",
             }
         ]
         result = self.serviceImpl.genbank_to_genome(
