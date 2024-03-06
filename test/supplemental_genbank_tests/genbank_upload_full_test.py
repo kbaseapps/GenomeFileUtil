@@ -170,6 +170,10 @@ class GenomeFileUtilTest(unittest.TestCase):
     def _check_result_object_info_fields(self, results, file_names, object_metas):
         object_version_pattern = re.compile(r'^[0-9]+\/1$')
         for idx, res in enumerate(results):
+            print("-----------")
+            print(f"idx is {idx}")
+            print(f"ref is {"/".join(res['genome_ref'].split("/")[-2:])}")
+            print("-----------")
             assert object_version_pattern.match("/".join(res['genome_ref'].split("/")[-2:]))
             obj = self.wsClient.get_object_info3(
                 {
@@ -182,6 +186,11 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
             assert info[6] == self.wsID
+            print("-----------")
+            print(f"info is {info[10]}")
+            print(f"object_meta is {object_metas[idx]}")
+            print([info[10].get(k) == v for k, v in object_metas[idx].items()])
+            print("-----------")
             assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
 
     def test_genbank_to_genome_invalid_workspace(self):
