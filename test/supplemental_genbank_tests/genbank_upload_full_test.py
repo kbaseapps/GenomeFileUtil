@@ -181,6 +181,10 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
             assert info[6] == self.wsID
+            print("-------------")
+            print(info[10])
+            print([info[10].get(k) == v for k, v in object_metas[idx].items()])
+            print("-------------")
             assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
 
             # check provenance
