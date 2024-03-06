@@ -172,7 +172,8 @@ class GenomeFileUtilTest(unittest.TestCase):
         for idx, res in enumerate(results):
             print("-----------")
             print(f"idx is {idx}")
-            print(f"ref is {"/".join(res['genome_ref'].split("/")[-2:])}")
+            ref_output = "/".join(res['genome_ref'].split("/")[-2:])
+            print(f"ref is {ref_output}")
             print("-----------")
             assert object_version_pattern.match("/".join(res['genome_ref'].split("/")[-2:]))
             obj = self.wsClient.get_object_info3(
