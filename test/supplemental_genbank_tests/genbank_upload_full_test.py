@@ -225,6 +225,7 @@ class GenomeFileUtilTest(unittest.TestCase):
                 "workspace_id": self.wsID,
                 "file": {"path": f"data/gbff/{genome_name}"},
                 "genome_name": genome_name,
+                "metadata": {"temp": "curr"},
             })
         self._check_result_object_info_fields(result, [genome_name], object_metas)
 
