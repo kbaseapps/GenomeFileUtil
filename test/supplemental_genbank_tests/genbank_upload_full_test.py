@@ -171,7 +171,6 @@ class GenomeFileUtilTest(unittest.TestCase):
         object_version_pattern = re.compile(r'^[0-9]+\/1$')
         for idx, res in enumerate(results):
             assert object_version_pattern.match("/".join(res['genome_ref'].split("/")[-2:]))
-            # Check relevant object info fields
             obj = self.wsClient.get_object_info3(
                 {
                     "objects": [{'ref': res['genome_ref']}],
@@ -179,16 +178,11 @@ class GenomeFileUtilTest(unittest.TestCase):
                 }
             )
             info = obj['infos'][0]
-            print("-----------------")
-            print(f"info is: {info}")
-            print("-----------------")
             assert info == res['genome_info']
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
             assert info[6] == self.wsID
-            print("-----------------")
-            print(info[10])
-            print("-----------------")
+            assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
@@ -214,24 +208,48 @@ class GenomeFileUtilTest(unittest.TestCase):
             "Exactly one of a 'workspace_id' or a 'workspace_name' parameter must be provided",
         )
 
-    # def test_genbank_to_genome(self):
-    #     genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
-    #     result = self.serviceImpl.genbank_to_genome(
-    #         self.ctx,
-    #         {
-    #             "workspace_id": self.wsID,
-    #             "file": {"path": f"data/gbff/{genome_name}"},
-    #             "genome_name": genome_name,
-    #         })[0]
-    #     self._check_result_object_info_fields(result, genome_name, object_metas)
+    def test_genbank_to_genome(self):
+        genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
+        object_metas = [
+            {
+                "GC content": "0.41457",
+                "Size": "4096482",
+                "Number contigs": "1",
+                "MD5": "949a0fe665048cb917c8cf74f75c74b7",
+                "foo": "bar",
+            }
+        ]
+        result = self.serviceImpl.genbank_to_genome(
+            self.ctx,
+            {
+                "workspace_id": self.wsID,
+                "file": {"path": f"data/gbff/{genome_name}"},
+                "genome_name": genome_name,
+            })
+        self._check_result_object_info_fields(result, [genome_name], object_metas)
 
     def test_genbanks_to_genomes(self):
         genome_name1 = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
         genome_name2 = "GCF_000970185.1_ASM97018v1_genomic.gbff.gz"
         
         file_names = [genome_name1, genome_name2]
-        object_metas = {}
-        
+        object_metas = [
+            {
+                "GC content": "0.41457",
+                "Size": "4096482",
+                "Number contigs": "1",
+                "MD5": "949a0fe665048cb917c8cf74f75c74b7",
+                "foo": "bar",
+            },
+            {
+                "GC content": "0.41487",
+                "Size": "4066551",
+                "Number contigs": "1",
+                "MD5": "d33802829ba0686714a5d74280527615",
+                "bar": "foo",
+            }
+        ]
+
         results = self.serviceImpl.genbanks_to_genomes(
             self.ctx,
             {
