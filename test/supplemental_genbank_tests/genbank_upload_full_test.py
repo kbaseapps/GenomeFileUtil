@@ -219,7 +219,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             {
                 "GC content": "0.41421",
                 "Size": "4142816",
-                "N Contigs": "1",
+                "Number contigs": "1",
                 "MD5": "cf47d74f66a16dffcbaa7a05eb9eec70",
                 "temp": "curr",
             }
@@ -243,14 +243,14 @@ class GenomeFileUtilTest(unittest.TestCase):
             {
                 "GC content": "0.41457",
                 "Size": "4096482",
-                "N Contigs": "1",
+                "Number contigs": "1",
                 "MD5": "949a0fe665048cb917c8cf74f75c74b7",
                 "foo": "bar",
             },
             {
                 "GC content": "0.41487",
                 "Size": "4066551",
-                "N Contigs": "1",
+                "Number contigs": "1",
                 "MD5": "d33802829ba0686714a5d74280527615",
                 "bar": "foo",
             }
