@@ -182,6 +182,12 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
             assert info[6] == self.wsID
+            print("-----------")
+            print(f"info is {info}")
+            print(f"info[10] is {info[10]}")
+            print(f"object_meta is {object_metas[idx]}")
+            print([info[10].get(k) == v for k, v in object_metas[idx].items()])
+            print("-----------")
             assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
 
     def test_genbank_to_genome_invalid_workspace(self):
