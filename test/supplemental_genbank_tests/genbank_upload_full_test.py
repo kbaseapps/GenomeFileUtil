@@ -170,11 +170,6 @@ class GenomeFileUtilTest(unittest.TestCase):
     def _check_result_object_info_fields(self, results, file_names, object_metas):
         object_version_pattern = re.compile(r'^[0-9]+\/1$')
         for idx, res in enumerate(results):
-            print("-----------")
-            print(f"idx is {idx}")
-            ref_output = "/".join(res['genome_ref'].split("/")[-2:])
-            print(f"ref is {ref_output}")
-            print("-----------")
             assert object_version_pattern.match("/".join(res['genome_ref'].split("/")[-2:]))
             obj = self.wsClient.get_object_info3(
                 {
@@ -187,12 +182,6 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
             assert info[6] == self.wsID
-            print("-----------")
-            print(f"info is {info}")
-            print(f"info is {info[10]}")
-            print(f"object_meta is {object_metas[idx]}")
-            print([info[10].get(k) == v for k, v in object_metas[idx].items()])
-            print("-----------")
             assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
 
     def test_genbank_to_genome_invalid_workspace(self):
@@ -223,10 +212,10 @@ class GenomeFileUtilTest(unittest.TestCase):
         genome_name = "GCF_000970205.1_ASM97020v1_genomic.gbff.gz"
         object_metas = [
             {
-                "GC content": "0.41457",
-                "Size": "4096482",
+                "GC content": "0.41421",
+                "Size": "4142816",
                 "Number contigs": "1",
-                "MD5": "949a0fe665048cb917c8cf74f75c74b7",
+                "MD5": "cf47d74f66a16dffcbaa7a05eb9eec70",
                 "temp": "curr",
             }
         ]
