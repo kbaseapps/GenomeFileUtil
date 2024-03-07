@@ -579,8 +579,6 @@ class GenbankToGenome:
         Returns:
             Path to resulting file (currenly it's the same file as input).
         """
-        if len(input_files) == 0:
-            raise ValueError("NO GENBANK FILE")
         temp_dir = os.path.join(os.path.dirname(input_files[0]), "combined")
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir)
