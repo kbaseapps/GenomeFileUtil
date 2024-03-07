@@ -178,26 +178,17 @@ class GenomeFileUtilTest(unittest.TestCase):
         for idx, res in enumerate(results):
             assert object_version_pattern.match("/".join(res['genome_ref'].split("/")[-2:]))
             data = self.wsClient.get_objects2({"objects": [{'ref': res['genome_ref']}]})["data"][0]
+
             # check info
             info = data["info"]
-            print("-------------")
-            print(f"info: {info}")
-            print("-------------")
             assert info == res['genome_info']
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
             assert info[6] == self.wsID
-            print("-------------")
-            print(info[10])
-            print([info[10].get(k) == v for k, v in object_metas[idx].items()])
-            print("-------------")
             assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
 
             # check provenance
             provenance = data["provenance"][0]
-            print("-------------")
-            print(f"prov: {provenance}")
-            print("-------------")
             retrieved_provenance = {
                 'provenance': [
                     {
@@ -375,6 +366,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             "Entry #1 in inputs field is not a mapping as required",
         )
 
+    # TODO test other params in genbanks_to_genomes function
     def test_genbanks_to_genomes_invalid_params(self):
         e = 'required "genome_name" field was not defined'
         params = {
