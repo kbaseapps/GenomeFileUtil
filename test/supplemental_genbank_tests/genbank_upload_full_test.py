@@ -299,11 +299,13 @@ class GenomeFileUtilTest(unittest.TestCase):
                         "file": {"path": f"data/gbff/{genome_name1}"},
                         "genome_name": genome_name1,
                         "metadata": {"foo": "bar"},
+                        'generate_missing_genes': 1,
                     },
                     {
                         "file": {"path": f"data/gbff/{genome_name2}"},
                         "genome_name": genome_name2,
                         "metadata": {"bar": "foo"},
+                        'generate_missing_genes': 1,
                     }
                 ]
             }

@@ -754,6 +754,9 @@ class GenbankToGenome:
                 self._process_gene(_id, out_feat, genome_obj)
 
             elif in_feature.type == 'mRNA':
+                print("----------------")
+                print("mRNA is getting processed ...")
+                print("----------------")
                 self._process_mrna(_id, out_feat, genome_obj)
 
             else:
@@ -952,6 +955,10 @@ class GenbankToGenome:
         return out_feat
 
     def _process_mrna(self, gene_id, out_feat, genome_obj):
+        print("-----------")
+        print(f"gene_id is {gene_id}")
+        print(f"genome_obj.genes is {genome_obj.genes}")
+        print("-----------")
         if gene_id not in genome_obj.genes and genome_obj.generate_parents:
             self._process_gene(gene_id, copy.copy(out_feat), genome_obj)
 
