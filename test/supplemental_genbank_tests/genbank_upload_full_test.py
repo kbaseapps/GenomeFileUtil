@@ -299,13 +299,11 @@ class GenomeFileUtilTest(unittest.TestCase):
                         "file": {"path": f"data/gbff/{genome_name1}"},
                         "genome_name": genome_name1,
                         "metadata": {"foo": "bar"},
-                        'generate_missing_genes': 1,
                     },
                     {
                         "file": {"path": f"data/gbff/{genome_name2}"},
                         "genome_name": genome_name2,
                         "metadata": {"bar": "foo"},
-                        'generate_missing_genes': 1,
                     }
                 ]
             }
@@ -381,3 +379,20 @@ class GenomeFileUtilTest(unittest.TestCase):
             params,
             f"Entry #1 in inputs field has invalid params: {e}",
         )
+
+    def test_genbanks_to_genomes_rMNA(self):
+        genome_name = "Cyanidioschyzon_merolae_one_locus.gbff"
+        results = self.serviceImpl.genbanks_to_genomes(
+            self.ctx,
+            {
+                "workspace_id": self.wsID,
+                "inputs": [
+                    {
+                        "file": {"path": f"data/Cyanidioschyzon/{genome_name}"},
+                        "genome_name": genome_name,
+                        "metadata": {"foo": "bar"},
+                    }
+                ]
+            }
+        )[0]['results']
+
