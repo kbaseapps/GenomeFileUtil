@@ -162,8 +162,7 @@ class GenbankToGenome:
         inputs = params[_INPUTS]
         genome_objs = []
 
-        for idx, input_params in enumerate(inputs):
-
+        for input_params in inputs:
             genome_obj = _Genome()
             genome_obj.genome_name = input_params['genome_name']
 

@@ -390,6 +390,8 @@ class GenomeFileUtilTest(unittest.TestCase):
                     {
                         "file": {"path": f"data/Cyanidioschyzon/{genome_name}"},
                         "genome_name": genome_name,
+                        "generate_ids_if_needed": 1,
+                        "generate_missing_genes": 1,
                         "metadata": {"foo": "bar"},
                     }
                 ]
