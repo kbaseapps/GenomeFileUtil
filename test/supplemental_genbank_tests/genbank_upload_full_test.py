@@ -392,6 +392,8 @@ class GenomeFileUtilTest(unittest.TestCase):
                         "genome_name": genome_name,
                         "generate_ids_if_needed": 1,
                         "generate_missing_genes": 1,
+                        "taxon_id": "511145",
+                        "source": "Ensembl user",
                         "metadata": {"foo": "bar"},
                     }
                 ]
