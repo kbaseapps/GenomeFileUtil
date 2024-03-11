@@ -177,7 +177,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         for res in results:
             genome = self.dfuClient.get_objects({'object_refs': [res['genome_ref']]})['data'][0]['data']
             print("-------")
-            print(f"check dfu client {genome}")
+            print(f"check dfu client warnings {genome.get("warnings", [])}")
             print("-------")
 
     def _check_result_object_info_fields_and_provenance(
