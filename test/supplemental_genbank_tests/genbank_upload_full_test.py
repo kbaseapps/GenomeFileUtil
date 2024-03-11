@@ -193,7 +193,7 @@ class GenomeFileUtilTest(unittest.TestCase):
 
             # check data
             print("-------------")
-            print(f"data is {data["info"]}")
+            print(f"data is {data["data"]}")
             print("-------------")
 
             # check provenance
