@@ -173,14 +173,6 @@ class GenomeFileUtilTest(unittest.TestCase):
             self.serviceImpl.genbanks_to_genomes(self.ctx, params)
         assert_exception_correct(got.value, ValueError(error_message))
 
-    def _check_spoof(self, results):
-        for res in results:
-            genome = self.dfuClient.get_objects({'object_refs': [res['genome_ref']]})['data'][0]['data']
-            print("-------")
-            print("check dfu client warnings")
-            print(genome.get("warnings", []))
-            print("-------")
-
     def _check_result_object_info_fields_and_provenance(
         self,
         results,
@@ -262,7 +254,6 @@ class GenomeFileUtilTest(unittest.TestCase):
                 "metadata": {"temp": "curr"},
             })
 
-        self._check_spoof(result)
         self._check_result_object_info_fields_and_provenance(
             result, [genome_name], object_metas, self.provenance
         )
@@ -380,25 +371,17 @@ class GenomeFileUtilTest(unittest.TestCase):
         )
 
     def test_genbanks_to_genomes_spoof(self):
-        genome_name = "Ecoli_spoofing_test_genome.gbff"
+        genome_name = "Cyanidioschyzon_merolae_one_locus.gbff"
 
         object_metas = [
             {
-                "GC content": "0.5207",
-                "Size": "10000",
+                "GC content": "0.27065",
+                "Size": "32211",
                 "Number contigs": "1",
-                "MD5": "a049c3e96aabd0821b83715bf0ca4250",
+                "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
                 "curr": "temp",
             }
         ]
-
-            # {
-            #     "GC content": "0.27065",
-            #     "Size": "32211",
-            #     "Number contigs": "1",
-            #     "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
-            #     "curr": "temp",
-            # }
 
         results = self.serviceImpl.genbanks_to_genomes(
             self.ctx,
@@ -406,17 +389,16 @@ class GenomeFileUtilTest(unittest.TestCase):
                 "workspace_id": self.wsID,
                 "inputs": [
                     {
-                        "file": {"path": f"data/e_coli/{genome_name}"},
+                        "file": {"path": f"data/Cyanidioschyzon/{genome_name}"},
                         "genome_name": genome_name,
                         "generate_ids_if_needed": 1,
-                        "generate_missing_genes": 1,
+                        # "generate_missing_genes": 1,
                         "metadata": {"curr": "temp"},
                     }
                 ]
             }
         )[0]['results']
 
-        self._check_spoof(results)
         self._check_result_object_info_fields_and_provenance(
             results, [genome_name], object_metas, self.provenance
         )
