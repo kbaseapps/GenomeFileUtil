@@ -380,7 +380,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         )
 
     def test_genbanks_to_genomes_spoof(self):
-        genome_name = "Cyanidioschyzon_merolae_one_locus.gbff"
+        genome_name = "Ecoli_spoofing_test_genome.gbff"
 
         object_metas = [
             {
@@ -398,7 +398,7 @@ class GenomeFileUtilTest(unittest.TestCase):
                 "workspace_id": self.wsID,
                 "inputs": [
                     {
-                        "file": {"path": f"data/Cyanidioschyzon/{genome_name}"},
+                        "file": {"path": f"data/e_coli/{genome_name}"},
                         "genome_name": genome_name,
                         "generate_ids_if_needed": 1,
                         "generate_missing_genes": 1,
