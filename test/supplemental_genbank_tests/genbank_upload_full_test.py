@@ -9,7 +9,6 @@ from configparser import ConfigParser
 from installed_clients.DataFileUtilClient import DataFileUtil
 from GenomeFileUtil.GenomeFileUtilImpl import GenomeFileUtil
 from GenomeFileUtil.GenomeFileUtilServer import MethodContext
-from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.WorkspaceClient import Workspace as workspaceService
 from conftest import assert_exception_correct
 
@@ -21,13 +20,20 @@ class GenomeFileUtilTest(unittest.TestCase):
         # WARNING: don't call any logging methods on the context object,
         # it'll result in a NoneType error
         cls.ctx = MethodContext(None)
-        cls.ctx.update({'token': token,
-                        'provenance': [
-                            {'service': 'GenomeFileUtil',
-                             'method': 'please_never_use_it_in_production',
-                             'method_params': []
-                             }],
-                        'authenticated': 1})
+        cls.provenance = [
+            {
+                'service': 'GenomeFileUtil',
+                'method': 'run_local_tests',
+                'method_params': [],
+            }
+        ]
+        cls.ctx.update(
+            {
+                'token': token,
+                'provenance': cls.provenance,
+                'authenticated': 1
+            }
+        )
         config_file = os.environ.get('KB_DEPLOYMENT_CONFIG', None)
         cls.cfg = {}
         config = ConfigParser()
@@ -40,6 +46,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         cls.wsName = "test_GenomeFileUtil_" + str(suffix)
         cls.wsID = cls.wsClient.create_workspace({'workspace': cls.wsName})[0]
         cls.serviceImpl = GenomeFileUtil(cls.cfg)
+        cls.dfuClient = DataFileUtil(os.environ['SDK_CALLBACK_URL'])
 
     @classmethod
     def tearDownClass(cls):
@@ -141,9 +148,8 @@ class GenomeFileUtilTest(unittest.TestCase):
         ### Test for upload from SHOCK - upload the file to shock first
         print('attempting upload through shock')
         gbk_path = "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff"
-        data_file_cli = DataFileUtil(os.environ['SDK_CALLBACK_URL'])
         shutil.copy(gbk_path, self.cfg['scratch'])
-        shock_id = data_file_cli.file_to_shock({
+        shock_id = self.dfuClient.file_to_shock({
             'file_path': os.path.join(self.cfg['scratch'], gbk_path.split("/")[-1])
         })['shock_id']
         print("Running test")
@@ -166,6 +172,13 @@ class GenomeFileUtilTest(unittest.TestCase):
         with pytest.raises(Exception) as got:
             self.serviceImpl.genbanks_to_genomes(self.ctx, params)
         assert_exception_correct(got.value, ValueError(error_message))
+
+    def _check_spoof(self, results):
+        for res in results:
+            genome = self.dfuClient.get_objects({'object_refs': [res['genome_ref']]})['data'][0]['data']
+            print("-------")
+            print(f"check dfu client {genome}")
+            print("-------")
 
     def _check_result_object_info_fields_and_provenance(
         self,
@@ -191,22 +204,16 @@ class GenomeFileUtilTest(unittest.TestCase):
             print("-------------")
             assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
 
-            # check data
-            print("-------------")
-            print(f"data is {data["data"]}")
-            print("-------------")
-
             # check provenance
             provenance = data["provenance"][0]
-            retrieved_provenance = {
-                'provenance': [
-                    {
-                        'service': provenance['service'],
-                        'method': provenance['method'],
-                        'method_params': provenance['method_params'],
-                    }
-                ]
-            }
+            retrieved_provenance = [
+                {
+                    'service': provenance['service'],
+                    'method': provenance['method'],
+                    'method_params': provenance['method_params'],
+                }
+            ]
+
             assert retrieved_provenance == expected_provenance
 
     def test_genbank_to_genome_invalid_workspace(self):
@@ -245,16 +252,6 @@ class GenomeFileUtilTest(unittest.TestCase):
             }
         ]
 
-        expected_provenance = {
-            'provenance': [
-                {
-                    'service': 'GenomeFileUtil',
-                    'method': 'run_local_tests',
-                    'method_params': [],
-                }
-            ]
-        }
-
         result = self.serviceImpl.genbank_to_genome(
             self.ctx,
             {
@@ -263,8 +260,10 @@ class GenomeFileUtilTest(unittest.TestCase):
                 "genome_name": genome_name,
                 "metadata": {"temp": "curr"},
             })
+
+        self._check_spoof(result)
         self._check_result_object_info_fields_and_provenance(
-            result, [genome_name], object_metas, expected_provenance
+            result, [genome_name], object_metas, self.provenance
         )
 
     def test_genbanks_to_genomes(self):
@@ -289,16 +288,6 @@ class GenomeFileUtilTest(unittest.TestCase):
             }
         ]
 
-        expected_provenance = {
-            'provenance': [
-                {
-                    'service': 'GenomeFileUtil',
-                    'method': 'run_local_tests',
-                    'method_params': [],
-                }
-            ]
-        }
-
         results = self.serviceImpl.genbanks_to_genomes(
             self.ctx,
             {
@@ -320,7 +309,7 @@ class GenomeFileUtilTest(unittest.TestCase):
 
         self.assertEqual(len(results), 2)
         self._check_result_object_info_fields_and_provenance(
-            results, file_names, object_metas, expected_provenance
+            results, file_names, object_metas, self.provenance
         )
 
     def test_genbanks_to_genomes_invalid_workspace_id(self):
@@ -402,16 +391,6 @@ class GenomeFileUtilTest(unittest.TestCase):
             }
         ]
 
-        expected_provenance = {
-            'provenance': [
-                {
-                    'service': 'GenomeFileUtil',
-                    'method': 'run_local_tests',
-                    'method_params': [],
-                }
-            ]
-        }
-
         results = self.serviceImpl.genbanks_to_genomes(
             self.ctx,
             {
@@ -428,6 +407,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             }
         )[0]['results']
 
+        self._check_spoof(results)
         self._check_result_object_info_fields_and_provenance(
-            results, [genome_name], object_metas, expected_provenance
+            results, [genome_name], object_metas, self.provenance
         )
