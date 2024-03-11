@@ -384,13 +384,21 @@ class GenomeFileUtilTest(unittest.TestCase):
 
         object_metas = [
             {
-                "GC content": "0.27065",
-                "Size": "32211",
+                "GC content": "0.5207",
+                "Size": "10000",
                 "Number contigs": "1",
-                "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
+                "MD5": "a049c3e96aabd0821b83715bf0ca4250",
                 "curr": "temp",
             }
         ]
+
+            # {
+            #     "GC content": "0.27065",
+            #     "Size": "32211",
+            #     "Number contigs": "1",
+            #     "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
+            #     "curr": "temp",
+            # }
 
         results = self.serviceImpl.genbanks_to_genomes(
             self.ctx,
