@@ -185,6 +185,10 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
             assert info[6] == self.wsID
+            print("-------------")
+            print(info[10])
+            print([info[10].get(k) == v for k, v in object_metas[idx].items()])
+            print("-------------")
             assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
 
             # check provenance
@@ -380,8 +384,29 @@ class GenomeFileUtilTest(unittest.TestCase):
             f"Entry #1 in inputs field has invalid params: {e}",
         )
 
-    def test_genbanks_to_genomes_rMNA(self):
+    def test_genbanks_to_genomes_spoof(self):
         genome_name = "Cyanidioschyzon_merolae_one_locus.gbff"
+
+        object_metas = [
+            {
+                "GC content": "0.41421",
+                "Size": "4142816",
+                "Number contigs": "1",
+                "MD5": "cf47d74f66a16dffcbaa7a05eb9eec70",
+                "curr": "temp",
+            }
+        ]
+
+        expected_provenance = {
+            'provenance': [
+                {
+                    'service': 'GenomeFileUtil',
+                    'method': 'run_local_tests',
+                    'method_params': [],
+                }
+            ]
+        }
+
         results = self.serviceImpl.genbanks_to_genomes(
             self.ctx,
             {
@@ -392,11 +417,12 @@ class GenomeFileUtilTest(unittest.TestCase):
                         "genome_name": genome_name,
                         "generate_ids_if_needed": 1,
                         "generate_missing_genes": 1,
-                        "taxon_id": "511145",
-                        "source": "Ensembl user",
-                        "metadata": {"foo": "bar"},
+                        "metadata": {"curr": "temp"},
                     }
                 ]
             }
         )[0]['results']
 
+        self._check_result_object_info_fields_and_provenance(
+            results, [genome_name], object_metas, expected_provenance
+        )
