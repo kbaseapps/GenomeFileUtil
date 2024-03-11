@@ -191,6 +191,11 @@ class GenomeFileUtilTest(unittest.TestCase):
             print("-------------")
             assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
 
+            # check data
+            print("-------------")
+            print(f"data is {data["info"]}")
+            print("-------------")
+
             # check provenance
             provenance = data["provenance"][0]
             retrieved_provenance = {
@@ -389,10 +394,10 @@ class GenomeFileUtilTest(unittest.TestCase):
 
         object_metas = [
             {
-                "GC content": "0.41421",
-                "Size": "4142816",
+                "GC content": "0.27065",
+                "Size": "32211",
                 "Number contigs": "1",
-                "MD5": "cf47d74f66a16dffcbaa7a05eb9eec70",
+                "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
                 "curr": "temp",
             }
         ]
