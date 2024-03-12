@@ -261,6 +261,7 @@ class GenomeFileUtilTest(unittest.TestCase):
     def test_genbanks_to_genomes(self):
         genome_name1 = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
         genome_name2 = "GCF_000970185.1_ASM97018v1_genomic.gbff.gz"
+        # genome_name3 = "Cyanidioschyzon_merolae_one_locus.gbff"
         
         file_names = [genome_name1, genome_name2]
         object_metas = [
@@ -277,7 +278,21 @@ class GenomeFileUtilTest(unittest.TestCase):
                 "Number contigs": "1",
                 "MD5": "d33802829ba0686714a5d74280527615",
                 "bar": "foo",
-            }
+            },
+            # {
+            #     "GC content": "0.27065",
+            #     "Size": "32211",
+            #     "Number contigs": "1",
+            #     "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
+            #     "curr": "temp",
+            # },
+            # {
+            #     "GC content": "0.27065",
+            #     "Size": "32211",
+            #     "Number contigs": "1",
+            #     "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
+            #     "curr": "temp",
+            # },
         ]
 
         results = self.serviceImpl.genbanks_to_genomes(
@@ -373,15 +388,15 @@ class GenomeFileUtilTest(unittest.TestCase):
     def test_genbanks_to_genomes_generate_ids_and_missing_genes(self):
         genome_name = "mRNA_with_no_parent.gbff"
 
-        # object_metas = [
-        #     {
-        #         "GC content": "0.27065",
-        #         "Size": "32211",
-        #         "Number contigs": "1",
-        #         "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
-        #         "curr": "temp",
-        #     }
-        # ]
+        object_metas = [
+            {
+                "GC content": "0.27065",
+                "Size": "32211",
+                "Number contigs": "1",
+                "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
+                "curr": "temp",
+            }
+        ]
 
         results = self.serviceImpl.genbanks_to_genomes(
             self.ctx,
@@ -399,7 +414,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             }
         )[0]['results']
 
-        # # TODO maybe more test
-        # self._check_result_object_info_fields_and_provenance(
-        #     results, [genome_name], object_metas, self.provenance
-        # )
+        # TODO maybe more test
+        self._check_result_object_info_fields_and_provenance(
+            results, [genome_name], object_metas, self.provenance
+        )
