@@ -191,10 +191,6 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
             assert info[6] == self.wsID
-            print("-------------")
-            print(info[10])
-            print([info[10].get(k) == v for k, v in object_metas[idx].items()])
-            print("-------------")
             assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
 
             # check provenance
@@ -370,7 +366,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             f"Entry #1 in inputs field has invalid params: {e}",
         )
 
-    def test_genbanks_to_genomes_spoof(self):
+    def test_genbanks_to_genomes_generate_ids_and_missing_genes(self):
         genome_name = "Cyanidioschyzon_merolae_one_locus.gbff"
 
         object_metas = [
@@ -392,13 +388,14 @@ class GenomeFileUtilTest(unittest.TestCase):
                         "file": {"path": f"data/Cyanidioschyzon/{genome_name}"},
                         "genome_name": genome_name,
                         "generate_ids_if_needed": 1,
-                        # "generate_missing_genes": 1,
+                        "generate_missing_genes": 1,
                         "metadata": {"curr": "temp"},
                     }
                 ]
             }
         )[0]['results']
 
+        # TODO maybe more test
         self._check_result_object_info_fields_and_provenance(
             results, [genome_name], object_metas, self.provenance
         )
