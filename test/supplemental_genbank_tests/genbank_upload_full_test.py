@@ -262,7 +262,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         genome_name1 = "GCF_000970185.1_ASM97018v1_genomic.gbff.gz"
         genome_name2 = "Cyanidioschyzon_merolae_one_locus.gbff"
         genome_name3 = "mRNA_with_no_parent.gbff"
-        genome_name4 = "ontology_gbff"
+        genome_name4 = "ontology.gbff"
         
         file_names = [genome_name1, genome_name2, genome_name3, genome_name4]
         object_metas = [
