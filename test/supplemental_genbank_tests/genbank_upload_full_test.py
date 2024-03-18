@@ -191,10 +191,10 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
             assert info[6] == self.wsID
-            # print("-------------")
-            # print(info[10])
-            # print([info[10].get(k) == v for k, v in object_metas[idx].items()])
-            # print("-------------")
+            print("-------------")
+            print(info[10])
+            print([info[10].get(k) == v for k, v in object_metas[idx].items()])
+            print("-------------")
             assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
 
             # check provenance
@@ -259,20 +259,13 @@ class GenomeFileUtilTest(unittest.TestCase):
         )
 
     def test_genbanks_to_genomes(self):
-        genome_name1 = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
-        genome_name2 = "GCF_000970185.1_ASM97018v1_genomic.gbff.gz"
-        genome_name3 = "Cyanidioschyzon_merolae_one_locus.gbff"
-        genome_name4 = "mRNA_with_no_parent.gbff"
+        genome_name1 = "GCF_000970185.1_ASM97018v1_genomic.gbff.gz"
+        genome_name2 = "Cyanidioschyzon_merolae_one_locus.gbff"
+        genome_name3 = "mRNA_with_no_parent.gbff"
+        genome_name4 = "ontology_gbff"
         
         file_names = [genome_name1, genome_name2, genome_name3, genome_name4]
         object_metas = [
-            {
-                "GC content": "0.41457",
-                "Size": "4096482",
-                "Number contigs": "1",
-                "MD5": "949a0fe665048cb917c8cf74f75c74b7",
-                "foo": "bar",
-            },
             {
                 "GC content": "0.41487",
                 "Size": "4066551",
@@ -294,6 +287,13 @@ class GenomeFileUtilTest(unittest.TestCase):
                 "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
                 "temp": "curr",
             },
+            {
+                "GC content": "0.27065",
+                "Size": "32211",
+                "Number contigs": "1",
+                "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
+                "foo": "bar",
+            },
         ]
 
         results = self.serviceImpl.genbanks_to_genomes(
@@ -304,26 +304,28 @@ class GenomeFileUtilTest(unittest.TestCase):
                     {
                         "file": {"path": f"data/gbff/{genome_name1}"},
                         "genome_name": genome_name1,
-                        "metadata": {"foo": "bar"},
-                    },
-                    {
-                        "file": {"path": f"data/gbff/{genome_name2}"},
-                        "genome_name": genome_name2,
                         "metadata": {"bar": "foo"},
                     },
                     {
-                        "file": {"path": f"data/Cyanidioschyzon/{genome_name3}"},
-                        "genome_name": genome_name3,
+                        "file": {"path": f"data/Cyanidioschyzon/{genome_name2}"},
+                        "genome_name": genome_name2,
                         "generate_ids_if_needed": 1,
                         "generate_missing_genes": 1,
                         "metadata": {"curr": "temp"},
+                    },
+                    {
+                        "file": {"path": f"data/genome_curated/{genome_name3}"},
+                        "genome_name": genome_name3,
+                        "generate_ids_if_needed": 1,
+                        "generate_missing_genes": 1,
+                        "metadata": {"temp": "curr"},
                     },
                     {
                         "file": {"path": f"data/genome_curated/{genome_name4}"},
                         "genome_name": genome_name4,
                         "generate_ids_if_needed": 1,
                         "generate_missing_genes": 1,
-                        "metadata": {"temp": "curr"},
+                        "metadata": {"foo": "bar"},
                     }
                 ]
             }
