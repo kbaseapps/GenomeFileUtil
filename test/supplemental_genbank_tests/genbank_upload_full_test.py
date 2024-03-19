@@ -185,8 +185,17 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert object_version_pattern.match("/".join(res['genome_ref'].split("/")[-2:]))
             data = self.wsClient.get_objects2({"objects": [{'ref': res['genome_ref']}]})["data"][0]
 
+            # check data
+            d = data["data"]
+            print("-------------")
+            print(f"data is {d}")
+            print("-------------")
+
             # check info
             info = data["info"]
+            print("-------------")
+            print(f"info is {info}")
+            print("-------------")
             assert info == res['genome_info']
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
@@ -195,6 +204,9 @@ class GenomeFileUtilTest(unittest.TestCase):
 
             # check provenance
             provenance = data["provenance"][0]
+            print("-------------")
+            print(f"provenance is {provenance}")
+            print("-------------")
             retrieved_provenance = [
                 {
                     'service': provenance['service'],
