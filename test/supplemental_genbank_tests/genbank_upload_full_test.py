@@ -262,11 +262,6 @@ class GenomeFileUtilTest(unittest.TestCase):
             # check provenance
             provenance = data["provenance"]
             retrieved_provenance = self._retrieve_provenance(provenance)
-            print("-------------")
-            print(f"provenance is {provenance}")
-            print(f"retrieved_provenance is {retrieved_provenance}")
-            print(f"expected_provenance is {expected_provenance}")
-            print("-------------")
             assert retrieved_provenance == expected_provenance
 
     def test_genbank_to_genome_invalid_workspace(self):
