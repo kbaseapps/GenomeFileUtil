@@ -5,6 +5,7 @@ import shutil
 import time
 import unittest
 from configparser import ConfigParser
+from datetime import datetime
 
 from installed_clients.DataFileUtilClient import DataFileUtil
 from GenomeFileUtil.GenomeFileUtilImpl import GenomeFileUtil
@@ -12,6 +13,10 @@ from GenomeFileUtil.GenomeFileUtilServer import MethodContext
 from installed_clients.WorkspaceClient import Workspace as workspaceService
 from conftest import assert_exception_correct
 
+_GENOMEFILEUTIL_VERSION = "local-dev"
+_DATAFILEUTIL_VERSION = "0.2.1-release"
+_ASSEMBLYUTIL_VERSION = "3.1.1-release"
+_WSLARGEDATAIO_VERSION = "0.0.5-beta"
 
 class GenomeFileUtilTest(unittest.TestCase):
     @classmethod
@@ -22,9 +27,39 @@ class GenomeFileUtilTest(unittest.TestCase):
         cls.ctx = MethodContext(None)
         cls.provenance = [
             {
-                'service': 'GenomeFileUtil',
-                'method': 'run_local_tests',
-                'method_params': [],
+                "service": "GenomeFileUtil",
+                "service_ver": "local-dev",
+                "method": "run_local_tests",
+                "method_params": [],
+                "input_ws_objects": [],
+                "resolved_ws_objects": [],
+                "intermediate_incoming": [],
+                "intermediate_outgoing": [],
+                "external_data": [],
+                "subactions": [
+                    {
+                        "name": "GenomeFileUtil",
+                        "ver": _GENOMEFILEUTIL_VERSION,
+                        "code_url": "https://localhost",
+                    },
+                    {
+                        "name": "DataFileUtil",
+                        "ver": _DATAFILEUTIL_VERSION,
+                        "code_url": "https://github.com/kbaseapps/DataFileUtil",
+                    },
+                    {
+                        "name": "AssemblyUtil",
+                        "ver": _ASSEMBLYUTIL_VERSION,
+                        "code_url": "https://github.com/kbaseapps/AssemblyUtil",
+                    },
+                    {
+                        "name": "WsLargeDataIO",
+                        "ver": _WSLARGEDATAIO_VERSION,
+                        "code_url": "https://github.com/kbaseapps/WsLargeDataIO",
+                    },
+                ],
+                "custom": {},
+                "description": "KBase SDK method run via the KBase Execution Engine",
             }
         ]
         cls.ctx.update(
@@ -173,6 +208,21 @@ class GenomeFileUtilTest(unittest.TestCase):
             self.serviceImpl.genbanks_to_genomes(self.ctx, params)
         assert_exception_correct(got.value, ValueError(error_message))
 
+    def _retrieve_provenance(self, provenance):
+        # make a copy to avoid modifying the original provenance
+        prov = dict(provenance)
+        for key in ["time", "epoch"]:
+            prov.pop(key)
+        for subaction in prov['subactions']:
+            subaction.pop("commit")
+        return prov
+
+    def _retrive_metadata(self, metadata):
+        # make a copy to avoid modifying the original metadata
+        metadata = dict(metadata)
+        metadata.pop("Assembly Object")
+        return metadata
+
     def _check_result_object_info_fields_and_provenance(
         self,
         results,
@@ -180,41 +230,31 @@ class GenomeFileUtilTest(unittest.TestCase):
         object_metas,
         expected_provenance,
     ):
-        object_version_pattern = re.compile(r'^[0-9]+\/1$')
+        object_version_pattern = re.compile(r'^[0-9]+\/[0-9]+\/1$')
         for idx, res in enumerate(results):
-            assert object_version_pattern.match("/".join(res['genome_ref'].split("/")[-2:]))
-            data = self.wsClient.get_objects2({"objects": [{'ref': res['genome_ref']}]})["data"][0]
 
-            # check data
-            d = data["data"]
-            print("-------------")
-            print(f"data is {d}")
-            print("-------------")
+            assert object_version_pattern.match(res['genome_ref'])
+            data = self.wsClient.get_objects2({"objects": [{'ref': res['genome_ref']}]})["data"][0]
 
             # check info
             info = data["info"]
-            print("-------------")
-            print(f"info is {info}")
-            print("-------------")
             assert info == res['genome_info']
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
+            assert datetime.fromisoformat(info[3])
             assert info[6] == self.wsID
-            assert all(info[10].get(k) == v for k, v in object_metas[idx].items())
+            assert info[7] == self.wsName
+            assert info[10] == self._retrive_metadata(object_metas[idx])
 
             # check provenance
             provenance = data["provenance"][0]
             print("-------------")
             print(f"provenance is {provenance}")
             print("-------------")
-            retrieved_provenance = [
-                {
-                    'service': provenance['service'],
-                    'method': provenance['method'],
-                    'method_params': provenance['method_params'],
-                }
-            ]
-
+            retrieved_provenance = self._retrieve_provenance(provenance)
+            print("-------------")
+            print(f"retrieved_provenance is {retrieved_provenance}")
+            print("-------------")
             assert retrieved_provenance == expected_provenance
 
     def test_genbank_to_genome_invalid_workspace(self):
@@ -245,11 +285,21 @@ class GenomeFileUtilTest(unittest.TestCase):
         genome_name = "GCF_000970205.1_ASM97020v1_genomic.gbff.gz"
         object_metas = [
             {
-                "GC content": "0.41421",
-                "Size": "4142816",
-                "Number contigs": "1",
-                "MD5": "cf47d74f66a16dffcbaa7a05eb9eec70",
                 "temp": "curr",
+                "Taxonomy": "Unconfirmed Organism",
+                "Size": "4142816",
+                "Source": "Genbank",
+                "Name": "Methanosarcina mazei S-6",
+                "GC content": "0.41421",
+                "Genetic code": "11",
+                "Number of Genome Level Warnings": "1",
+                "Source ID": "NZ_CP009512",
+                "Number of Protein Encoding Genes": "3509",
+                "Assembly Object": "73257/5/1",
+                "Number contigs": "1",
+                "Domain": "Unknown",
+                "Number of CDS": "3509",
+                "MD5": "cf47d74f66a16dffcbaa7a05eb9eec70",
             }
         ]
 
@@ -275,32 +325,68 @@ class GenomeFileUtilTest(unittest.TestCase):
         file_names = [genome_name1, genome_name2, genome_name3, genome_name4]
         object_metas = [
             {
-                "GC content": "0.41487",
+                "Taxonomy": "Unconfirmed Organism",
                 "Size": "4066551",
-                "Number contigs": "1",
-                "MD5": "d33802829ba0686714a5d74280527615",
+                "Source": "Genbank",
+                "Name": "Methanosarcina mazei SarPi",
+                "GC content": "0.41487",
+                "Genetic code": "11",
                 "bar": "foo",
+                "Number of Genome Level Warnings": "1",
+                "Source ID": "NZ_CP009511",
+                "Number of Protein Encoding Genes": "3403",
+                "Number contigs": "1",
+                "Domain": "Unknown",
+                "Number of CDS": "3403",
+                "MD5": "d33802829ba0686714a5d74280527615",
             },
             {
-                "GC content": "0.27065",
+                "Taxonomy": "Unconfirmed Organism",
                 "Size": "32211",
+                "Source": "Genbank",
+                "Name": "Cyanidioschyzon merolae strain 10D",
+                "GC content": "0.27065",
+                "Genetic code": "11",
+                "Number of Genome Level Warnings": "2",
+                "Source ID": "MitoASM9120v1",
+                "Number of Protein Encoding Genes": "34",
                 "Number contigs": "1",
-                "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
                 "curr": "temp",
+                "Domain": "Unknown",
+                "Number of CDS": "34",
+                "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
             },
             {
-                "GC content": "0.27065",
-                "Size": "32211",
-                "Number contigs": "1",
-                "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
                 "temp": "curr",
+                "Taxonomy": "Unconfirmed Organism",
+                "Size": "32211",
+                "Source": "Genbank",
+                "Name": "Cyanidioschyzon merolae strain 10D",
+                "GC content": "0.27065",
+                "Genetic code": "11",
+                "Number of Genome Level Warnings": "1",
+                "Source ID": "MitoASM9120v1",
+                "Number of Protein Encoding Genes": "0",
+                "Number contigs": "1",
+                "Domain": "Unknown",
+                "Number of CDS": "0",
+                "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
             },
             {
-                "GC content": "0.27065",
+                "Taxonomy": "Unconfirmed Organism",
                 "Size": "32211",
-                "Number contigs": "1",
-                "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
                 "foo": "bar",
+                "Source": "Genbank",
+                "Name": "Cyanidioschyzon merolae strain 10D",
+                "GC content": "0.27065",
+                "Genetic code": "11",
+                "Number of Genome Level Warnings": "1",
+                "Source ID": "MitoASM9120v1",
+                "Number of Protein Encoding Genes": "1",
+                "Number contigs": "1",
+                "Domain": "Unknown",
+                "Number of CDS": "1",
+                "MD5": "43b94ee0851f3b9e9db521167c6fcba3",
             },
         ]
 
