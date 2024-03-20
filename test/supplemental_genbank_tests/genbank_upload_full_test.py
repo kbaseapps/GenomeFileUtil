@@ -227,7 +227,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         self,
         results,
         file_names,
-        object_metas,
+        expected_metadata,
         expected_provenance,
     ):
         object_version_pattern = re.compile(r'^[0-9]+\/[0-9]+\/1$')
@@ -245,7 +245,9 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert datetime.strptime(info[3], '%Y-%m-%dT%H:%M:%S+%f')
             assert info[6] == self.wsID
             assert info[7] == self.wsName
-            assert info[10] == self._retrive_metadata(object_metas[idx])
+            # check metadata
+            retrieved_metadata = self._retrive_metadata(info[10])
+            assert retrieved_metadata == expected_metadata[idx]
 
             # check provenance
             provenance = data["provenance"][0]
