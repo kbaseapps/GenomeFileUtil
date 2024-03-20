@@ -16,6 +16,7 @@ from conftest import assert_exception_correct
 _GENOMEFILEUTIL_VERSION = "local-dev"
 _DATAFILEUTIL_VERSION = "0.2.1-release"
 _ASSEMBLYUTIL_VERSION = "3.1.1-release"
+_GENOMEANNOTATIONAPI_VERSION = "1.0.2-release"
 _WSLARGEDATAIO_VERSION = "0.0.5-beta"
 
 class GenomeFileUtilTest(unittest.TestCase):
@@ -43,14 +44,19 @@ class GenomeFileUtilTest(unittest.TestCase):
                         "code_url": "https://localhost",
                     },
                     {
+                        "name": "AssemblyUtil",
+                        "ver": _ASSEMBLYUTIL_VERSION,
+                        "code_url": "https://github.com/kbaseapps/AssemblyUtil",
+                    },
+                    {
                         "name": "DataFileUtil",
                         "ver": _DATAFILEUTIL_VERSION,
                         "code_url": "https://github.com/kbaseapps/DataFileUtil",
                     },
                     {
-                        "name": "AssemblyUtil",
-                        "ver": _ASSEMBLYUTIL_VERSION,
-                        "code_url": "https://github.com/kbaseapps/AssemblyUtil",
+                        'name': 'GenomeAnnotationAPI',
+                        'ver': _GENOMEANNOTATIONAPI_VERSION,
+                        'code_url': 'https://github.com/kbase/genome_annotation_api',
                     },
                     {
                         "name": "WsLargeDataIO",
@@ -257,6 +263,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             provenance = data["provenance"]
             retrieved_provenance = self._retrieve_provenance(provenance)
             print("-------------")
+            print(f"provenance is {provenance}")
             print(f"retrieved_provenance is {retrieved_provenance}")
             print(f"expected_provenance is {expected_provenance}")
             print("-------------")
