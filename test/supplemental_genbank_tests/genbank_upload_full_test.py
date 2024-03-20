@@ -257,12 +257,10 @@ class GenomeFileUtilTest(unittest.TestCase):
 
             # check provenance
             provenance = data["provenance"]
-
             retrieved_provenance = self._retrieve_provenance(provenance)
             print("-------------")
             print(f"retrieved_provenance is {retrieved_provenance}")
             print(f"expected_provenance is {expected_provenance}")
-            print([retrieved_provenance.get(k) == v for k, v in expected_provenance[idx].items()])
             print("-------------")
             assert retrieved_provenance == expected_provenance
 
@@ -304,7 +302,6 @@ class GenomeFileUtilTest(unittest.TestCase):
                 "Number of Genome Level Warnings": "1",
                 "Source ID": "NZ_CP009512",
                 "Number of Protein Encoding Genes": "3509",
-                "Assembly Object": "73257/5/1",
                 "Number contigs": "1",
                 "Domain": "Unknown",
                 "Number of CDS": "3509",
