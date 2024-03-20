@@ -241,7 +241,8 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert info == res['genome_info']
             assert info[1] == file_names[idx]
             assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
-            assert datetime.fromisoformat(info[3])
+            # datetime.fromisoformat is not available in Python 3.6 or below
+            assert datetime.strptime(info[3], '%Y-%m-%dT%H:%M:%S+%f')
             assert info[6] == self.wsID
             assert info[7] == self.wsName
             assert info[10] == self._retrive_metadata(object_metas[idx])
