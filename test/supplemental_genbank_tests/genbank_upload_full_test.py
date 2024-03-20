@@ -210,12 +210,13 @@ class GenomeFileUtilTest(unittest.TestCase):
 
     def _retrieve_provenance(self, provenance):
         # make a copy to avoid modifying the original provenance
-        prov = dict(provenance)
-        for key in ["time", "epoch"]:
-            prov.pop(key)
-        for subaction in prov['subactions']:
-            subaction.pop("commit")
-        return prov
+        provs = [prov.copy() for prov in provenance]
+        for prov in provs:
+            for key in ["time", "epoch"]:
+                prov.pop(key)
+            for subaction in prov['subactions']:
+                subaction.pop("commit")
+        return provs
 
     def _retrive_metadata(self, metadata):
         # make a copy to avoid modifying the original metadata
@@ -247,16 +248,21 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert info[7] == self.wsName
             # check metadata
             retrieved_metadata = self._retrive_metadata(info[10])
+            print("-------------")
+            print(f"retrieved_metadata is {retrieved_metadata}")
+            print(f"expected_metadata is {expected_metadata}")
+            print([retrieved_metadata.get(k) == v for k, v in expected_metadata[idx].items()])
+            print("-------------")
             assert retrieved_metadata == expected_metadata[idx]
 
             # check provenance
-            provenance = data["provenance"][0]
-            print("-------------")
-            print(f"provenance is {provenance}")
-            print("-------------")
+            provenance = data["provenance"]
+
             retrieved_provenance = self._retrieve_provenance(provenance)
             print("-------------")
             print(f"retrieved_provenance is {retrieved_provenance}")
+            print(f"expected_provenance is {expected_provenance}")
+            print([retrieved_provenance.get(k) == v for k, v in expected_provenance[idx].items()])
             print("-------------")
             assert retrieved_provenance == expected_provenance
 
