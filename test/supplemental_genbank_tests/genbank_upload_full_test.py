@@ -237,6 +237,9 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert object_version_pattern.match(res['genome_ref'])
             data = self.wsClient.get_objects2({"objects": [{'ref': res['genome_ref']}]})["data"][0]
 
+            # TODO check the new assembly
+            # TODO check the data
+
             # check info
             info = data["info"]
             assert info == res['genome_info']
@@ -248,20 +251,11 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert info[7] == self.wsName
             # check metadata
             retrieved_metadata = self._retrive_metadata(info[10])
-            print("-------------")
-            print(f"retrieved_metadata is {retrieved_metadata}")
-            print(f"expected_metadata is {expected_metadata}")
-            print([retrieved_metadata.get(k) == v for k, v in expected_metadata[idx].items()])
-            print("-------------")
             assert retrieved_metadata == expected_metadata[idx]
 
             # check provenance
             provenance = data["provenance"]
             retrieved_provenance = self._retrieve_provenance(provenance)
-            print("-------------")
-            print(f"retrieved_provenance is {retrieved_provenance}")
-            print(f"expected_provenance is {expected_provenance}")
-            print("-------------")
             assert retrieved_provenance == expected_provenance
 
     def test_genbank_to_genome_invalid_workspace(self):
