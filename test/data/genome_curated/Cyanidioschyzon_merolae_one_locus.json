@@ -2800,12 +2800,12 @@
         {
             "aliases": [
                 [
-                    "protein_id",
-                    "CMW001CT"
-                ],
-                [
                     "gene",
                     "CMW001C"
+                ],
+                [
+                    "protein_id",
+                    "CMW001CT"
                 ]
             ],
             "cdss": [
@@ -2858,12 +2858,12 @@
         {
             "aliases": [
                 [
-                    "protein_id",
-                    "CMW002CT"
-                ],
-                [
                     "gene",
                     "CMW002C"
+                ],
+                [
+                    "protein_id",
+                    "CMW002CT"
                 ]
             ],
             "cdss": [
@@ -3129,12 +3129,12 @@
         {
             "aliases": [
                 [
-                    "gene",
-                    "CMW011C"
-                ],
-                [
                     "protein_id",
                     "CMW011CT"
+                ],
+                [
+                    "gene",
+                    "CMW011C"
                 ]
             ],
             "cdss": [
@@ -3498,12 +3498,12 @@
         {
             "aliases": [
                 [
-                    "gene",
-                    "CMW022C"
-                ],
-                [
                     "protein_id",
                     "CMW022CT"
+                ],
+                [
+                    "gene",
+                    "CMW022C"
                 ]
             ],
             "cdss": [
@@ -3550,12 +3550,12 @@
         {
             "aliases": [
                 [
-                    "protein_id",
-                    "CMW023CT"
-                ],
-                [
                     "gene",
                     "CMW023C"
+                ],
+                [
+                    "protein_id",
+                    "CMW023CT"
                 ]
             ],
             "cdss": [
@@ -3602,12 +3602,12 @@
         {
             "aliases": [
                 [
-                    "protein_id",
-                    "CMW025CT"
-                ],
-                [
                     "gene",
                     "CMW025C"
+                ],
+                [
+                    "protein_id",
+                    "CMW025CT"
                 ]
             ],
             "cdss": [
@@ -3718,12 +3718,12 @@
         {
             "aliases": [
                 [
-                    "gene",
-                    "CMW027C"
-                ],
-                [
                     "protein_id",
                     "CMW027CT"
+                ],
+                [
+                    "gene",
+                    "CMW027C"
                 ]
             ],
             "cdss": [
@@ -3773,12 +3773,12 @@
         {
             "aliases": [
                 [
-                    "gene",
-                    "CMW028C"
-                ],
-                [
                     "protein_id",
                     "CMW028CT"
+                ],
+                [
+                    "gene",
+                    "CMW028C"
                 ]
             ],
             "cdss": [
@@ -3834,12 +3834,12 @@
         {
             "aliases": [
                 [
-                    "gene",
-                    "CMW029C"
-                ],
-                [
                     "protein_id",
                     "CMW029CT"
+                ],
+                [
+                    "gene",
+                    "CMW029C"
                 ]
             ],
             "cdss": [
@@ -3901,12 +3901,12 @@
         {
             "aliases": [
                 [
-                    "gene",
-                    "CMW030C"
-                ],
-                [
                     "protein_id",
                     "CMW030CT"
+                ],
+                [
+                    "gene",
+                    "CMW030C"
                 ]
             ],
             "cdss": [
@@ -3941,12 +3941,12 @@
         {
             "aliases": [
                 [
-                    "gene",
-                    "CMW031C"
-                ],
-                [
                     "protein_id",
                     "CMW031CT"
+                ],
+                [
+                    "gene",
+                    "CMW031C"
                 ]
             ],
             "cdss": [
@@ -3996,12 +3996,12 @@
         {
             "aliases": [
                 [
-                    "protein_id",
-                    "CMW032CT"
-                ],
-                [
                     "gene",
                     "CMW032C"
+                ],
+                [
+                    "protein_id",
+                    "CMW032CT"
                 ]
             ],
             "cdss": [
@@ -4045,12 +4045,12 @@
         {
             "aliases": [
                 [
-                    "protein_id",
-                    "CMW033CT"
-                ],
-                [
                     "gene",
                     "CMW033C"
+                ],
+                [
+                    "protein_id",
+                    "CMW033CT"
                 ]
             ],
             "cdss": [
@@ -4146,12 +4146,12 @@
         {
             "aliases": [
                 [
-                    "gene",
-                    "CMW036C"
-                ],
-                [
                     "protein_id",
                     "CMW036CT"
+                ],
+                [
+                    "gene",
+                    "CMW036C"
                 ]
             ],
             "cdss": [
@@ -4302,12 +4302,12 @@
         {
             "aliases": [
                 [
-                    "gene",
-                    "CMW039C"
-                ],
-                [
                     "protein_id",
                     "CMW039CT"
+                ],
+                [
+                    "gene",
+                    "CMW039C"
                 ]
             ],
             "cdss": [
@@ -4476,12 +4476,12 @@
         {
             "aliases": [
                 [
-                    "gene",
-                    "CMW050C"
-                ],
-                [
                     "protein_id",
                     "CMW050CT"
+                ],
+                [
+                    "gene",
+                    "CMW050C"
                 ]
             ],
             "cdss": [
@@ -4580,12 +4580,12 @@
         {
             "aliases": [
                 [
-                    "gene",
-                    "CMW055C"
-                ],
-                [
                     "protein_id",
                     "CMW055CT"
+                ],
+                [
+                    "gene",
+                    "CMW055C"
                 ]
             ],
             "cdss": [
@@ -4735,7 +4735,6 @@
         }
     ],
     "gc_content": 0.27065,
-    "genbank_handle_ref": "KBH_724249",
     "genetic_code": 11,
     "genome_tiers": [
         "User"
@@ -6844,8 +6843,7 @@
             "id": "GO",
             "method": "GenomeFileUtils Genbank uploader from annotations",
             "method_version": "0.11.7",
-            "ontology_ref": "6308/3/2",
-            "timestamp": "2024_03_19_21_21_11"
+            "ontology_ref": "6308/3/2"
         }
     ],
     "original_source_file_name": "Cyanidioschyzon_merolae_one_locus.gbff",

@@ -239,7 +239,10 @@ class GenomeFileUtilTest(unittest.TestCase):
     def _retrieve_data(self, data):
         # make a copy to avoid modifying the original data
         data = dict(data)
-        data.pop("assembly_ref")
+        for key in ["assembly_ref", "genbank_handle_ref"]:
+            data.pop(key)
+        for ontology_event in data.get("ontology_events", []):
+            ontology_event.pop("timestamp")
         return data
 
     def _check_result_object_info_fields_and_provenance(
@@ -281,8 +284,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             print("-------------")
             print(f"retrieved_data is {retrieved_data}")
             print("-------------")
-            # retrieved_data = self._retrieve_data(data)
-            # assert retrieved_data == expected_data
+            assert retrieved_data == expected_data
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
@@ -329,7 +331,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             }
         ]
 
-        expected_data = self._load_expected_data("data/gbff/GCF_000970205.json")
+        expected_data = self._load_expected_data("data/genome_curated/GCF_000970205.json")
 
         result = self.serviceImpl.genbank_to_genome(
             self.ctx,
@@ -419,7 +421,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         ]
 
         expected_data = [
-            self._load_expected_data("data/gbff/GCF_000970185.json"),
+            self._load_expected_data("data/genome_curated/GCF_000970185.json"),
             self._load_expected_data("data/genome_curated/Cyanidioschyzon_merolae_one_locus.json"),
             self._load_expected_data("data/genome_curated/mRNA_with_no_parent.json"),
             self._load_expected_data("data/genome_curated/ontology.json"),

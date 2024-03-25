@@ -126,12 +126,12 @@
         {
             "aliases": [
                 [
-                    "protein_id",
-                    "CMW001CT"
-                ],
-                [
                     "gene",
                     "CMW001C"
+                ],
+                [
+                    "protein_id",
+                    "CMW001CT"
                 ]
             ],
             "cdss": [
@@ -208,7 +208,6 @@
         }
     ],
     "gc_content": 0.27065,
-    "genbank_handle_ref": "KBH_724251",
     "genetic_code": 11,
     "genome_tiers": [
         "User"
@@ -275,43 +274,37 @@
             "id": "GO",
             "method": "GenomeFileUtils Genbank uploader from annotations",
             "method_version": "0.11.7",
-            "ontology_ref": "6308/3/2",
-            "timestamp": "2024_03_19_21_21_13"
+            "ontology_ref": "6308/3/2"
         },
         {
             "id": "PO",
             "method": "GenomeFileUtils Genbank uploader from annotations",
             "method_version": "0.11.7",
-            "ontology_ref": "6308/2/3",
-            "timestamp": "2024_03_19_21_21_13"
+            "ontology_ref": "6308/2/3"
         },
         {
             "id": "KO",
             "method": "GenomeFileUtils Genbank uploader from annotations",
             "method_version": "0.11.7",
-            "ontology_ref": "6308/21/1",
-            "timestamp": "2024_03_19_21_21_13"
+            "ontology_ref": "6308/21/1"
         },
         {
             "id": "COG",
             "method": "GenomeFileUtils Genbank uploader from annotations",
             "method_version": "0.11.7",
-            "ontology_ref": "6308/22/1",
-            "timestamp": "2024_03_19_21_21_13"
+            "ontology_ref": "6308/22/1"
         },
         {
             "id": "PFAM",
             "method": "GenomeFileUtils Genbank uploader from annotations",
             "method_version": "0.11.7",
-            "ontology_ref": "6308/20/1",
-            "timestamp": "2024_03_19_21_21_13"
+            "ontology_ref": "6308/20/1"
         },
         {
             "id": "TIGRFAM",
             "method": "GenomeFileUtils Genbank uploader from annotations",
             "method_version": "0.11.7",
-            "ontology_ref": "6308/25/1",
-            "timestamp": "2024_03_19_21_21_13"
+            "ontology_ref": "6308/25/1"
         }
     ],
     "original_source_file_name": "ontology.gbff",
