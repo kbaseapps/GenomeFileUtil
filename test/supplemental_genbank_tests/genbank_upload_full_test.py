@@ -20,6 +20,16 @@ _ASSEMBLYUTIL_VERSION = "3.1.1-release"
 _GENOMEANNOTATIONAPI_VERSION = "1.0.2-release"
 _WSLARGEDATAIO_VERSION = "0.0.5-beta"
 
+def ordered(obj):
+    if isinstance(obj, dict):
+        return sorted((k, ordered(v)) for k, v in obj.items())
+    if isinstance(obj, list):
+        return sorted(ordered(x) for x in obj)
+    if isinstance(obj, int):
+        return str(obj)
+    else:
+        return obj
+
 class GenomeFileUtilTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -284,7 +294,9 @@ class GenomeFileUtilTest(unittest.TestCase):
             print("-------------")
             print(f"retrieved_data is {retrieved_data}")
             print("-------------")
-            assert sorted(retrieved_data) == sorted(expected_data)
+            assert ordered(retrieved_data) == ordered(expected_data)
+            print("**************")
+            print(f"test {file_names[idx]} passed!")
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
