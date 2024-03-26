@@ -292,7 +292,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             data = obj["data"]
             retrieved_data = self._retrieve_data(data)
             print("-------------")
-            print(f"retrieved_data is {retrieved_data}")
+            print(f"retrieved_data {file_names[idx]} is {retrieved_data}")
             print("-------------")
             assert ordered(retrieved_data) == ordered(expected_data)
             print("**************")
