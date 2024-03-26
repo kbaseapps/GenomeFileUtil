@@ -126,12 +126,12 @@
         {
             "aliases": [
                 [
-                    "gene",
-                    "CMW001C"
-                ],
-                [
                     "protein_id",
                     "CMW001CT"
+                ],
+                [
+                    "gene",
+                    "CMW001C"
                 ]
             ],
             "cdss": [
