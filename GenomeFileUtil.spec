@@ -21,6 +21,8 @@ module GenomeFileUtil {
 
     /*
     genome_name - becomes the name of the object
+    workspace_id - the immutable, numeric ID of the target workspace. Always prefer
+        providing the ID over the name.
     workspace_name - the name of the workspace it gets saved to.
     source - Source of the file typically something like RefSeq or Ensembl
     taxon_ws_name - where the reference taxons are : ReferenceTaxons
@@ -42,6 +44,7 @@ module GenomeFileUtil {
     typedef structure {
         File file;
 
+        int workspace_id;
         string genome_name;
         string workspace_name;
 
@@ -64,6 +67,46 @@ module GenomeFileUtil {
 
     funcdef genbank_to_genome(GenbankToGenomeParams params)
                 returns (GenomeSaveResult result) authentication required;
+
+    typedef structure {
+        File file;
+        string genome_name;
+
+        string source;
+        string taxon_wsname;
+        string taxon_id;
+
+        string release;
+        string generate_ids_if_needed;
+        int    genetic_code;
+        string scientific_name;
+        usermeta metadata;
+        boolean generate_missing_genes;
+        string use_existing_assembly;
+    } GenbankToGenomeInput;
+
+    typedef structure {
+        int workspace_id;
+        list<GenbankToGenomeInput> inputs;
+    } GenbanksToGenomesParams;
+
+    typedef structure {
+        string genome_ref;
+        string assembly_ref;
+        string assembly_path;
+        Workspace.object_info assembly_info;
+        Workspace.object_info genome_info;
+    } GenbankToGenomeSaveResult;
+
+    /* Results for the genbanks_to_genomes function.
+        results - the results of the save operation in the same order as the input.
+    */
+    typedef structure {
+        list<GenbankToGenomeSaveResult> results;
+    } GenbanksToGenomesSaveResults;
+
+    funcdef genbanks_to_genomes(GenbanksToGenomesParams params)
+                returns (GenbanksToGenomesSaveResults results) authentication required;
 
     /*
         is_gtf - optional flag switching export to GTF format (default is 0,

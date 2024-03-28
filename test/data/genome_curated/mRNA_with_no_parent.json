@@ -1,0 +1,85 @@
+{
+    "cdss": [],
+    "contig_ids": [
+        "MitoASM9120v1"
+    ],
+    "contig_lengths": [
+        32211
+    ],
+    "dna_size": 32211,
+    "domain": "Unknown",
+    "external_source_origination_date": "14-Sep-2015",
+    "feature_counts": {
+        "mRNA": 1,
+        "non_coding_features": 1,
+        "non_coding_genes": 1
+    },
+    "features": [],
+    "gc_content": 0.27065,
+    "genetic_code": 11,
+    "genome_tiers": [
+        "User"
+    ],
+    "id": "mRNA_with_no_parent.gbff",
+    "md5": "43b94ee0851f3b9e9db521167c6fcba3",
+    "molecule_type": "DNA",
+    "mrnas": [
+        {
+            "aliases": [
+                [
+                    "gene",
+                    "CMW001C"
+                ]
+            ],
+            "dna_sequence": "ATGAAGAATTATATTATTAGACCTATTGCACCTCATCTTACTATTTATAATGCACAATGGAATTCCGTATTTTCTATTTTTCATAGGATTAGTGGAGTTTTTATAATGGTATTTATTTTTTTCTCTACTTTGGGGTTGTTTTTCTTTAAATTTTATTCGCCTACTATAATGTGTGTAAGTTTTTTATGGTTATTTAATAAAGTTTATTGGATTTTTATTTCCATCATTTTTATTATTTTTATGTCATTTTTTTATCATTTATGCTCTGGCATTTATCATTTGCTTTTAGAATTAGGGTATTTTTACCATATGGTAAAAATTGAAAAGATGAGTAAATATAGTTTAAGCTTTTCAATTTTAATTTCTTTTTTTTATTTTTTTTTAATTAGGCTTTTGTTCATCAATTTATAT",
+            "dna_sequence_length": 411,
+            "id": "gene_0_mRNA_1",
+            "location": [
+                [
+                    "MitoASM9120v1",
+                    1,
+                    "+",
+                    411
+                ]
+            ],
+            "md5": "b23d4949338f1eb739707a1a616da517",
+            "note": "transcript_id=CMW001CT",
+            "parent_gene": "gene_0"
+        }
+    ],
+    "non_coding_features": [
+        {
+            "aliases": [
+                [
+                    "gene",
+                    "CMW001C"
+                ]
+            ],
+            "dna_sequence": "ATGAAGAATTATATTATTAGACCTATTGCACCTCATCTTACTATTTATAATGCACAATGGAATTCCGTATTTTCTATTTTTCATAGGATTAGTGGAGTTTTTATAATGGTATTTATTTTTTTCTCTACTTTGGGGTTGTTTTTCTTTAAATTTTATTCGCCTACTATAATGTGTGTAAGTTTTTTATGGTTATTTAATAAAGTTTATTGGATTTTTATTTCCATCATTTTTATTATTTTTATGTCATTTTTTTATCATTTATGCTCTGGCATTTATCATTTGCTTTTAGAATTAGGGTATTTTTACCATATGGTAAAAATTGAAAAGATGAGTAAATATAGTTTAAGCTTTTCAATTTTAATTTCTTTTTTTTATTTTTTTTTAATTAGGCTTTTGTTCATCAATTTATAT",
+            "dna_sequence_length": 411,
+            "id": "gene_0",
+            "location": [
+                [
+                    "MitoASM9120v1",
+                    1,
+                    "+",
+                    411
+                ]
+            ],
+            "md5": "b23d4949338f1eb739707a1a616da517",
+            "note": "transcript_id=CMW001CT",
+            "type": "gene"
+        }
+    ],
+    "notes": "This sequence was annotated by the Ensembl system. Please visit the\nEnsembl web site, http://www.ensembl.org/ for more information.\nAll feature locations are relative to the first (5') base of the\nsequence in this file.  The sequence presented is always the\nforward strand of the assembly. Features that lie outside of the\nsequence contained in this file have clonal location coordinates in\nthe format: <clone accession>.<version>:<start>..<end>\nThe /gene indicates a unique id for a gene,\n/note=\"transcript_id=...\" a unique id for a transcript, /protein_id\na unique id for a peptide and note=\"exon_id=...\" a unique id for an\nexon. These ids are maintained wherever possible between versions.\nAll the exons and transcripts in Ensembl are confirmed by\nsimilarity to either protein or cDNA sequences.",
+    "num_contigs": 1,
+    "original_source_file_name": "mRNA_with_no_parent.gbff",
+    "publications": [],
+    "scientific_name": "Cyanidioschyzon merolae strain 10D",
+    "source": "Genbank",
+    "source_id": "MitoASM9120v1",
+    "taxonomy": "Unconfirmed Organism",
+    "warnings": [
+        "Unable to determine organism taxonomy"
+    ]
+}
