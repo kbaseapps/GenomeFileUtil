@@ -481,7 +481,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             }
         )[0]['results']
 
-        self.assertEqual(len(results), 3)
+        self.assertEqual(len(results), 4)
         self._check_result_object_info_fields_and_provenance(
             results, file_names, object_metas, self.provenance, expected_data
         )
