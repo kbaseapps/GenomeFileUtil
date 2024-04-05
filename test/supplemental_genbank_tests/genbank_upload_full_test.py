@@ -297,13 +297,13 @@ class GenomeFileUtilTest(unittest.TestCase):
             retrieved_data = self._retrieve_data(data)
             print("-------------")
             # print(f"retrieved_data {file_names[idx]} is {retrieved_data}")
-            json_path = file_names[idx].split(".")[0] + "_new" + ".json"
-            self._dump_retrieved_data(json_path, retrieved_data)
-            print(f"{json_path} is processed")
+            # json_path = "/kb/module/work/tmp/" + "sijie_" + file_names[idx].split(".")[0] + "_new" + ".json"
+            # self._dump_retrieved_data(json_path, retrieved_data)
+            # print(f"{json_path} is processed")
             print("-------------")
-            # assert ordered(retrieved_data) == ordered(expected_data)
-            # print("**************")
-            # print(f"test {file_names[idx]} passed!")
+            assert ordered(retrieved_data) == ordered(expected_data)
+            print("**************")
+            print(f"test {file_names[idx]} passed!")
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
@@ -350,7 +350,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             }
         ]
 
-        expected_data = self._load_expected_data("data/genome_curated/GCF_000970205.json")
+        expected_data = self._load_expected_data("data/genome_curated/sijiex_GCF_000970205_new.json")
 
         result = self.serviceImpl.genbank_to_genome(
             self.ctx,
@@ -440,10 +440,10 @@ class GenomeFileUtilTest(unittest.TestCase):
         ]
 
         expected_data = [
-            self._load_expected_data("data/genome_curated/GCF_000970185.json"),
-            self._load_expected_data("data/genome_curated/Cyanidioschyzon_merolae_one_locus.json"),
-            self._load_expected_data("data/genome_curated/mRNA_with_no_parent.json"),
-            self._load_expected_data("data/genome_curated/ontology.json"),
+            self._load_expected_data("data/genome_curated/sijie_GCF_000970185_new.json"),
+            self._load_expected_data("data/genome_curated/sijie_Cyanidioschyzon_merolae_one_locus_new.json"),
+            self._load_expected_data("data/genome_curated/sijie_mRNA_with_no_parent_new.json"),
+            self._load_expected_data("data/genome_curated/sijie_ontology_new.json"),
         ]
 
         results = self.serviceImpl.genbanks_to_genomes(
