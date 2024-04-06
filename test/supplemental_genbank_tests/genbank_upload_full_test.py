@@ -350,7 +350,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             }
         ]
 
-        expected_data = self._load_expected_data("data/genome_curated/sijiex_GCF_000970205_new.json")
+        expected_data = self._load_expected_data("data/genome_curated/sijie_GCF_000970205_new.json")
 
         result = self.serviceImpl.genbank_to_genome(
             self.ctx,
