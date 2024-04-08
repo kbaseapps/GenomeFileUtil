@@ -350,7 +350,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             }
         ]
 
-        expected_data = self._load_expected_data("data/genome_curated/sijie_GCF_000970205_new.json")
+        expected_data = self._load_expected_data("data/genome_curated/sijie_GCF_000970205_new_1.json")
 
         result = self.serviceImpl.genbank_to_genome(
             self.ctx,
@@ -440,10 +440,10 @@ class GenomeFileUtilTest(unittest.TestCase):
         ]
 
         expected_data = [
-            self._load_expected_data("data/genome_curated/sijie_GCF_000970185_new.json"),
-            self._load_expected_data("data/genome_curated/sijie_Cyanidioschyzon_merolae_one_locus_new.json"),
-            self._load_expected_data("data/genome_curated/sijie_mRNA_with_no_parent_new.json"),
-            self._load_expected_data("data/genome_curated/sijie_ontology_new.json"),
+            self._load_expected_data("data/genome_curated/sijie_GCF_000970185_new_1.json"),
+            self._load_expected_data("data/genome_curated/sijie_Cyanidioschyzon_merolae_one_locus_new_1.json"),
+            self._load_expected_data("data/genome_curated/sijie_mRNA_with_no_parent_new_1.json"),
+            self._load_expected_data("data/genome_curated/sijie_ontology_new_1.json"),
         ]
 
         results = self.serviceImpl.genbanks_to_genomes(
