@@ -301,7 +301,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             # self._dump_retrieved_data(json_path, retrieved_data)
             # print(f"{json_path} is processed")
             print("-------------")
-            assert ordered(retrieved_data) == ordered(expected_data)
+            assert ordered(retrieved_data) == ordered(expected_data[idx])
             print("**************")
             print(f"test {file_names[idx]} passed!")
 
