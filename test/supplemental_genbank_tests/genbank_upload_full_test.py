@@ -305,6 +305,9 @@ class GenomeFileUtilTest(unittest.TestCase):
 
 
             ######################Assembly######################
+            print("-------------------------")
+            print(f"type res is {type(res)}")
+            print(f"res keys is {res.keys()}")
             assert object_version_pattern.match(res['assembly_ref'])
             obj = self.wsClient.get_objects2({"objects": [{'ref': res['assembly_ref']}]})["data"][0]
 
