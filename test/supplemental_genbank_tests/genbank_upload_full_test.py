@@ -277,7 +277,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             info = obj["info"]
             assert info == res['assembly_info']
             assert info[1] == file_names[idx] + "_assembly"
-            assert info[2].split('-')[0] == 'KBaseGenomes.Assembly'
+            assert info[2].split('-')[0] == 'KBaseGenomeAnnotations.Assembly'
             # datetime.fromisoformat is not available in Python 3.6 or below
             assert datetime.strptime(info[3], '%Y-%m-%dT%H:%M:%S+%f')
             assert info[6] == self.wsID
