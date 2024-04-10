@@ -270,10 +270,10 @@ class GenomeFileUtilTest(unittest.TestCase):
         object_version_pattern = re.compile(r'^[0-9]+\/[0-9]+\/1$')
         for idx, res in enumerate(results):
 
+            ######################Genome######################
             assert object_version_pattern.match(res['genome_ref'])
             obj = self.wsClient.get_objects2({"objects": [{'ref': res['genome_ref']}]})["data"][0]
 
-            # TODO check the new assembly
             # check info
             info = obj["info"]
             assert info == res['genome_info']
@@ -302,6 +302,22 @@ class GenomeFileUtilTest(unittest.TestCase):
             # print(f"{json_path} is processed")
             # print("-------------")
             assert ordered(retrieved_data) == ordered(expected_data[idx])
+
+
+            ######################Assembly######################
+            assert object_version_pattern.match(res['assembly_ref'])
+            obj = self.wsClient.get_objects2({"objects": [{'ref': res['assembly_ref']}]})["data"][0]
+
+            print("-------------------------")
+            info = obj["info"]
+            print(f"assembly info is: {info}")
+            print("-------------------------")
+            provenance = obj["provenance"]
+            print(f"assembly prov is: {provenance}")
+            print("-------------------------")
+            data = obj["data"]
+            print(f"assembly data is: {data}")
+            print("-------------------------")
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
