@@ -1,0 +1,39 @@
+{
+    "assembly_id": "GCF_000970185.1_ASM97018v1_genomic.gbff.gz_assembly",
+    "base_counts": {
+        "A": 1190094,
+        "C": 843692,
+        "G": 843400,
+        "T": 1189365
+    },
+    "contigs": {
+        "NZ_CP009511.1": {
+            "contig_id": "NZ_CP009511.1",
+            "description": "Methanosarcina mazei SarPi chromosome, complete genome",
+            "gc_content": 0.41487,
+            "is_circ": 1,
+            "length": 4066551,
+            "md5": "9687bfd4c762fa0cfc219b6ca339fde0",
+            "name": "NZ_CP009511.1"
+        }
+    },
+    "dna_size": 4066551,
+    "fasta_handle_info": {
+        "handle": {
+            "file_name": "GCF_000970185.1_ASM97018v1_genomic.gbff.gz_assembly.fasta",
+            "hid": "KBH_727654",
+            "id": "d8e45f4d-6175-4c31-8e90-dd4eef66979c",
+            "remote_md5": "892d9cc9f2da0d7ee1a4737d11ba1f94",
+            "type": "shock",
+            "url": "https://ci.kbase.us/services/shock-api"
+        },
+        "node_file_name": "GCF_000970185.1_ASM97018v1_genomic.gbff.gz_assembly.fasta",
+        "shock_id": "d8e45f4d-6175-4c31-8e90-dd4eef66979c",
+        "size": 4134397
+    },
+    "fasta_handle_ref": "KBH_727654",
+    "gc_content": 0.41487,
+    "md5": "d33802829ba0686714a5d74280527615",
+    "num_contigs": 1,
+    "type": "isolate"
+}

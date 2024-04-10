@@ -244,13 +244,13 @@ class GenomeFileUtilTest(unittest.TestCase):
                 subaction.pop("commit")
         return provs
 
-    def _retrieve_metadata(self, metadata):
+    def _retrieve_genome_metadata(self, metadata):
         # make a copy to avoid modifying the original metadata
         metadata = dict(metadata)
         metadata.pop("Assembly Object")
         return metadata
 
-    def _retrieve_data(self, data):
+    def _retrieve_genome_data(self, data):
         # make a copy to avoid modifying the original data
         data = dict(data)
         for key in ["assembly_ref", "genbank_handle_ref"]:
@@ -259,7 +259,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             ontology_event.pop("timestamp")
         return data
 
-    def _check_result_object_info_fields_and_provenance(
+    def _check_result_assembly_info_provenance_data(
         self,
         results,
         file_names,
@@ -270,7 +270,42 @@ class GenomeFileUtilTest(unittest.TestCase):
         object_version_pattern = re.compile(r'^[0-9]+\/[0-9]+\/1$')
         for idx, res in enumerate(results):
 
-            ######################Genome######################
+            assert object_version_pattern.match(res['assembly_ref'])
+            obj = self.wsClient.get_objects2({"objects": [{'ref': res['assembly_ref']}]})["data"][0]
+
+            # check info
+            info = obj["info"]
+            assert info == res['assembly_info']
+            assert info[1] == file_names[idx] + "_assembly"
+            assert info[2].split('-')[0] == 'KBaseGenomes.Assembly'
+            # datetime.fromisoformat is not available in Python 3.6 or below
+            assert datetime.strptime(info[3], '%Y-%m-%dT%H:%M:%S+%f')
+            assert info[6] == self.wsID
+            assert info[7] == self.wsName
+            # check metadata
+            retrieved_metadata = info[10]
+            assert retrieved_metadata == expected_metadata[idx]
+
+            # check provenance
+            provenance = obj["provenance"]
+            retrieved_provenance = self._retrieve_provenance(provenance)
+            assert retrieved_provenance == expected_provenance
+
+            # check data
+            retrieved_data = obj["data"]
+            assert retrieved_data == expected_data[idx]
+
+    def _check_result_genome_info_provenance_data(
+        self,
+        results,
+        file_names,
+        expected_metadata,
+        expected_provenance,
+        expected_data,
+    ):
+        object_version_pattern = re.compile(r'^[0-9]+\/[0-9]+\/1$')
+        for idx, res in enumerate(results):
+
             assert object_version_pattern.match(res['genome_ref'])
             obj = self.wsClient.get_objects2({"objects": [{'ref': res['genome_ref']}]})["data"][0]
 
@@ -284,7 +319,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert info[6] == self.wsID
             assert info[7] == self.wsName
             # check metadata
-            retrieved_metadata = self._retrieve_metadata(info[10])
+            retrieved_metadata = self._retrieve_genome_metadata(info[10])
             assert retrieved_metadata == expected_metadata[idx]
 
             # check provenance
@@ -294,33 +329,8 @@ class GenomeFileUtilTest(unittest.TestCase):
 
             # check data
             data = obj["data"]
-            retrieved_data = self._retrieve_data(data)
-            # print("-------------")
-            # print(f"retrieved_data {file_names[idx]} is {retrieved_data}")
-            # json_path = "/kb/module/work/tmp/" + "sijie_" + file_names[idx].split(".")[0] + "_new" + ".json"
-            # self._dump_retrieved_data(json_path, retrieved_data)
-            # print(f"{json_path} is processed")
-            # print("-------------")
+            retrieved_data = self._retrieve_genome_data(data)
             assert ordered(retrieved_data) == ordered(expected_data[idx])
-
-
-            ######################Assembly######################
-            print("-------------------------")
-            print(f"type res is {type(res)}")
-            print(f"res keys is {res.keys()}")
-            assert object_version_pattern.match(res['assembly_ref'])
-            obj = self.wsClient.get_objects2({"objects": [{'ref': res['assembly_ref']}]})["data"][0]
-
-            print("-------------------------")
-            info = obj["info"]
-            print(f"assembly info is: {info}")
-            print("-------------------------")
-            provenance = obj["provenance"]
-            print(f"assembly prov is: {provenance}")
-            print("-------------------------")
-            data = obj["data"]
-            print(f"assembly data is: {data}")
-            print("-------------------------")
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
@@ -378,7 +388,7 @@ class GenomeFileUtilTest(unittest.TestCase):
                 "metadata": {"temp": "curr"},
             })
 
-        self._check_result_object_info_fields_and_provenance(
+        self._check_result_genome_info_provenance_data(
             result, [genome_name], object_metas, self.provenance, [expected_data]
         )
 
@@ -389,7 +399,8 @@ class GenomeFileUtilTest(unittest.TestCase):
         genome_name4 = "ontology.gbff"
 
         file_names = [genome_name1, genome_name2, genome_name3, genome_name4]
-        object_metas = [
+
+        genome_metas = [
             {
                 "Taxonomy": "Unconfirmed Organism",
                 "Size": "4066551",
@@ -456,11 +467,25 @@ class GenomeFileUtilTest(unittest.TestCase):
             },
         ]
 
-        expected_data = [
+        assembly_metas = [
+            {'GC content': '0.41487', 'Size': '4066551', 'N Contigs': '1', 'MD5': 'd33802829ba0686714a5d74280527615'},
+            {'GC content': '0.27065', 'Size': '32211', 'N Contigs': '1', 'MD5': '43b94ee0851f3b9e9db521167c6fcba3'},
+            {'GC content': '0.27065', 'Size': '32211', 'N Contigs': '1', 'MD5': '43b94ee0851f3b9e9db521167c6fcba3'},
+            {'GC content': '0.27065', 'Size': '32211', 'N Contigs': '1', 'MD5': '43b94ee0851f3b9e9db521167c6fcba3'},
+        ]
+
+        expected_genome_data = [
             self._load_expected_data("data/genome_curated/genome_GCF_000970185.json"),
             self._load_expected_data("data/genome_curated/genome_Cyanidioschyzon_merolae_one_locus.json"),
             self._load_expected_data("data/genome_curated/genome_mRNA_with_no_parent.json"),
             self._load_expected_data("data/genome_curated/genome_ontology.json"),
+        ]
+
+        expected_assembly_data = [
+            self._load_expected_data("data/genome_curated/assembly_GCF_000970185.json"),
+            self._load_expected_data("data/genome_curated/assembly_Cyanidioschyzon_merolae_one_locus.json"),
+            self._load_expected_data("data/genome_curated/assembly_mRNA_with_no_parent.json"),
+            self._load_expected_data("data/genome_curated/assembly_ontology.json"),
         ]
 
         results = self.serviceImpl.genbanks_to_genomes(
@@ -499,8 +524,19 @@ class GenomeFileUtilTest(unittest.TestCase):
         )[0]['results']
 
         self.assertEqual(len(results), 4)
-        self._check_result_object_info_fields_and_provenance(
-            results, file_names, object_metas, self.provenance, expected_data
+        self._check_result_genome_info_provenance_data(
+            results,
+            file_names,
+            genome_metas,
+            self.provenance,
+            expected_genome_data
+        )
+        self._check_result_assembly_info_provenance_data(
+            results,
+            file_names,
+            assembly_metas,
+            self.provenance,
+            expected_assembly_data
         )
 
     def test_genbanks_to_genomes_invalid_workspace_id(self):
