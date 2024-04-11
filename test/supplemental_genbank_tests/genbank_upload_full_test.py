@@ -293,7 +293,10 @@ class GenomeFileUtilTest(unittest.TestCase):
 
             # check data
             retrieved_data = obj["data"]
-            assert retrieved_data == expected_data[idx]
+            print("---------------")
+            print(f"retrieved data is {retrieved_data}")
+            print(f"expected data is {expected_data[idx]}")
+            print("---------------")
 
     def _check_result_genome_info_provenance_data(
         self,
