@@ -232,10 +232,6 @@ class GenomeFileUtilTest(unittest.TestCase):
             data = json.load(read_file)
         return data
 
-    def _dump_retrieved_data(self, json_path, dictionary):
-        with open(json_path, "w") as outfile:
-            json.dump(dictionary, outfile)
-
     def _retrieve_provenance(self, provenance):
         # make a copy to avoid modifying the original provenance
         provs = [prov.copy() for prov in provenance]
@@ -253,7 +249,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         return metadata
 
     def _retrieve_genome_data(self, data):
-        # make a copy to avoid modifying the original data
+        # make a copy to avoid modifying the original genome data
         data = dict(data)
         for key in ["assembly_ref", "genbank_handle_ref"]:
             data.pop(key)
@@ -262,7 +258,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         return data
 
     def _retrieve_assembly_data(self, data):
-        # make a copy to avoid modifying the original data
+        # make a copy to avoid modifying the original assembly data
         data = dict(data)
         data.pop("fasta_handle_ref")
         fasta_handle_info = data["fasta_handle_info"]
@@ -271,18 +267,18 @@ class GenomeFileUtilTest(unittest.TestCase):
             fasta_handle_info["handle"].pop(key)
         return data
 
-    def _get_object(self, result, is_genome=True):
+    def _get_object(self, result, is_genome):
         ref = 'genome_ref' if is_genome else 'assembly_ref'
         assert _OBJECT_VERSION_PATTERN.match(result[ref])
         return self.wsClient.get_objects2({"objects": [{'ref': result[ref]}]})["data"][0]
 
-    def _check_info(self, obj, result, file_names, idx, expected_metadata, is_genome=True):
+    def _check_info(self, obj, result, file_names, idx, expected_metadata, is_genome):
+        info = obj["info"]
         object_info = 'genome_info' if is_genome else 'assembly_info'
         object_name = file_names[idx] if is_genome else file_names[idx] + "_assembly"
         object_type = 'KBaseGenomes.Genome' if is_genome else 'KBaseGenomeAnnotations.Assembly'
         retrieved_metadata = self._retrieve_genome_metadata(info[10]) if is_genome else info[10]
 
-        info = obj["info"]
         assert info == result[object_info]
         assert info[1] == object_name
         assert info[2].split('-')[0] == object_type
@@ -300,7 +296,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         retrieved_provenance = self._retrieve_provenance(provenance)
         assert retrieved_provenance == expected_provenance
 
-    def _check_data(self, obj, idx, expected_data, is_genome=True):
+    def _check_data(self, obj, idx, expected_data, is_genome):
         data = obj["data"]
         retrieved_data = (
             self._retrieve_genome_data(data)
@@ -309,33 +305,20 @@ class GenomeFileUtilTest(unittest.TestCase):
         )
         assert ordered(retrieved_data) == ordered(expected_data[idx])
 
-    def _check_result_assembly_info_provenance_data(
+    def _check_result_object_info_provenance_data(
         self,
         results,
         file_names,
         expected_metadata,
         expected_provenance,
         expected_data,
+        is_genome=True,
     ):
         for idx, res in enumerate(results):
-            obj = self._get_object(res, False)
-            self._check_info(obj, res, file_names, idx, expected_metadata, False)
+            obj = self._get_object(res, is_genome)
+            self._check_info(obj, res, file_names, idx, expected_metadata, is_genome)
             self._check_prov(obj, expected_provenance)
-            self._check_data(obj, idx, expected_data, False)
-
-    def _check_result_genome_info_provenance_data(
-        self,
-        results,
-        file_names,
-        expected_metadata,
-        expected_provenance,
-        expected_data,
-    ):
-        for idx, res in enumerate(results):
-            obj = self._get_object(res)
-            self._check_info(obj, res, file_names, idx, expected_metadata)
-            self._check_prov(obj, expected_provenance)
-            self._check_data(obj, idx, expected_data)
+            self._check_data(obj, idx, expected_data, is_genome)
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
@@ -363,7 +346,7 @@ class GenomeFileUtilTest(unittest.TestCase):
 
     def test_genbank_to_genome(self):
         genome_name = "GCF_000970205.1_ASM97020v1_genomic.gbff.gz"
-        object_metas = [
+        genome_metas = [
             {
                 "temp": "curr",
                 "Taxonomy": "Unconfirmed Organism",
@@ -382,7 +365,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             }
         ]
 
-        expected_data = self._load_expected_data("data/genome_curated/genome_GCF_000970205.json")
+        expected_genome_data = self._load_expected_data("data/genome_curated/genome_GCF_000970205.json")
 
         result = self.serviceImpl.genbank_to_genome(
             self.ctx,
@@ -393,8 +376,12 @@ class GenomeFileUtilTest(unittest.TestCase):
                 "metadata": {"temp": "curr"},
             })
 
-        self._check_result_genome_info_provenance_data(
-            result, [genome_name], object_metas, self.provenance, [expected_data]
+        self._check_result_object_info_provenance_data(
+            result,
+            [genome_name],
+            genome_metas,
+            self.provenance,
+            [expected_genome_data]
         )
 
     def test_genbanks_to_genomes(self):
@@ -529,19 +516,23 @@ class GenomeFileUtilTest(unittest.TestCase):
         )[0]['results']
 
         self.assertEqual(len(results), 4)
-        self._check_result_genome_info_provenance_data(
+
+        # check genome result
+        self._check_result_object_info_provenance_data(
             results,
             file_names,
             genome_metas,
             self.provenance,
             expected_genome_data
         )
-        self._check_result_assembly_info_provenance_data(
+        # check assembly result
+        self._check_result_object_info_provenance_data(
             results,
             file_names,
             assembly_metas,
             self.provenance,
-            expected_assembly_data
+            expected_assembly_data,
+            is_genome=False
         )
 
     def test_genbanks_to_genomes_invalid_workspace_id(self):
