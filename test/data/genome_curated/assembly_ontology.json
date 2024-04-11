@@ -20,17 +20,13 @@
     "fasta_handle_info": {
         "handle": {
             "file_name": "ontology.gbff_assembly.fasta",
-            "hid": "KBH_727652",
-            "id": "143cd8a0-79f9-4ec1-ae09-9d3ca1f248af",
             "remote_md5": "cd8a65e6af5fcb25bf665e5ed3732607",
             "type": "shock",
             "url": "https://ci.kbase.us/services/shock-api"
         },
         "node_file_name": "ontology.gbff_assembly.fasta",
-        "shock_id": "143cd8a0-79f9-4ec1-ae09-9d3ca1f248af",
         "size": 32871
     },
-    "fasta_handle_ref": "KBH_727652",
     "gc_content": 0.27065,
     "md5": "43b94ee0851f3b9e9db521167c6fcba3",
     "num_contigs": 1,

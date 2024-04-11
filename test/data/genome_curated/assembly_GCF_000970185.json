@@ -21,17 +21,13 @@
     "fasta_handle_info": {
         "handle": {
             "file_name": "GCF_000970185.1_ASM97018v1_genomic.gbff.gz_assembly.fasta",
-            "hid": "KBH_727654",
-            "id": "d8e45f4d-6175-4c31-8e90-dd4eef66979c",
             "remote_md5": "892d9cc9f2da0d7ee1a4737d11ba1f94",
             "type": "shock",
             "url": "https://ci.kbase.us/services/shock-api"
         },
         "node_file_name": "GCF_000970185.1_ASM97018v1_genomic.gbff.gz_assembly.fasta",
-        "shock_id": "d8e45f4d-6175-4c31-8e90-dd4eef66979c",
         "size": 4134397
     },
-    "fasta_handle_ref": "KBH_727654",
     "gc_content": 0.41487,
     "md5": "d33802829ba0686714a5d74280527615",
     "num_contigs": 1,

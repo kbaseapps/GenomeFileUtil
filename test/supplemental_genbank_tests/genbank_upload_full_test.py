@@ -259,6 +259,16 @@ class GenomeFileUtilTest(unittest.TestCase):
             ontology_event.pop("timestamp")
         return data
 
+    def _retrieve_assembly_data(self, data):
+        # make a copy to avoid modifying the original data
+        data = dict(data)
+        data.pop("fasta_handle_ref")
+        fasta_handle_info = data["fasta_handle_info"]
+        fasta_handle_info.pop("shock_id")
+        for key in ["hid", "id"]:
+            fasta_handle_info["handle"].pop(key)
+        return data
+
     def _check_result_assembly_info_provenance_data(
         self,
         results,
@@ -292,11 +302,13 @@ class GenomeFileUtilTest(unittest.TestCase):
             assert retrieved_provenance == expected_provenance
 
             # check data
-            retrieved_data = obj["data"]
+            data = obj["data"]
+            retrieved_data = self._retrieve_assembly_data(data)
             print("---------------")
             print(f"retrieved data is {retrieved_data}")
             print(f"expected data is {expected_data[idx]}")
             print("---------------")
+            assert retrieved_data == expected_data[idx]
 
     def _check_result_genome_info_provenance_data(
         self,
