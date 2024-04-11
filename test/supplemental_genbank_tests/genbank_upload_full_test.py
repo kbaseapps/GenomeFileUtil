@@ -20,6 +20,8 @@ _ASSEMBLYUTIL_VERSION = "3.1.1-release"
 _GENOMEANNOTATIONAPI_VERSION = "1.0.2-release"
 _WSLARGEDATAIO_VERSION = "0.0.5-beta"
 
+_OBJECT_VERSION_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/1$')
+
 def ordered(obj):
     if isinstance(obj, dict):
         return sorted((k, ordered(v)) for k, v in obj.items())
@@ -269,6 +271,44 @@ class GenomeFileUtilTest(unittest.TestCase):
             fasta_handle_info["handle"].pop(key)
         return data
 
+    def _get_object(self, result, is_genome=True):
+        ref = 'genome_ref' if is_genome else 'assembly_ref'
+        assert _OBJECT_VERSION_PATTERN.match(result[ref])
+        return self.wsClient.get_objects2({"objects": [{'ref': result[ref]}]})["data"][0]
+
+    def _check_info(self, obj, result, file_names, idx, expected_metadata, is_genome=True):
+        object_info = 'genome_info' if is_genome else 'assembly_info'
+        object_name = file_names[idx] if is_genome else file_names[idx] + "_assembly"
+        object_type = 'KBaseGenomes.Genome' if is_genome else 'KBaseGenomeAnnotations.Assembly'
+        retrieved_metadata = self._retrieve_genome_metadata(info[10]) if is_genome else info[10]
+
+        info = obj["info"]
+        assert info == result[object_info]
+        assert info[1] == object_name
+        assert info[2].split('-')[0] == object_type
+
+        # datetime.fromisoformat is not available in Python 3.6 or below
+        assert datetime.strptime(info[3], '%Y-%m-%dT%H:%M:%S+%f')
+        assert info[6] == self.wsID
+        assert info[7] == self.wsName
+
+        # check metadata
+        assert retrieved_metadata == expected_metadata[idx]
+
+    def _check_prov(self, obj, expected_provenance):
+        provenance = obj["provenance"]
+        retrieved_provenance = self._retrieve_provenance(provenance)
+        assert retrieved_provenance == expected_provenance
+
+    def _check_data(self, obj, idx, expected_data, is_genome=True):
+        data = obj["data"]
+        retrieved_data = (
+            self._retrieve_genome_data(data)
+            if is_genome
+            else self._retrieve_assembly_data(data)
+        )
+        assert ordered(retrieved_data) == ordered(expected_data[idx])
+
     def _check_result_assembly_info_provenance_data(
         self,
         results,
@@ -277,34 +317,11 @@ class GenomeFileUtilTest(unittest.TestCase):
         expected_provenance,
         expected_data,
     ):
-        object_version_pattern = re.compile(r'^[0-9]+\/[0-9]+\/1$')
         for idx, res in enumerate(results):
-
-            assert object_version_pattern.match(res['assembly_ref'])
-            obj = self.wsClient.get_objects2({"objects": [{'ref': res['assembly_ref']}]})["data"][0]
-
-            # check info
-            info = obj["info"]
-            assert info == res['assembly_info']
-            assert info[1] == file_names[idx] + "_assembly"
-            assert info[2].split('-')[0] == 'KBaseGenomeAnnotations.Assembly'
-            # datetime.fromisoformat is not available in Python 3.6 or below
-            assert datetime.strptime(info[3], '%Y-%m-%dT%H:%M:%S+%f')
-            assert info[6] == self.wsID
-            assert info[7] == self.wsName
-            # check metadata
-            retrieved_metadata = info[10]
-            assert retrieved_metadata == expected_metadata[idx]
-
-            # check provenance
-            provenance = obj["provenance"]
-            retrieved_provenance = self._retrieve_provenance(provenance)
-            assert retrieved_provenance == expected_provenance
-
-            # check data
-            data = obj["data"]
-            retrieved_data = self._retrieve_assembly_data(data)
-            assert retrieved_data == expected_data[idx]
+            obj = self._get_object(res, False)
+            self._check_info(obj, res, file_names, idx, expected_metadata, False)
+            self._check_prov(obj, expected_provenance)
+            self._check_data(obj, idx, expected_data, False)
 
     def _check_result_genome_info_provenance_data(
         self,
@@ -314,34 +331,11 @@ class GenomeFileUtilTest(unittest.TestCase):
         expected_provenance,
         expected_data,
     ):
-        object_version_pattern = re.compile(r'^[0-9]+\/[0-9]+\/1$')
         for idx, res in enumerate(results):
-
-            assert object_version_pattern.match(res['genome_ref'])
-            obj = self.wsClient.get_objects2({"objects": [{'ref': res['genome_ref']}]})["data"][0]
-
-            # check info
-            info = obj["info"]
-            assert info == res['genome_info']
-            assert info[1] == file_names[idx]
-            assert info[2].split('-')[0] == 'KBaseGenomes.Genome'
-            # datetime.fromisoformat is not available in Python 3.6 or below
-            assert datetime.strptime(info[3], '%Y-%m-%dT%H:%M:%S+%f')
-            assert info[6] == self.wsID
-            assert info[7] == self.wsName
-            # check metadata
-            retrieved_metadata = self._retrieve_genome_metadata(info[10])
-            assert retrieved_metadata == expected_metadata[idx]
-
-            # check provenance
-            provenance = obj["provenance"]
-            retrieved_provenance = self._retrieve_provenance(provenance)
-            assert retrieved_provenance == expected_provenance
-
-            # check data
-            data = obj["data"]
-            retrieved_data = self._retrieve_genome_data(data)
-            assert retrieved_data == expected_data[idx]
+            obj = self._get_object(res)
+            self._check_info(obj, res, file_names, idx, expected_metadata)
+            self._check_prov(obj, expected_provenance)
+            self._check_data(obj, idx, expected_data)
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
