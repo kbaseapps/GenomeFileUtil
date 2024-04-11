@@ -304,10 +304,6 @@ class GenomeFileUtilTest(unittest.TestCase):
             # check data
             data = obj["data"]
             retrieved_data = self._retrieve_assembly_data(data)
-            print("---------------")
-            print(f"retrieved data is {retrieved_data}")
-            print(f"expected data is {expected_data[idx]}")
-            print("---------------")
             assert retrieved_data == expected_data[idx]
 
     def _check_result_genome_info_provenance_data(
@@ -345,7 +341,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             # check data
             data = obj["data"]
             retrieved_data = self._retrieve_genome_data(data)
-            assert ordered(retrieved_data) == ordered(expected_data[idx])
+            assert retrieved_data == expected_data[idx]
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
