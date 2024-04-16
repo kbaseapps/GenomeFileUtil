@@ -304,18 +304,14 @@ class GenomeFileUtilTest(unittest.TestCase):
         retrieved_provenance = self._retrieve_provenance(provenance)
         assert retrieved_provenance == expected_provenance
 
-    def _check_data(self, obj, idx, file_names, expected_data, is_genome):
+    def _check_data(self, obj, idx, expected_data, is_genome):
         data = obj["data"]
         retrieved_data = (
             self._retrieve_genome_data(data)
             if is_genome
             else self._retrieve_assembly_data(data)
         )
-        if is_genome:
-            json_path = "/kb/module/work/tmp/" + "genome_" + file_names[idx].split(".")[0] + ".json"
-            self._dump_retrieved_data(json_path, retrieved_data)
-            print(f"{json_path} is processed")
-        # assert ordered(retrieved_data) == ordered(expected_data[idx])
+        assert retrieved_data == expected_data[idx]
 
     def _check_result_object_info_provenance_data(
         self,
@@ -330,7 +326,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             obj = self._get_object(res, is_genome)
             self._check_info(obj, res, file_names, idx, expected_metadata, is_genome)
             self._check_prov(obj, expected_provenance)
-            self._check_data(obj, idx, file_names, expected_data, is_genome)
+            self._check_data(obj, idx, expected_data, is_genome)
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"

@@ -1,1 +1,287 @@
-{"cdss": [{"db_xrefs": [["EMBL", "D89861"], ["RefSeq_peptide", "NP_059349"], ["UniParc", "UPI0000095EE9"], ["Uniprot/SPTREMBL", "Q9ZZR3"], ["protein_id", "BAA36520"]], "dna_sequence": "ATGAAGAATTATATTATTAGACCTATTGCACCTCATCTTACTATTTATAATGCACAATGGAATTCCGTATTTTCTATTTTTCATAGGATTAGTGGAGTTTTTATAATGGTATTTATTTTTTTCTCTACTTTGGGGTTGTTTTTCTTTAAATTTTATTCGCCTACTATAATGTGTGTAAGTTTTTTATGGTTATTTAATAAAGTTTATTGGATTTTTATTTCCATCATTTTTATTATTTTTATGTCATTTTTTTATCATTTATGCTCTGGCATTTATCATTTGCTTTTAGAATTAGGGTATTTTTACCATATGGTAAAAATTGAAAAGATGAGTAAATATAGTTTAAGCTTTTCAATTTTAATTTCTTTTTTTTATTTTTTTTTAATTAGGCTTTTGTTCATCAATTTATAT", "dna_sequence_length": 411, "id": "gene_1_CDS_1", "location": [["MitoASM9120v1", 1, "+", 411]], "md5": "b23d4949338f1eb739707a1a616da517", "note": "transcript_id=CMW001CT", "ontology_terms": {"COG": {"COG0028": [3]}, "GO": {"GO:0000104": [0], "GO:0005739": [0], "GO:0006099": [0], "GO:0009055": [0], "GO:0016020": [0], "GO:0016627": [0], "GO:0045281": [0]}, "KO": {"KO:K12542": [2]}, "PFAM": {"PF00028": [4]}, "PO": {"PO:0000028": [1]}, "TIGRFAM": {"TIGR00088": [5]}}, "parent_gene": "gene_1", "parent_mrna": "gene_1_mRNA_1", "protein_md5": "4029e139a790ab1d0026bf84e65a1a0b", "protein_translation": "MKNYIIRPIAPHLTIYNAQWNSVFSIFHRISGVFIMVFIFFSTLGLFFFKFYSPTIMCVSFLWLFNKVYWIFISIIFIIFMSFFYHLCSGIYHLLLELGYFYHMVKIEKMSKYSLSFSILISFFYFFLIRLLFINLY", "protein_translation_length": 137, "warnings": ["Unable to verify protein sequence:Final codon 'TAT' is not a stop codon"]}], "contig_ids": ["MitoASM9120v1"], "contig_lengths": [32211], "dna_size": 32211, "domain": "Unknown", "external_source_origination_date": "14-Sep-2015", "feature_counts": {"CDS": 1, "gene": 1, "mRNA": 1, "non_coding_features": 0, "protein_encoding_gene": 1}, "features": [{"cdss": ["gene_1_CDS_1"], "dna_sequence": "ATGAAGAATTATATTATTAGACCTATTGCACCTCATCTTACTATTTATAATGCACAATGGAATTCCGTATTTTCTATTTTTCATAGGATTAGTGGAGTTTTTATAATGGTATTTATTTTTTTCTCTACTTTGGGGTTGTTTTTCTTTAAATTTTATTCGCCTACTATAATGTGTGTAAGTTTTTTATGGTTATTTAATAAAGTTTATTGGATTTTTATTTCCATCATTTTTATTATTTTTATGTCATTTTTTTATCATTTATGCTCTGGCATTTATCATTTGCTTTTAGAATTAGGGTATTTTTACCATATGGTAAAAATTGAAAAGATGAGTAAATATAGTTTAAGCTTTTCAATTTTAATTTCTTTTTTTTATTTTTTTTTAATTAGGCTTTTGTTCATCAATTTATAT", "dna_sequence_length": 411, "id": "gene_1", "location": [["MitoASM9120v1", 1, "+", 411]], "md5": "b23d4949338f1eb739707a1a616da517", "mrnas": ["gene_1_mRNA_1"], "note": "Succinate dehydrogenase cytochrome B560 subunit [Source:UniProtKB/TrEMBL;Acc:Q9ZZR3]", "ontology_terms": {"COG": {"COG0028": [3]}, "GO": {"GO:0000104": [0], "GO:0005739": [0], "GO:0006099": [0], "GO:0009055": [0], "GO:0016020": [0], "GO:0016627": [0], "GO:0045281": [0]}, "KO": {"KO:K12542": [2]}, "PFAM": {"PF00028": [4]}, "PO": {"PO:0000028": [1]}, "TIGRFAM": {"TIGR00088": [5]}}, "protein_translation": "MKNYIIRPIAPHLTIYNAQWNSVFSIFHRISGVFIMVFIFFSTLGLFFFKFYSPTIMCVSFLWLFNKVYWIFISIIFIIFMSFFYHLCSGIYHLLLELGYFYHMVKIEKMSKYSLSFSILISFFYFFLIRLLFINLY", "protein_translation_length": 137}], "gc_content": 0.27065, "genetic_code": 11, "genome_tiers": ["User"], "id": "ontology.gbff", "md5": "43b94ee0851f3b9e9db521167c6fcba3", "molecule_type": "DNA", "mrnas": [{"cds": "gene_1_CDS_1", "dna_sequence": "ATGAAGAATTATATTATTAGACCTATTGCACCTCATCTTACTATTTATAATGCACAATGGAATTCCGTATTTTCTATTTTTCATAGGATTAGTGGAGTTTTTATAATGGTATTTATTTTTTTCTCTACTTTGGGGTTGTTTTTCTTTAAATTTTATTCGCCTACTATAATGTGTGTAAGTTTTTTATGGTTATTTAATAAAGTTTATTGGATTTTTATTTCCATCATTTTTATTATTTTTATGTCATTTTTTTATCATTTATGCTCTGGCATTTATCATTTGCTTTTAGAATTAGGGTATTTTTACCATATGGTAAAAATTGAAAAGATGAGTAAATATAGTTTAAGCTTTTCAATTTTAATTTCTTTTTTTTATTTTTTTTTAATTAGGCTTTTGTTCATCAATTTATAT", "dna_sequence_length": 411, "id": "gene_1_mRNA_1", "location": [["MitoASM9120v1", 1, "+", 411]], "md5": "b23d4949338f1eb739707a1a616da517", "note": "transcript_id=CMW001CT", "parent_gene": "gene_1"}], "non_coding_features": [], "notes": "This sequence was annotated by the Ensembl system. Please visit the\nEnsembl web site, http://www.ensembl.org/ for more information.\nAll feature locations are relative to the first (5') base of the\nsequence in this file.  The sequence presented is always the\nforward strand of the assembly. Features that lie outside of the\nsequence contained in this file have clonal location coordinates in\nthe format: <clone accession>.<version>:<start>..<end>\nThe /gene indicates a unique id for a gene,\n/note=\"transcript_id=...\" a unique id for a transcript, /protein_id\na unique id for a peptide and note=\"exon_id=...\" a unique id for an\nexon. These ids are maintained wherever possible between versions.\nAll the exons and transcripts in Ensembl are confirmed by\nsimilarity to either protein or cDNA sequences.", "num_contigs": 1, "ontologies_present": {"COG": {"COG0028": "Acetolactate synthase large subunit or other thiamine pyrophosphate-requiring enzyme"}, "GO": {"GO:0000104": "succinate dehydrogenase activity", "GO:0005739": "mitochondrion", "GO:0006099": "tricarboxylic acid cycle", "GO:0009055": "electron transfer activity", "GO:0016020": "membrane", "GO:0016627": "oxidoreductase activity, acting on the CH-CH group of donors", "GO:0045281": "succinate dehydrogenase complex"}, "KO": {"KO:K12542": ""}, "PFAM": {"PF00028": "Cadherin domain"}, "PO": {"PO:0000028": "pollen tube tip"}, "TIGRFAM": {"TIGR00088": "tRNA (guanine(37)-N(1))-methyltransferase"}}, "ontology_events": [{"id": "GO", "method": "GenomeFileUtils Genbank uploader from annotations", "method_version": "0.11.7"}, {"id": "PO", "method": "GenomeFileUtils Genbank uploader from annotations", "method_version": "0.11.7"}, {"id": "KO", "method": "GenomeFileUtils Genbank uploader from annotations", "method_version": "0.11.7"}, {"id": "COG", "method": "GenomeFileUtils Genbank uploader from annotations", "method_version": "0.11.7"}, {"id": "PFAM", "method": "GenomeFileUtils Genbank uploader from annotations", "method_version": "0.11.7"}, {"id": "TIGRFAM", "method": "GenomeFileUtils Genbank uploader from annotations", "method_version": "0.11.7"}], "original_source_file_name": "ontology.gbff", "publications": [], "scientific_name": "Cyanidioschyzon merolae strain 10D", "source": "Genbank", "source_id": "MitoASM9120v1", "taxonomy": "Unconfirmed Organism", "warnings": ["Unable to determine organism taxonomy"]}
+{
+    "cdss": [
+        {
+            "db_xrefs": [
+                [
+                    "EMBL",
+                    "D89861"
+                ],
+                [
+                    "RefSeq_peptide",
+                    "NP_059349"
+                ],
+                [
+                    "UniParc",
+                    "UPI0000095EE9"
+                ],
+                [
+                    "Uniprot/SPTREMBL",
+                    "Q9ZZR3"
+                ],
+                [
+                    "protein_id",
+                    "BAA36520"
+                ]
+            ],
+            "dna_sequence": "ATGAAGAATTATATTATTAGACCTATTGCACCTCATCTTACTATTTATAATGCACAATGGAATTCCGTATTTTCTATTTTTCATAGGATTAGTGGAGTTTTTATAATGGTATTTATTTTTTTCTCTACTTTGGGGTTGTTTTTCTTTAAATTTTATTCGCCTACTATAATGTGTGTAAGTTTTTTATGGTTATTTAATAAAGTTTATTGGATTTTTATTTCCATCATTTTTATTATTTTTATGTCATTTTTTTATCATTTATGCTCTGGCATTTATCATTTGCTTTTAGAATTAGGGTATTTTTACCATATGGTAAAAATTGAAAAGATGAGTAAATATAGTTTAAGCTTTTCAATTTTAATTTCTTTTTTTTATTTTTTTTTAATTAGGCTTTTGTTCATCAATTTATAT",
+            "dna_sequence_length": 411,
+            "id": "gene_1_CDS_1",
+            "location": [
+                [
+                    "MitoASM9120v1",
+                    1,
+                    "+",
+                    411
+                ]
+            ],
+            "md5": "b23d4949338f1eb739707a1a616da517",
+            "note": "transcript_id=CMW001CT",
+            "ontology_terms": {
+                "COG": {
+                    "COG0028": [
+                        3
+                    ]
+                },
+                "GO": {
+                    "GO:0000104": [
+                        0
+                    ],
+                    "GO:0005739": [
+                        0
+                    ],
+                    "GO:0006099": [
+                        0
+                    ],
+                    "GO:0009055": [
+                        0
+                    ],
+                    "GO:0016020": [
+                        0
+                    ],
+                    "GO:0016627": [
+                        0
+                    ],
+                    "GO:0045281": [
+                        0
+                    ]
+                },
+                "KO": {
+                    "KO:K12542": [
+                        2
+                    ]
+                },
+                "PFAM": {
+                    "PF00028": [
+                        4
+                    ]
+                },
+                "PO": {
+                    "PO:0000028": [
+                        1
+                    ]
+                },
+                "TIGRFAM": {
+                    "TIGR00088": [
+                        5
+                    ]
+                }
+            },
+            "parent_gene": "gene_1",
+            "parent_mrna": "gene_1_mRNA_1",
+            "protein_md5": "4029e139a790ab1d0026bf84e65a1a0b",
+            "protein_translation": "MKNYIIRPIAPHLTIYNAQWNSVFSIFHRISGVFIMVFIFFSTLGLFFFKFYSPTIMCVSFLWLFNKVYWIFISIIFIIFMSFFYHLCSGIYHLLLELGYFYHMVKIEKMSKYSLSFSILISFFYFFLIRLLFINLY",
+            "protein_translation_length": 137,
+            "warnings": [
+                "Unable to verify protein sequence:Final codon 'TAT' is not a stop codon"
+            ]
+        }
+    ],
+    "contig_ids": [
+        "MitoASM9120v1"
+    ],
+    "contig_lengths": [
+        32211
+    ],
+    "dna_size": 32211,
+    "domain": "Unknown",
+    "external_source_origination_date": "14-Sep-2015",
+    "feature_counts": {
+        "CDS": 1,
+        "gene": 1,
+        "mRNA": 1,
+        "non_coding_features": 0,
+        "protein_encoding_gene": 1
+    },
+    "features": [
+        {
+            "cdss": [
+                "gene_1_CDS_1"
+            ],
+            "dna_sequence": "ATGAAGAATTATATTATTAGACCTATTGCACCTCATCTTACTATTTATAATGCACAATGGAATTCCGTATTTTCTATTTTTCATAGGATTAGTGGAGTTTTTATAATGGTATTTATTTTTTTCTCTACTTTGGGGTTGTTTTTCTTTAAATTTTATTCGCCTACTATAATGTGTGTAAGTTTTTTATGGTTATTTAATAAAGTTTATTGGATTTTTATTTCCATCATTTTTATTATTTTTATGTCATTTTTTTATCATTTATGCTCTGGCATTTATCATTTGCTTTTAGAATTAGGGTATTTTTACCATATGGTAAAAATTGAAAAGATGAGTAAATATAGTTTAAGCTTTTCAATTTTAATTTCTTTTTTTTATTTTTTTTTAATTAGGCTTTTGTTCATCAATTTATAT",
+            "dna_sequence_length": 411,
+            "id": "gene_1",
+            "location": [
+                [
+                    "MitoASM9120v1",
+                    1,
+                    "+",
+                    411
+                ]
+            ],
+            "md5": "b23d4949338f1eb739707a1a616da517",
+            "mrnas": [
+                "gene_1_mRNA_1"
+            ],
+            "note": "Succinate dehydrogenase cytochrome B560 subunit [Source:UniProtKB/TrEMBL;Acc:Q9ZZR3]",
+            "ontology_terms": {
+                "COG": {
+                    "COG0028": [
+                        3
+                    ]
+                },
+                "GO": {
+                    "GO:0000104": [
+                        0
+                    ],
+                    "GO:0005739": [
+                        0
+                    ],
+                    "GO:0006099": [
+                        0
+                    ],
+                    "GO:0009055": [
+                        0
+                    ],
+                    "GO:0016020": [
+                        0
+                    ],
+                    "GO:0016627": [
+                        0
+                    ],
+                    "GO:0045281": [
+                        0
+                    ]
+                },
+                "KO": {
+                    "KO:K12542": [
+                        2
+                    ]
+                },
+                "PFAM": {
+                    "PF00028": [
+                        4
+                    ]
+                },
+                "PO": {
+                    "PO:0000028": [
+                        1
+                    ]
+                },
+                "TIGRFAM": {
+                    "TIGR00088": [
+                        5
+                    ]
+                }
+            },
+            "protein_translation": "MKNYIIRPIAPHLTIYNAQWNSVFSIFHRISGVFIMVFIFFSTLGLFFFKFYSPTIMCVSFLWLFNKVYWIFISIIFIIFMSFFYHLCSGIYHLLLELGYFYHMVKIEKMSKYSLSFSILISFFYFFLIRLLFINLY",
+            "protein_translation_length": 137
+        }
+    ],
+    "gc_content": 0.27065,
+    "genetic_code": 11,
+    "genome_tiers": [
+        "User"
+    ],
+    "id": "ontology.gbff",
+    "md5": "43b94ee0851f3b9e9db521167c6fcba3",
+    "molecule_type": "DNA",
+    "mrnas": [
+        {
+            "cds": "gene_1_CDS_1",
+            "dna_sequence": "ATGAAGAATTATATTATTAGACCTATTGCACCTCATCTTACTATTTATAATGCACAATGGAATTCCGTATTTTCTATTTTTCATAGGATTAGTGGAGTTTTTATAATGGTATTTATTTTTTTCTCTACTTTGGGGTTGTTTTTCTTTAAATTTTATTCGCCTACTATAATGTGTGTAAGTTTTTTATGGTTATTTAATAAAGTTTATTGGATTTTTATTTCCATCATTTTTATTATTTTTATGTCATTTTTTTATCATTTATGCTCTGGCATTTATCATTTGCTTTTAGAATTAGGGTATTTTTACCATATGGTAAAAATTGAAAAGATGAGTAAATATAGTTTAAGCTTTTCAATTTTAATTTCTTTTTTTTATTTTTTTTTAATTAGGCTTTTGTTCATCAATTTATAT",
+            "dna_sequence_length": 411,
+            "id": "gene_1_mRNA_1",
+            "location": [
+                [
+                    "MitoASM9120v1",
+                    1,
+                    "+",
+                    411
+                ]
+            ],
+            "md5": "b23d4949338f1eb739707a1a616da517",
+            "note": "transcript_id=CMW001CT",
+            "parent_gene": "gene_1"
+        }
+    ],
+    "non_coding_features": [],
+    "notes": "This sequence was annotated by the Ensembl system. Please visit the\nEnsembl web site, http://www.ensembl.org/ for more information.\nAll feature locations are relative to the first (5') base of the\nsequence in this file.  The sequence presented is always the\nforward strand of the assembly. Features that lie outside of the\nsequence contained in this file have clonal location coordinates in\nthe format: <clone accession>.<version>:<start>..<end>\nThe /gene indicates a unique id for a gene,\n/note=\"transcript_id=...\" a unique id for a transcript, /protein_id\na unique id for a peptide and note=\"exon_id=...\" a unique id for an\nexon. These ids are maintained wherever possible between versions.\nAll the exons and transcripts in Ensembl are confirmed by\nsimilarity to either protein or cDNA sequences.",
+    "num_contigs": 1,
+    "ontologies_present": {
+        "COG": {
+            "COG0028": "Acetolactate synthase large subunit or other thiamine pyrophosphate-requiring enzyme"
+        },
+        "GO": {
+            "GO:0000104": "succinate dehydrogenase activity",
+            "GO:0005739": "mitochondrion",
+            "GO:0006099": "tricarboxylic acid cycle",
+            "GO:0009055": "electron transfer activity",
+            "GO:0016020": "membrane",
+            "GO:0016627": "oxidoreductase activity, acting on the CH-CH group of donors",
+            "GO:0045281": "succinate dehydrogenase complex"
+        },
+        "KO": {
+            "KO:K12542": ""
+        },
+        "PFAM": {
+            "PF00028": "Cadherin domain"
+        },
+        "PO": {
+            "PO:0000028": "pollen tube tip"
+        },
+        "TIGRFAM": {
+            "TIGR00088": "tRNA (guanine(37)-N(1))-methyltransferase"
+        }
+    },
+    "ontology_events": [
+        {
+            "id": "GO",
+            "method": "GenomeFileUtils Genbank uploader from annotations",
+            "method_version": "0.11.7"
+        },
+        {
+            "id": "PO",
+            "method": "GenomeFileUtils Genbank uploader from annotations",
+            "method_version": "0.11.7"
+        },
+        {
+            "id": "KO",
+            "method": "GenomeFileUtils Genbank uploader from annotations",
+            "method_version": "0.11.7"
+        },
+        {
+            "id": "COG",
+            "method": "GenomeFileUtils Genbank uploader from annotations",
+            "method_version": "0.11.7"
+        },
+        {
+            "id": "PFAM",
+            "method": "GenomeFileUtils Genbank uploader from annotations",
+            "method_version": "0.11.7"
+        },
+        {
+            "id": "TIGRFAM",
+            "method": "GenomeFileUtils Genbank uploader from annotations",
+            "method_version": "0.11.7"
+        }
+    ],
+    "original_source_file_name": "ontology.gbff",
+    "publications": [],
+    "scientific_name": "Cyanidioschyzon merolae strain 10D",
+    "source": "Genbank",
+    "source_id": "MitoASM9120v1",
+    "taxonomy": "Unconfirmed Organism",
+    "warnings": [
+        "Unable to determine organism taxonomy"
+    ]
+}
