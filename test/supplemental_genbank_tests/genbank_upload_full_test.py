@@ -22,16 +22,6 @@ _WSLARGEDATAIO_VERSION = "0.0.5-beta"
 
 _OBJECT_VERSION_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/1$')
 
-def ordered(obj):
-    if isinstance(obj, dict):
-        return sorted((k, ordered(v)) for k, v in obj.items())
-    if isinstance(obj, list):
-        return sorted(ordered(x) for x in obj)
-    if isinstance(obj, int):
-        return str(obj)
-    else:
-        return obj
-
 class GenomeFileUtilTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -231,10 +221,6 @@ class GenomeFileUtilTest(unittest.TestCase):
         with open(json_path, "r") as read_file:
             data = json.load(read_file)
         return data
-
-    def _dump_retrieved_data(self, json_path, dictionary):
-        with open(json_path, "w") as outfile:
-            json.dump(dictionary, outfile)
 
     def _retrieve_provenance(self, provenance):
         # make a copy to avoid modifying the original provenance
