@@ -259,7 +259,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             data.pop(key)
         for key in ["cdss", "features", "mrnas", "non_coding_features"]:
             for dist in data.get(key):
-                dist.pop("aliases")
+                dist.pop("aliases", None)
         for ontology_event in data.get("ontology_events", []):
             ontology_event.pop("timestamp")
             ontology_event.pop("ontology_ref")
