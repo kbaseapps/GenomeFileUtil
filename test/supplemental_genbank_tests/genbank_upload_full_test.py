@@ -20,6 +20,7 @@ _ASSEMBLYUTIL_VERSION = "3.1.1-release"
 _GENOMEANNOTATIONAPI_VERSION = "1.0.2-release"
 _WSLARGEDATAIO_VERSION = "0.0.5-beta"
 
+_UPA_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/[0-9]$')
 _OBJECT_VERSION_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/1$')
 
 class GenomeFileUtilTest(unittest.TestCase):
@@ -232,10 +233,15 @@ class GenomeFileUtilTest(unittest.TestCase):
                 subaction.pop("commit")
         return provs
 
-    def _retrieve_genome_metadata(self, metadata):
+    def _check_assembly_upa(self, retrieved_upa, expected_upa):
+        assert _UPA_PATTERN.match(retrieved_upa)
+        assert retrieved_upa == expected_upa
+
+    def _retrieve_genome_metadata(self, metadata, expected_assembly_upa):
         # make a copy to avoid modifying the original metadata
         metadata = dict(metadata)
-        metadata.pop("Assembly Object")
+        retrieved_assembly_upa = metadata.pop("Assembly Object")
+        self._check_assembly_upa(retrieved_assembly_upa, expected_assembly_upa)
         return metadata
 
     def _retrieve_genome_data(self, data):
@@ -268,15 +274,18 @@ class GenomeFileUtilTest(unittest.TestCase):
 
     def _check_info(self, obj, result, file_names, idx, expected_metadata, is_genome):
         info = obj["info"]
+        assembly_upa = result["assembly_ref"]
         object_info = 'genome_info' if is_genome else 'assembly_info'
         object_name = file_names[idx] if is_genome else file_names[idx] + "_assembly"
         object_type = 'KBaseGenomes.Genome' if is_genome else 'KBaseGenomeAnnotations.Assembly'
-        retrieved_metadata = self._retrieve_genome_metadata(info[10]) if is_genome else info[10]
+        retrieved_metadata = self._retrieve_genome_metadata(info[10], assembly_upa) if is_genome else info[10]
 
         assert info == result[object_info]
         assert info[1] == object_name
         assert info[2].split('-')[0] == object_type
 
+        # check version
+        assert info[4] == 1
         # datetime.fromisoformat is not available in Python 3.6 or below
         assert datetime.strptime(info[3], '%Y-%m-%dT%H:%M:%S+%f')
         assert info[6] == self.wsID
@@ -290,14 +299,14 @@ class GenomeFileUtilTest(unittest.TestCase):
         retrieved_provenance = self._retrieve_provenance(provenance)
         assert retrieved_provenance == expected_provenance
 
-    def _check_data(self, obj, idx, expected_data, is_genome):
+    def _check_data(self, obj, expected_data, is_genome):
         data = obj["data"]
         retrieved_data = (
             self._retrieve_genome_data(data)
             if is_genome
             else self._retrieve_assembly_data(data)
         )
-        assert retrieved_data == expected_data[idx]
+        assert retrieved_data == expected_data
 
     def _check_result_object_info_provenance_data(
         self,
@@ -312,7 +321,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             obj = self._get_object(res, is_genome)
             self._check_info(obj, res, file_names, idx, expected_metadata, is_genome)
             self._check_prov(obj, expected_provenance)
-            self._check_data(obj, idx, expected_data, is_genome)
+            self._check_data(obj, expected_data[idx], is_genome)
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
