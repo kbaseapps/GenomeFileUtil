@@ -6,6 +6,7 @@ import shutil
 import time
 import unittest
 from configparser import ConfigParser
+from copy import deepcopy
 from datetime import datetime
 
 from installed_clients.DataFileUtilClient import DataFileUtil
@@ -14,14 +15,9 @@ from GenomeFileUtil.GenomeFileUtilServer import MethodContext
 from installed_clients.WorkspaceClient import Workspace as workspaceService
 from conftest import assert_exception_correct
 
-_GENOMEFILEUTIL_VERSION = "local-dev"
-_DATAFILEUTIL_VERSION = "0.2.1-release"
-_ASSEMBLYUTIL_VERSION = "3.1.1-release"
-_GENOMEANNOTATIONAPI_VERSION = "1.0.2-release"
-_WSLARGEDATAIO_VERSION = "0.0.5-beta"
-
 _UPA_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/[0-9]$')
 _OBJECT_VERSION_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/1$')
+_PROV_SUBACTION_VERSION_PATTERN = re.compile(r'^\d+\.\d+\.\d+-(release|beta)$')
 
 class GenomeFileUtilTest(unittest.TestCase):
     @classmethod
@@ -44,27 +40,23 @@ class GenomeFileUtilTest(unittest.TestCase):
                 "subactions": [
                     {
                         "name": "GenomeFileUtil",
-                        "ver": _GENOMEFILEUTIL_VERSION,
+                        "ver": "local-dev",
                         "code_url": "https://localhost",
                     },
                     {
                         "name": "AssemblyUtil",
-                        "ver": _ASSEMBLYUTIL_VERSION,
                         "code_url": "https://github.com/kbaseapps/AssemblyUtil",
                     },
                     {
                         "name": "DataFileUtil",
-                        "ver": _DATAFILEUTIL_VERSION,
                         "code_url": "https://github.com/kbaseapps/DataFileUtil",
                     },
                     {
                         'name': 'GenomeAnnotationAPI',
-                        'ver': _GENOMEANNOTATIONAPI_VERSION,
                         'code_url': 'https://github.com/kbase/genome_annotation_api',
                     },
                     {
                         "name": "WsLargeDataIO",
-                        "ver": _WSLARGEDATAIO_VERSION,
                         "code_url": "https://github.com/kbaseapps/WsLargeDataIO",
                     },
                 ],
@@ -223,14 +215,21 @@ class GenomeFileUtilTest(unittest.TestCase):
             data = json.load(read_file)
         return data
 
+    def _dump_retrieved_data(self, json_path, dictionary):
+        with open(json_path, "w") as outfile:
+            json.dump(dictionary, outfile)
+
     def _retrieve_provenance(self, provenance):
-        # make a copy to avoid modifying the original provenance
+        # make a deep copy to avoid modifying the original provenance
         provs = [prov.copy() for prov in provenance]
         for prov in provs:
             for key in ["time", "epoch"]:
                 prov.pop(key)
             for subaction in prov['subactions']:
                 subaction.pop("commit")
+                if subaction["name"] != "GenomeFileUtil":
+                    version = subaction.pop("ver")
+                    assert _PROV_SUBACTION_VERSION_PATTERN.match(version)
         return provs
 
     def _check_assembly_upa(self, retrieved_upa, expected_upa):
@@ -238,28 +237,33 @@ class GenomeFileUtilTest(unittest.TestCase):
         assert retrieved_upa == expected_upa
 
     def _retrieve_genome_metadata(self, metadata, expected_assembly_upa):
-        # make a copy to avoid modifying the original metadata
-        metadata = dict(metadata)
+        # make a deep copy to avoid modifying the original metadata
+        metadata = deepcopy(metadata)
         retrieved_assembly_upa = metadata.pop("Assembly Object")
         self._check_assembly_upa(retrieved_assembly_upa, expected_assembly_upa)
         return metadata
 
     def _retrieve_genome_data(self, data):
-        # make a copy to avoid modifying the original genome data
-        data = dict(data)
-        for key in ["assembly_ref", "genbank_handle_ref"]:
-            data.pop(key)
+        # make a deep copy to avoid modifying the original genome data
+        data = deepcopy(data)
         for key in ["cdss", "features", "mrnas", "non_coding_features"]:
             for dist in data.get(key):
-                dist.pop("aliases", None)
+                if dist.get("aliases"):
+                    dist["aliases"] = sorted(dist["aliases"])
+
+        for key in ["assembly_ref", "genbank_handle_ref"]:
+            data.pop(key)
+
         for ontology_event in data.get("ontology_events", []):
             ontology_event.pop("timestamp")
-            ontology_event.pop("ontology_ref")
+            ontology_ref = ontology_event.pop("ontology_ref")
+            assert _UPA_PATTERN.match(ontology_ref)
+
         return data
 
     def _retrieve_assembly_data(self, data):
-        # make a copy to avoid modifying the original assembly data
-        data = dict(data)
+        # make a deep copy to avoid modifying the original assembly data
+        data = deepcopy(data)
         data.pop("fasta_handle_ref")
         fasta_handle_info = data["fasta_handle_info"]
         fasta_handle_info.pop("shock_id")
