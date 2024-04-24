@@ -2,6 +2,7 @@ import json
 import os
 import pytest
 import re
+import requests
 import shutil
 import time
 import unittest
@@ -9,9 +10,10 @@ from configparser import ConfigParser
 from copy import deepcopy
 from datetime import datetime
 
-from installed_clients.DataFileUtilClient import DataFileUtil
 from GenomeFileUtil.GenomeFileUtilImpl import GenomeFileUtil
 from GenomeFileUtil.GenomeFileUtilServer import MethodContext
+from installed_clients.AbstractHandleClient import AbstractHandle as HandleService
+from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.WorkspaceClient import Workspace as workspaceService
 from conftest import assert_exception_correct
 
@@ -84,6 +86,8 @@ class GenomeFileUtilTest(unittest.TestCase):
         cls.wsID = cls.wsClient.create_workspace({'workspace': cls.wsName})[0]
         cls.serviceImpl = GenomeFileUtil(cls.cfg)
         cls.dfuClient = DataFileUtil(os.environ['SDK_CALLBACK_URL'])
+        cls.hs = HandleService(cls.cfg['handle-service-url'], token=token)
+        cls.kbase_endpoint = cls.cfg['kbase-endpoint']
 
     @classmethod
     def tearDownClass(cls):
@@ -219,6 +223,28 @@ class GenomeFileUtilTest(unittest.TestCase):
         with open(json_path, "w") as outfile:
             json.dump(dictionary, outfile)
 
+    def _get_shock_id(self, handle_id):
+        handles = self.hs.hids_to_handles([handle_id])
+        shock_id = handles[0]['id']
+        return shock_id
+
+    def _get_blobstore(self, shock_id):
+        blob_url = self.kbase_endpoint + "/blobstore/node/" + shock_id
+        response = requests.get(blob_url)
+        if response.status_code == 200:
+            data = response.json()
+            return data
+        else:
+            try:
+                error_data = response.json()
+                error_message = error_data.get('error')
+                if error_message:
+                    raise ValueError(
+                        f"Error message: {error_message}; Error status: {error_data.get('status')}"
+                    )
+            except Exception as e:
+                raise ValueError(f"Unable to parse error message") from e
+
     def _retrieve_provenance(self, provenance):
         # make a deep copy to avoid modifying the original provenance
         provs = [prov.copy() for prov in provenance]
@@ -251,8 +277,15 @@ class GenomeFileUtilTest(unittest.TestCase):
                 if dist.get("aliases"):
                     dist["aliases"] = sorted(dist["aliases"])
 
-        for key in ["assembly_ref", "genbank_handle_ref"]:
-            data.pop(key)
+        assembly_ref = data.pop("assembly_ref")
+        assert _UPA_PATTERN.match(assembly_ref)
+
+        # check handle ref
+        handle_id = data.pop("genbank_handle_ref")
+        shock_id = self._get_shock_id(handle_id)
+        blob_info = self._get_blobstore(shock_id)
+        assert blob_info["data"]["file"]["checksum"]["md5"] == data["md5"]
+        assert blob_info["data"]["file"]["name"] == data["id"]
 
         for ontology_event in data.get("ontology_events", []):
             ontology_event.pop("timestamp")
@@ -266,7 +299,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         data = deepcopy(data)
 
         handle_id = data.pop("fasta_handle_ref")
-        assert handle_id.split("-")[0] == "KBH"
+        assert handle_id.split("_")[0] == "KBH"
 
         handle_info = data["fasta_handle_info"]
         blob_id = handle_info.pop("shock_id")
