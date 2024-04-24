@@ -264,11 +264,21 @@ class GenomeFileUtilTest(unittest.TestCase):
     def _retrieve_assembly_data(self, data):
         # make a deep copy to avoid modifying the original assembly data
         data = deepcopy(data)
-        data.pop("fasta_handle_ref")
-        fasta_handle_info = data["fasta_handle_info"]
-        fasta_handle_info.pop("shock_id")
-        for key in ["hid", "id"]:
-            fasta_handle_info["handle"].pop(key)
+
+        handle_id = data.pop("fasta_handle_ref")
+        assert handle_id.split("-")[0] == "KBH"
+
+        handle_info = data["fasta_handle_info"]
+        blob_id = handle_info.pop("shock_id")
+
+        handle = handle_info['handle']
+        assert handle.pop('hid') == handle_id
+        assert handle.pop('id') == blob_id
+
+        url = handle.get('url')
+        assert url.startswith('https://')
+        assert url.endswith('kbase.us/services/shock-api')
+
         return data
 
     def _get_object(self, result, is_genome):
