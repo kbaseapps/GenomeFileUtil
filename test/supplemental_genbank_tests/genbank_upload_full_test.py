@@ -88,6 +88,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         cls.dfuClient = DataFileUtil(os.environ['SDK_CALLBACK_URL'])
         cls.hs = HandleService(cls.cfg['handle-service-url'], token=token)
         cls.kbase_endpoint = cls.cfg['kbase-endpoint']
+        cls.token = token
 
     @classmethod
     def tearDownClass(cls):
@@ -230,7 +231,8 @@ class GenomeFileUtilTest(unittest.TestCase):
 
     def _get_blobstore(self, shock_id):
         blob_url = self.kbase_endpoint + "/blobstore/node/" + shock_id
-        response = requests.get(blob_url)
+        headers = {'authorization': 'OAuth ' + self.token}
+        response = requests.get(blob_url, headers=headers)
         if response.status_code == 200:
             data = response.json()
             return data
@@ -243,7 +245,7 @@ class GenomeFileUtilTest(unittest.TestCase):
                         f"Error message: {error_message}; Error status: {error_data.get('status')}"
                     )
             except Exception as e:
-                raise ValueError(f"Unable to parse error message") from e
+                raise ValueError(f"Failed to retrieve data from the blob store") from e
 
     def _retrieve_provenance(self, provenance):
         # make a deep copy to avoid modifying the original provenance
