@@ -286,6 +286,8 @@ class GenomeFileUtilTest(unittest.TestCase):
         handle_id = data.pop("genbank_handle_ref")
         shock_id = self._get_shock_id(handle_id)
         blob_info = self._get_blobstore(shock_id)
+        print(f"blob_info is: {blob_info}")
+        print(f"data md5 is: {data["md5"]}")
         assert blob_info["data"]["file"]["checksum"]["md5"] == data["md5"]
         assert blob_info["data"]["file"]["name"] == data["id"]
 
