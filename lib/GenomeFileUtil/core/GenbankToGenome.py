@@ -184,7 +184,6 @@ class GenbankToGenome:
             # find genbank file
             files = self._find_input_files(genome_obj.input_directory)
             genome_obj.consolidated_file = self._join_files_skip_empty_lines(files)
-            print(f"the path of consolidated file is {genome_obj.consolidated_file}")
 
             # gather all objects
             genome_objs.append(genome_obj)
