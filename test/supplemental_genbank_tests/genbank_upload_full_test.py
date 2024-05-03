@@ -240,7 +240,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             return response_raw.text, response.text
         raise ValueError(f"Failed to download file from the blob store; Error code {response.status_code}")
 
-    def _md5sum_string(data):
+    def _md5sum_string(self, data):
         hash_md5 = hashlib.md5()
         hash_md5.update(data.encode('utf-8'))
         return hash_md5.hexdigest()
@@ -285,8 +285,10 @@ class GenomeFileUtilTest(unittest.TestCase):
         shock_id = self._get_shock_id(handle_id)
         blob_info_raw, blob_info = self._download_file_from_blobstore(shock_id)
         target = data["md5"]
-        print(f"blob_info_raw is: {self._md5sum_string(blob_info_raw)}")
-        print(f"blob_info is: {self._md5sum_string(blob_info)}")
+        blob_info_raw_md5sum = self._md5sum_string(blob_info_raw)
+        blob_info_md5sum = self._md5sum_string(blob_info)
+        print(f"blob_info_raw is: {blob_info_raw_md5sum}")
+        print(f"blob_info is: {blob_info_md5sum}")
         print(f"data md5 is: {target}")
         # assert blob_info["data"]["file"]["checksum"]["md5"] == data["md5"]
         # assert blob_info["data"]["file"]["name"] == data["id"]
