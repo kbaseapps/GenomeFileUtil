@@ -7,6 +7,7 @@ import requests
 import shutil
 import time
 import unittest
+import uuid
 from configparser import ConfigParser
 from copy import deepcopy
 from datetime import datetime
@@ -230,15 +231,21 @@ class GenomeFileUtilTest(unittest.TestCase):
         shock_id = handles[0]['id']
         return shock_id
 
-    def _download_file_from_blobstore(self, shock_id):
-        blob_url_raw = self.kbase_endpoint + "/blobstore/node/" + shock_id + "?download_raw"
-        blob_url = self.kbase_endpoint + "/blobstore/node/" + shock_id + "?download"
-        headers = {'authorization': 'OAuth ' + self.token}
-        response_raw = requests.get(blob_url_raw, headers=headers)
-        response = requests.get(blob_url, headers=headers)
-        if response_raw.status_code == 200 and response.status_code == 200:
-            return response_raw.text, response.text
-        raise ValueError(f"Failed to download file from the blob store; Error code {response.status_code}")
+    def _download_file_from_blobstore(self, handle_id):
+        output_dir = self.cfg['scratch'] + str(uuid.uuid4())
+        os.makedirs(output_dir)
+        file_ret = self.dfuClient.shock_to_file(
+            {
+                'handle_id': handle_id,
+                'file_path': output_dir,
+                'unpack': 'unpack',
+            }
+        )
+        file_path = file_ret['file_path']
+        print("*" * 30)
+        print(f"file_ret is {file_ret}")
+        print(f"file_path is {file_path}")
+        print("*" * 30)
 
     def _md5sum_string(self, data):
         hash_md5 = hashlib.md5()
@@ -282,13 +289,11 @@ class GenomeFileUtilTest(unittest.TestCase):
 
         # check handle ref
         handle_id = data.pop("genbank_handle_ref")
-        shock_id = self._get_shock_id(handle_id)
-        blob_info_raw, blob_info = self._download_file_from_blobstore(shock_id)
+        # shock_id = self._get_shock_id(handle_id)
+        self._download_file_from_blobstore(handle_id)
         target = data["md5"]
-        blob_info_raw_md5sum = self._md5sum_string(blob_info_raw)
-        blob_info_md5sum = self._md5sum_string(blob_info)
-        print(f"blob_info_raw is: {blob_info_raw_md5sum}")
-        print(f"blob_info is: {blob_info_md5sum}")
+        # blob_info_md5sum = self._md5sum_string(blob_info)
+        # print(f"blob_info is: {blob_info_md5sum}")
         print(f"data md5 is: {target}")
         # assert blob_info["data"]["file"]["checksum"]["md5"] == data["md5"]
         # assert blob_info["data"]["file"]["name"] == data["id"]
