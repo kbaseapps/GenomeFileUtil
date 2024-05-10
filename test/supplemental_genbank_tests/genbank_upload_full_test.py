@@ -240,13 +240,6 @@ class GenomeFileUtilTest(unittest.TestCase):
                 'unpack': 'unpack',
             }
         )
-
-        file_path = file_ret['file_path']
-        print("*" * 30)
-        print(f"output_dir is {os.listdir(output_dir)}")
-        print(f"file_path is {file_path}")
-        print("*" * 30)
-
         return file_ret['file_path']
 
     def _calculate_md5sum(self, file_path):
@@ -324,7 +317,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         # check handle ref
         file_path = self._download_file_from_blobstore(handle_id)
         retrieved_assembly_md5sum = self._calculate_md5sum(file_path)
-        print(f"retrieved_assembly_md5sum is {retrieved_assembly_md5sum}")
+        assert retrieved_assembly_md5sum == handle["remote_md5"]
 
         url = handle.get('url')
         assert url.startswith('https://')
@@ -373,7 +366,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         )
 
         assert retrieved_data == expected_data
-        # assert retrieved_md5sum == expected_md5sum
+        assert retrieved_md5sum == expected_md5sum
 
     def _check_result_object_info_provenance_data(
         self,
@@ -491,18 +484,16 @@ class GenomeFileUtilTest(unittest.TestCase):
             self._load_expected_data("data/genome_curated/assembly_ontology.json"),
         ]
 
-        # md5sum of processed genome file
         expected_genome_md5sum = [
             "b11f26a802d3302dc2648090930bd543",
             "2ae04b5ede4e27ce1fdd42ff023bf99c",
             "09b935cb6fc37ea17e36ff4cf72815c1",
         ]
 
-        # md5sum of assembly file
         expected_assembly_md5sum = [
-            "",
-            "",
-            "",
+            "cd8a65e6af5fcb25bf665e5ed3732607",
+            "cd8a65e6af5fcb25bf665e5ed3732607",
+            "cd8a65e6af5fcb25bf665e5ed3732607",
         ]
 
         results = self.serviceImpl.genbanks_to_genomes(
