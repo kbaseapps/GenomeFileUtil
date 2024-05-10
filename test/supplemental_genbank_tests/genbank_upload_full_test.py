@@ -330,7 +330,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         assert url.startswith('https://')
         assert url.endswith('kbase.us/services/shock-api')
 
-        return data
+        return data, retrieved_assembly_md5sum
 
     def _get_object(self, result, is_genome):
         ref = 'genome_ref' if is_genome else 'assembly_ref'
