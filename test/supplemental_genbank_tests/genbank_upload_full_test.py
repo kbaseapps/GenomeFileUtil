@@ -232,7 +232,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         return shock_id
 
     def _download_file_from_blobstore(self, handle_id):
-        output_dir = self.cfg['scratch'] + str(uuid.uuid4())
+        output_dir = self.cfg['scratch'] + "/" + str(uuid.uuid4())
         os.makedirs(output_dir)
         file_ret = self.dfuClient.shock_to_file(
             {
@@ -245,6 +245,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         print("*" * 30)
         print(f"file_ret is {file_ret}")
         print(f"file_path is {file_path}")
+        print(os.listdir(output_dir))
         print("*" * 30)
 
     def _md5sum_string(self, data):
