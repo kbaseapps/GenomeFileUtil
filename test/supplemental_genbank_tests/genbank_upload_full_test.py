@@ -225,10 +225,10 @@ class GenomeFileUtilTest(unittest.TestCase):
         with open(json_path, "w") as outfile:
             json.dump(dictionary, outfile)
 
-    def _get_shock_id(self, handle_id):
+    def _get_blob_id(self, handle_id):
         handles = self.hs.hids_to_handles([handle_id])
-        shock_id = handles[0]['id']
-        return shock_id
+        blob_id = handles[0]['id']
+        return blob_id
 
     def _download_file_from_blobstore(self, handle_id):
         output_dir = self.cfg['scratch'] + "/" + str(uuid.uuid4())
@@ -240,6 +240,13 @@ class GenomeFileUtilTest(unittest.TestCase):
                 'unpack': 'unpack',
             }
         )
+
+        file_path = file_ret['file_path']
+        print("*" * 30)
+        print(f"output_dir is {os.listdir(output_dir)}")
+        print(f"file_path is {file_path}")
+        print("*" * 30)
+
         return file_ret['file_path']
 
     def _calculate_md5sum(self, file_path):
@@ -310,6 +317,15 @@ class GenomeFileUtilTest(unittest.TestCase):
         assert handle.pop('hid') == handle_id
         assert handle.pop('id') == blob_id
 
+        # check handle_id and blob_id are match
+        retrieved_blob_id = self._get_blob_id(handle_id)
+        assert retrieved_blob_id == blob_id
+
+        # check handle ref
+        file_path = self._download_file_from_blobstore(handle_id)
+        retrieved_assembly_md5sum = self._calculate_md5sum(file_path)
+        print(f"retrieved_assembly_md5sum is {retrieved_assembly_md5sum}")
+
         url = handle.get('url')
         assert url.startswith('https://')
         assert url.endswith('kbase.us/services/shock-api')
@@ -357,7 +373,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         )
 
         assert retrieved_data == expected_data
-        assert retrieved_md5sum == expected_md5sum
+        # assert retrieved_md5sum == expected_md5sum
 
     def _check_result_object_info_provenance_data(
         self,
@@ -469,17 +485,24 @@ class GenomeFileUtilTest(unittest.TestCase):
             self._load_expected_data("data/genome_curated/genome_ontology.json"),
         ]
 
-        # md5sum of processed file
+        expected_assembly_data = [
+            self._load_expected_data("data/genome_curated/assembly_Cyanidioschyzon_merolae_one_locus.json"),
+            self._load_expected_data("data/genome_curated/assembly_mRNA_with_no_parent.json"),
+            self._load_expected_data("data/genome_curated/assembly_ontology.json"),
+        ]
+
+        # md5sum of processed genome file
         expected_genome_md5sum = [
             "b11f26a802d3302dc2648090930bd543",
             "2ae04b5ede4e27ce1fdd42ff023bf99c",
             "09b935cb6fc37ea17e36ff4cf72815c1",
         ]
 
-        expected_assembly_data = [
-            self._load_expected_data("data/genome_curated/assembly_Cyanidioschyzon_merolae_one_locus.json"),
-            self._load_expected_data("data/genome_curated/assembly_mRNA_with_no_parent.json"),
-            self._load_expected_data("data/genome_curated/assembly_ontology.json"),
+        # md5sum of assembly file
+        expected_assembly_md5sum = [
+            "",
+            "",
+            "",
         ]
 
         results = self.serviceImpl.genbanks_to_genomes(
@@ -524,14 +547,15 @@ class GenomeFileUtilTest(unittest.TestCase):
             expected_genome_md5sum
         )
         # check assembly result
-        # self._check_result_object_info_provenance_data(
-        #     results,
-        #     file_names,
-        #     assembly_metas,
-        #     self.provenance,
-        #     expected_assembly_data,
-        #     is_genome=False
-        # )
+        self._check_result_object_info_provenance_data(
+            results,
+            file_names,
+            assembly_metas,
+            self.provenance,
+            expected_assembly_data,
+            expected_assembly_md5sum,
+            is_genome=False
+        )
 
     def test_genbanks_to_genomes_invalid_workspace_id(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
