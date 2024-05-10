@@ -242,7 +242,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         )
         return file_ret['file_path']
 
-    def calculate_md5(file_path):
+    def _calculate_md5sum(self, file_path):
         md5 = hashlib.md5()
         with open(file_path, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
@@ -287,7 +287,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         # check handle ref
         handle_id = data.pop("genbank_handle_ref")
         file_path = self._download_file_from_blobstore(handle_id)
-        retrieved_genome_md5sum = self.calculate_md5(file_path)
+        retrieved_genome_md5sum = self._calculate_md5sum(file_path)
 
         for ontology_event in data.get("ontology_events", []):
             ontology_event.pop("timestamp")
