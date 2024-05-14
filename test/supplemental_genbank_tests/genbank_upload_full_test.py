@@ -240,7 +240,7 @@ class GenomeFileUtilTest(unittest.TestCase):
                 'unpack': 'unpack',
             }
         )
-        return file_ret['file_path']
+        return file_ret
 
     def _calculate_md5sum(self, file_path):
         md5 = hashlib.md5()
@@ -273,7 +273,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         self._check_assembly_upa(retrieved_assembly_upa, expected_assembly_upa)
         return metadata
 
-    def _retrieve_genome_data(self, data):
+    def _retrieve_genome_data(self, data, expected_assembly_ref):
         # make a deep copy to avoid modifying the original genome data
         data = deepcopy(data)
         for key in ["cdss", "features", "mrnas", "non_coding_features"]:
@@ -281,12 +281,16 @@ class GenomeFileUtilTest(unittest.TestCase):
                 if dist.get("aliases"):
                     dist["aliases"] = sorted(dist["aliases"])
 
-        assembly_ref = data.pop("assembly_ref")
-        assert _UPA_PATTERN.match(assembly_ref)
+        retrieved_assembly_ref = data.pop("assembly_ref")
+        assert _UPA_PATTERN.match(retrieved_assembly_ref)
+        assert retrieved_assembly_ref == expected_assembly_ref
 
         # check handle ref
         handle_id = data.pop("genbank_handle_ref")
-        file_path = self._download_file_from_blobstore(handle_id)
+        file_ret = self._download_file_from_blobstore(handle_id)
+
+        file_path = file_ret['file_path']
+        retrieved_node_filename = file_ret['node_file_name']
         retrieved_genome_md5sum = self._calculate_md5sum(file_path)
 
         for ontology_event in data.get("ontology_events", []):
@@ -294,7 +298,7 @@ class GenomeFileUtilTest(unittest.TestCase):
             ontology_ref = ontology_event.pop("ontology_ref")
             assert _UPA_PATTERN.match(ontology_ref)
 
-        return data, retrieved_genome_md5sum
+        return data, retrieved_genome_md5sum, retrieved_node_filename
 
     def _retrieve_assembly_data(self, data):
         # make a deep copy to avoid modifying the original assembly data
@@ -315,7 +319,9 @@ class GenomeFileUtilTest(unittest.TestCase):
         assert retrieved_blob_id == blob_id
 
         # check handle ref
-        file_path = self._download_file_from_blobstore(handle_id)
+        file_ret = self._download_file_from_blobstore(handle_id)
+        file_path = file_ret['file_path']
+        retrieved_node_filename = file_ret['node_file_name']
         retrieved_assembly_md5sum = self._calculate_md5sum(file_path)
         assert retrieved_assembly_md5sum == handle["remote_md5"]
 
@@ -323,18 +329,18 @@ class GenomeFileUtilTest(unittest.TestCase):
         assert url.startswith('https://')
         assert url.endswith('kbase.us/services/shock-api')
 
-        return data, retrieved_assembly_md5sum
+        return data, retrieved_assembly_md5sum, retrieved_node_filename
 
     def _get_object(self, result, is_genome):
         ref = 'genome_ref' if is_genome else 'assembly_ref'
         assert _OBJECT_VERSION_PATTERN.match(result[ref])
         return self.wsClient.get_objects2({"objects": [{'ref': result[ref]}]})["data"][0]
 
-    def _check_info(self, obj, result, file_names, idx, expected_metadata, is_genome):
+    def _check_info(self, obj, result, file_name, expected_metadata, is_genome):
         info = obj["info"]
         assembly_upa = result["assembly_ref"]
         object_info = 'genome_info' if is_genome else 'assembly_info'
-        object_name = file_names[idx] if is_genome else file_names[idx] + "_assembly"
+        object_name = file_name if is_genome else file_name + "_assembly"
         object_type = 'KBaseGenomes.Genome' if is_genome else 'KBaseGenomeAnnotations.Assembly'
         retrieved_metadata = self._retrieve_genome_metadata(info[10], assembly_upa) if is_genome else info[10]
 
@@ -350,23 +356,32 @@ class GenomeFileUtilTest(unittest.TestCase):
         assert info[7] == self.wsName
 
         # check metadata
-        assert retrieved_metadata == expected_metadata[idx]
+        assert retrieved_metadata == expected_metadata
 
     def _check_prov(self, obj, expected_provenance):
         provenance = obj["provenance"]
         retrieved_provenance = self._retrieve_provenance(provenance)
         assert retrieved_provenance == expected_provenance
 
-    def _check_data(self, obj, expected_data, expected_md5sum, is_genome):
+    def _check_data(self, obj, result, file_name, expected_data, expected_md5sum, is_genome):
         data = obj["data"]
-        retrieved_data, retrieved_md5sum = (
-            self._retrieve_genome_data(data)
+        expected_assembly_ref = result["assembly_ref"]
+
+        retrieved_data, retrieved_md5sum, retrieved_node_filename = (
+            self._retrieve_genome_data(data, expected_assembly_ref)
             if is_genome
             else self._retrieve_assembly_data(data)
         )
 
+        expected_node_filename = (
+            file_name + ".gz"
+            if is_genome
+            else file_name + "_assembly.fasta"
+        )
+
         assert retrieved_data == expected_data
         assert retrieved_md5sum == expected_md5sum
+        assert retrieved_node_filename == expected_node_filename
 
     def _check_result_object_info_provenance_data(
         self,
@@ -380,9 +395,9 @@ class GenomeFileUtilTest(unittest.TestCase):
     ):
         for idx, res in enumerate(results):
             obj = self._get_object(res, is_genome)
-            self._check_info(obj, res, file_names, idx, expected_metadata, is_genome)
+            self._check_info(obj, res, file_names[idx], expected_metadata[idx], is_genome)
             self._check_prov(obj, expected_provenance)
-            self._check_data(obj, expected_data[idx], expected_md5sum[idx], is_genome)
+            self._check_data(obj, res, file_names[idx], expected_data[idx], expected_md5sum[idx], is_genome)
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
