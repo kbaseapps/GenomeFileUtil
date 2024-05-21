@@ -24,7 +24,7 @@ class AssemblyUtil(object):
             password=None, token=None, ignore_authrc=False,
             trust_all_ssl_certificates=False,
             auth_svc='https://ci.kbase.us/services/auth/api/legacy/KBase/Sessions/Login',
-            service_ver='dev',
+            service_ver='release',
             async_job_check_time_ms=100, async_job_check_time_scale_percent=150, 
             async_job_check_max_time_ms=300000):
         if url is None:
@@ -106,45 +106,144 @@ class AssemblyUtil(object):
         return self._client.run_job('AssemblyUtil.export_assembly_as_fasta',
                                     [params], self._service_ver, context)
 
-    def save_assembly_from_fasta(self, params, context=None):
+    def save_assembly_from_fasta2(self, params, context=None):
         """
-        WARNING: has the side effect of moving the file to a temporary staging directory, because the upload
-        script for assemblies currently requires a working directory, not a specific file.  It will attempt
-        to upload everything in that directory.  This will move the file back to the original location, but
-        if you are trying to keep an open file handle or are trying to do things concurrently to that file,
-        this will break.  So this method is certainly NOT thread safe on the input file.
-        :param params: instance of type "SaveAssemblyParams" (Options
-           supported: file / shock_id / ftp_url - mutualy exclusive
-           parameters pointing to file content workspace_name - target
-           workspace assembly_name - target object name type - should be one
-           of 'isolate', 'metagenome', (maybe 'transcriptome')
-           min_contig_length - if set and value is greater than 1, this will
-           only include sequences with length greater or equal to the
-           min_contig_length specified, discarding all other sequences
-           taxon_ref         - sets the taxon_ref if present contig_info     
-           - map from contig_id to a small structure that can be used to set
-           the is_circular and description fields for Assemblies (optional)
-           Uploader options not yet supported taxon_reference: The ws
-           reference the assembly points to.  (Optional) source: The source
-           of the data (Ex: Refseq) date_string: Date (or date range)
-           associated with data. (Optional)) -> structure: parameter "file"
+        Save a KBase Workspace assembly object from a FASTA file.
+        :param params: instance of type "SaveAssemblyParams" (Required
+           arguments: Exactly one of: file - a pre-existing FASTA file to
+           import. The 'assembly_name' field in the FastaAssemblyFile object
+           is ignored. shock_id - an ID of a node in the Blobstore containing
+           the FASTA file. Exactly one of: workspace_id - the immutable,
+           numeric ID of the target workspace. Always prefer providing the ID
+           over the name. workspace_name - the name of the target workspace.
+           assembly_name - target object name Optional arguments: type -
+           should be one of 'isolate', 'metagenome', (maybe 'transcriptome').
+           Defaults to 'Unknown' min_contig_length - if set and value is
+           greater than 1, this will only include sequences with length
+           greater or equal to the min_contig_length specified, discarding
+           all other sequences contig_info - map from contig_id to a small
+           structure that can be used to set the is_circular and description
+           fields for Assemblies (optional)) -> structure: parameter "file"
            of type "FastaAssemblyFile" -> structure: parameter "path" of
            String, parameter "assembly_name" of String, parameter "shock_id"
-           of type "ShockNodeId", parameter "ftp_url" of String, parameter
+           of type "ShockNodeId", parameter "workspace_id" of Long, parameter
            "workspace_name" of String, parameter "assembly_name" of String,
-           parameter "external_source" of String, parameter
-           "external_source_id" of String, parameter "taxon_ref" of String,
-           parameter "min_contig_length" of Long, parameter "contig_info" of
-           mapping from String to type "ExtraContigInfo" (Structure for
-           setting additional Contig information per contig is_circ - flag if
-           contig is circular, 0 is false, 1 is true, missing indicates
-           unknown description - if set, sets the description of the field in
-           the assembly object which may override what was in the fasta file)
-           -> structure: parameter "is_circ" of Long, parameter "description"
-           of String
+           parameter "type" of String, parameter "external_source" of String,
+           parameter "external_source_id" of String, parameter
+           "min_contig_length" of Long, parameter "contig_info" of mapping
+           from String to type "ExtraContigInfo" (Structure for setting
+           additional Contig information per contig is_circ - flag if contig
+           is circular, 0 is false, 1 is true, missing indicates unknown
+           description - if set, sets the description of the field in the
+           assembly object which may override what was in the fasta file) ->
+           structure: parameter "is_circ" of Long, parameter "description" of
+           String
+        :returns: instance of type "SaveAssemblyResult" (Results from saving
+           an assembly. upa - the address of the resulting workspace object.
+           filtered_input - the filtered input file if the minimum contig
+           length parameter is present and > 0. null otherwise.) ->
+           structure: parameter "upa" of type "upa" (A Unique Permanent
+           Address for a workspace object, which is of the form W/O/V, where
+           W is the numeric workspace ID, O is the numeric object ID, and V
+           is the object version.), parameter "filtered_input" of String
+        """
+        return self._client.run_job('AssemblyUtil.save_assembly_from_fasta2',
+                                    [params], self._service_ver, context)
+
+    def save_assembly_from_fasta(self, params, context=None):
+        """
+        @deprecated AssemblyUtil.save_assembly_from_fasta2
+        :param params: instance of type "SaveAssemblyParams" (Required
+           arguments: Exactly one of: file - a pre-existing FASTA file to
+           import. The 'assembly_name' field in the FastaAssemblyFile object
+           is ignored. shock_id - an ID of a node in the Blobstore containing
+           the FASTA file. Exactly one of: workspace_id - the immutable,
+           numeric ID of the target workspace. Always prefer providing the ID
+           over the name. workspace_name - the name of the target workspace.
+           assembly_name - target object name Optional arguments: type -
+           should be one of 'isolate', 'metagenome', (maybe 'transcriptome').
+           Defaults to 'Unknown' min_contig_length - if set and value is
+           greater than 1, this will only include sequences with length
+           greater or equal to the min_contig_length specified, discarding
+           all other sequences contig_info - map from contig_id to a small
+           structure that can be used to set the is_circular and description
+           fields for Assemblies (optional)) -> structure: parameter "file"
+           of type "FastaAssemblyFile" -> structure: parameter "path" of
+           String, parameter "assembly_name" of String, parameter "shock_id"
+           of type "ShockNodeId", parameter "workspace_id" of Long, parameter
+           "workspace_name" of String, parameter "assembly_name" of String,
+           parameter "type" of String, parameter "external_source" of String,
+           parameter "external_source_id" of String, parameter
+           "min_contig_length" of Long, parameter "contig_info" of mapping
+           from String to type "ExtraContigInfo" (Structure for setting
+           additional Contig information per contig is_circ - flag if contig
+           is circular, 0 is false, 1 is true, missing indicates unknown
+           description - if set, sets the description of the field in the
+           assembly object which may override what was in the fasta file) ->
+           structure: parameter "is_circ" of Long, parameter "description" of
+           String
         :returns: instance of String
         """
         return self._client.run_job('AssemblyUtil.save_assembly_from_fasta',
+                                    [params], self._service_ver, context)
+
+    def save_assemblies_from_fastas(self, params, context=None):
+        """
+        Save multiple assembly objects from FASTA files.
+        WARNING: The code currently saves all assembly object data in memory before sending it
+        to the workspace in a single batch. Since the object data doesn't include sequences,
+        it is typically small and so in most cases this shouldn't cause issues. However, many
+        assemblies and / or many contigs could conceivably cause memeory issues or could
+        cause the workspace to reject the data package if the serialized data is > 1GB.
+        TODO: If this becomes a common issue (not particularly likely?) update the code to
+         Save assembly object data on disk if it becomes too large
+         Batch uploads to the workspace based on data size
+        :param params: instance of type "SaveAssembliesParams" (Input for the
+           save_assemblies_from_fastas function. Required arguments:
+           workspace_id - the numerical ID of the workspace in which to save
+           the Assemblies. inputs - a list of FASTA files to import. All of
+           the files must be from the same source - either all local files or
+           all Blobstore nodes. Optional arguments: min_contig_length - an
+           integer > 1. If present, sequences of lesser length will be
+           removed from the input FASTA files.) -> structure: parameter
+           "workspace_id" of Long, parameter "inputs" of list of type
+           "FASTAInput" (An input FASTA file and metadata for import.
+           Required arguments: Exactly one of: file - a path to an input
+           FASTA file. Must be accessible inside the AssemblyUtil docker
+           continer. node - a node ID for a Blobstore (formerly Shock) node
+           containing an input FASTA file. assembly_name - the workspace name
+           under which to save the Assembly object. Optional arguments: type
+           - should be one of 'isolate', 'metagenome', (maybe
+           'transcriptome'). Defaults to 'Unknown' external_source - the
+           source of the input data. E.g. JGI, NCBI, etc. external_source_id
+           - the ID of the input data at the source. contig_info - map from
+           contig_id to a small structure that can be used to set the
+           is_circular and description fields for Assemblies) -> structure:
+           parameter "file" of String, parameter "node" of String, parameter
+           "assembly_name" of String, parameter "type" of String, parameter
+           "external_source" of String, parameter "external_source_id" of
+           String, parameter "contig_info" of mapping from String to type
+           "ExtraContigInfo" (Structure for setting additional Contig
+           information per contig is_circ - flag if contig is circular, 0 is
+           false, 1 is true, missing indicates unknown description - if set,
+           sets the description of the field in the assembly object which may
+           override what was in the fasta file) -> structure: parameter
+           "is_circ" of Long, parameter "description" of String, parameter
+           "min_contig_length" of Long
+        :returns: instance of type "SaveAssembliesResults" (Results for the
+           save_assemblies_from_fastas function. results - the results of the
+           save operation in the same order as the input.) -> structure:
+           parameter "results" of list of type "SaveAssemblyResult" (Results
+           from saving an assembly. upa - the address of the resulting
+           workspace object. filtered_input - the filtered input file if the
+           minimum contig length parameter is present and > 0. null
+           otherwise.) -> structure: parameter "upa" of type "upa" (A Unique
+           Permanent Address for a workspace object, which is of the form
+           W/O/V, where W is the numeric workspace ID, O is the numeric
+           object ID, and V is the object version.), parameter
+           "filtered_input" of String
+        """
+        return self._client.run_job('AssemblyUtil.save_assemblies_from_fastas',
                                     [params], self._service_ver, context)
 
     def status(self, context=None):

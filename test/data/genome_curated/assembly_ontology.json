@@ -1,0 +1,34 @@
+{
+    "assembly_id": "ontology.gbff_assembly",
+    "base_counts": {
+        "A": 11899,
+        "C": 4102,
+        "G": 4616,
+        "T": 11594
+    },
+    "contigs": {
+        "MitoASM9120v1": {
+            "contig_id": "MitoASM9120v1",
+            "description": "Cyanidioschyzon merolae strain 10D chromosome Mito ASM9120v1 full sequence 1..32211 reannotated via EnsEMBL",
+            "gc_content": 0.27065,
+            "length": 32211,
+            "md5": "f656a7bdea29fcbac5510ef179cf3b9c",
+            "name": "MitoASM9120v1"
+        }
+    },
+    "dna_size": 32211,
+    "fasta_handle_info": {
+        "handle": {
+            "file_name": "ontology.gbff_assembly.fasta",
+            "remote_md5": "cd8a65e6af5fcb25bf665e5ed3732607",
+            "type": "shock",
+            "url": "https://ci.kbase.us/services/shock-api"
+        },
+        "node_file_name": "ontology.gbff_assembly.fasta",
+        "size": 32871
+    },
+    "gc_content": 0.27065,
+    "md5": "43b94ee0851f3b9e9db521167c6fcba3",
+    "num_contigs": 1,
+    "type": "isolate"
+}
