@@ -236,9 +236,6 @@ module GenomeFileUtil {
     funcdef export_genome_as_gff(ExportParams params)
                 returns (ExportOutput output) authentication required;
 
-    funcdef export_genome_features_protein_to_fasta(ExportParams params)
-                returns (ExportOutput output) authentication required;
-
     funcdef export_metagenome_as_gff(ExportParams params)
                 returns (ExportOutput output) authentication required;
 

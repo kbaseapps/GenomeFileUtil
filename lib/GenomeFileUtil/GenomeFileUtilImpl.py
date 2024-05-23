@@ -67,9 +67,9 @@ class GenomeFileUtil:
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "0.11.6"
+    VERSION = "0.11.7"
     GIT_URL = "git@github.com:kbaseapps/GenomeFileUtil.git"
-    GIT_COMMIT_HASH = "6649f13c36720d139812d344f0d3b6ccbc7fb5ec"
+    GIT_COMMIT_HASH = "591a19ccf4d1b42f01cc06486654b6d3a8ea08e4"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -597,46 +597,6 @@ class GenomeFileUtil:
         # return the results
         return [output]
 
-    def export_genome_features_protein_to_fasta(self, ctx, params):
-        """
-        :param params: instance of type "ExportParams" (input and output
-           structure functions for standard downloaders) -> structure:
-           parameter "input_ref" of String
-        :returns: instance of type "ExportOutput" -> structure: parameter
-           "shock_id" of String
-        """
-        # ctx is the context object
-        # return variables are: output
-        #BEGIN export_genome_features_protein_to_fasta
-        print('export_genome_features_protein_to_fasta -- parameters = ')
-
-        # validate parameters
-        if 'input_ref' not in params:
-            raise ValueError('Cannot run export_genome_features_protein_to_fasta - no "input_ref" field defined.')
-
-        # get WS metadata to get ws_name and obj_name
-        ws = Workspace(url=self.cfg.workspaceURL)
-        info = ws.get_object_info_new({'objects': [{'ref': params['input_ref']}],
-                                       'includeMetadata': 0, 'ignoreErrors': 0})[0]
-
-        genome_to_protein_fasta_params = {
-            'genome_ref': params['input_ref']
-        }
-
-        # export to file (building from KBase Genome Object)
-        result = self.genome_to_genbank(ctx, genome_to_protein_fasta_params)[0]['genbank_file']
-
-
-
-        #END export_genome_features_protein_to_fasta
-
-        # At some point might do deeper type checking...
-        if not isinstance(output, dict):
-            raise ValueError('Method export_genome_features_protein_to_fasta return value ' +
-                             'output is not type dict as required.')
-        # return the results
-        return [output]
-
     def export_metagenome_as_gff(self, ctx, params):
         """
         :param params: instance of type "ExportParams" (input and output
@@ -990,7 +950,7 @@ class GenomeFileUtil:
            String, parameter "eco" of String, parameter "ontologies_present"
            of mapping from String to mapping from String to String, parameter
            "features" of list of type "Feature" (Structure for a single CDS
-           encoding “gene” of a genome ONLY PUT GENES THAT HAVE A
+           encoding "gene" of a genome ONLY PUT GENES THAT HAVE A
            CORRESPONDING CDS IN THIS ARRAY NOTE: Sequence is optional.
            Ideally we can keep it in here, but Recognize due to space
            constraints another solution may be needed. We may want to add

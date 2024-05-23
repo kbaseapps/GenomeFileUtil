@@ -228,7 +228,7 @@ module KBaseGenomes {
     } InferenceInfo;
 
     /*
-    Structure for a single CDS encoding “gene” of a genome
+    Structure for a single CDS encoding "gene" of a genome
     ONLY PUT GENES THAT HAVE A CORRESPONDING CDS IN THIS ARRAY
 
     NOTE: Sequence is optional. Ideally we can keep it in here, but
