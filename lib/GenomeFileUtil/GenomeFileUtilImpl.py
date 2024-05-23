@@ -67,9 +67,9 @@ class GenomeFileUtil:
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "0.11.8"
+    VERSION = "0.11.7"
     GIT_URL = "git@github.com:kbaseapps/GenomeFileUtil.git"
-    GIT_COMMIT_HASH = "748c9ae152ba71640d6c7dbeea2595455d80dac1"
+    GIT_COMMIT_HASH = "591a19ccf4d1b42f01cc06486654b6d3a8ea08e4"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
