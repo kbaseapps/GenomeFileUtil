@@ -82,9 +82,9 @@ class _Genome:
         self.assembly_path = None
         self.assembly_info = None
         self.gc_content = None
-        # self.dna_size = None
-        # self.md5 = None
-        # self.input_params = None
+        self.dna_size = None
+        self.md5 = None
+        self.input_params = None
 
 
 class GenbankToGenome:
