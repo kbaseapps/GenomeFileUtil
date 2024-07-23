@@ -81,9 +81,6 @@ class _Genome:
         self.assembly_ref = None
         self.assembly_path = None
         self.assembly_info = None
-        self.gc_content = None
-        self.dna_size = None
-        self.md5 = None
         self.input_params = None
 
 
