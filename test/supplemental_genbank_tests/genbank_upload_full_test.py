@@ -20,7 +20,7 @@ from conftest import assert_exception_correct
 
 _UPA_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/[0-9]$')
 _OBJECT_VERSION_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/1$')
-_PROV_SUBACTION_VERSION_PATTERN = re.compile(r'^\d+\.\d+\.\d+-(release|beta)$')
+_PROV_SUBACTION_VERSION_PATTERN = re.compile(r'^\d+\.\d+\.\d+-(release|beta|dev)$')
 
 class GenomeFileUtilTest(unittest.TestCase):
     @classmethod
