@@ -1,6 +1,5 @@
 #!/bin/sh
 
-# TODO pin sdk image when pinnable tags are available
 # TODO may want to make the image an env var or argument
 
 # See https://github.com/kbaseapps/kb_sdk_actions/blob/master/bin/make_testdir for source
