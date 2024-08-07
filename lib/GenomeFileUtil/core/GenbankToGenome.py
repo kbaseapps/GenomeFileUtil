@@ -82,6 +82,9 @@ class _Genome:
         self.assembly_path = None
         self.assembly_info = None
         self.input_params = None
+        self.gc_content = None
+        self.dna_size = None
+        self.md5 = None
 
 
 class GenbankToGenome:
@@ -185,21 +188,22 @@ class GenbankToGenome:
             files = self._find_input_files(genome_obj.input_directory)
             genome_obj.consolidated_file = self._join_files_skip_empty_lines(files)
 
+            # validate existing assemblies
+            self._load_contigs_for_and_validate_existing_assemblies(genome_obj)
+
+            # parse genbank file
+            self._parse_genbank(genome_obj)
+
             # gather all objects
             genome_objs.append(genome_obj)
-
-        self._load_contigs_for_and_validate_existing_assemblies(genome_objs)
 
         self._save_files_to_blobstore_and_set_handle_service_output(genome_objs)
 
         self._save_assemblies(workspace_id, genome_objs)
 
-        # TODO parse genbank files before the assemblies are saved
-        for genome_obj in genome_objs:
-            self._parse_genbank(genome_obj)
+        self._update_genome_data(genome_objs)
 
-            # clear the temp directory
-            # TODO move with parse genbank function into for loop above and save disk space
+        for genome_obj in genome_objs:
             shutil.rmtree(genome_obj.input_directory)
 
         # TODO make an internal mass function save_genomes
@@ -332,11 +336,6 @@ class GenbankToGenome:
         genome = {
             "id": params['genome_name'],
             "original_source_file_name": os.path.basename(genome_obj.consolidated_file),
-            "assembly_ref": genome_obj.assembly_ref,
-            "gc_content": genome_obj.gc_content,
-            "dna_size": genome_obj.dna_size,
-            "md5": genome_obj.md5,
-            "genbank_handle_ref": genome_obj.handle_service_output['handle']['hid'],
             "publications": set(),
             "contig_ids": [],
             "contig_lengths": [],
@@ -473,37 +472,37 @@ class GenbankToGenome:
         if len(unmatched_ids_md5s) > 0:
             raise ValueError(warnings["assembly_ref_diff_seq"].format(", ".join(unmatched_ids_md5s)))
 
-    def _load_contigs_for_and_validate_existing_assemblies(self, genome_objs):
-        ref2genome = {}
-        for genome_obj in genome_objs:
-            assembly_ref = genome_obj.use_existing_assembly
-            if assembly_ref:
-                contigs = Bio.SeqIO.parse(genome_obj.consolidated_file, "genbank")
-                extra_info = self._get_contigs_and_extra_info(
-                    contigs, genome_obj
-                )
-                self._validate_existing_assembly(
-                    assembly_ref, genome_obj
-                )
-                ref2genome[assembly_ref] = genome_obj
-                genome_obj.extra_info = extra_info
-                genome_obj.assembly_ref = assembly_ref
-                genome_obj.assembly_path = None
+    def _load_contigs_for_and_validate_existing_assemblies(self, genome_obj):
+        assembly_ref = genome_obj.use_existing_assembly
+        if assembly_ref:
+            contigs = Bio.SeqIO.parse(genome_obj.consolidated_file, "genbank")
+            extra_info = self._get_contigs_and_extra_info(
+                contigs, genome_obj
+            )
+            self._validate_existing_assembly(
+                assembly_ref, genome_obj
+            )
 
-        if ref2genome:
-            assembly_refs = list(ref2genome.keys())
-            assembly_objs_info = self._get_objects_info(assembly_refs)
-            for assembly_ref, assembly_info in zip(
-                assembly_refs, assembly_objs_info
-            ):
-                genome = ref2genome[assembly_ref]
-                self._set_gc_content_dna_size_and_md5(genome, assembly_info)
+            genome_obj.extra_info = extra_info
+            genome_obj.assembly_ref = assembly_ref
+            genome_obj.assembly_path = None
+
+            assembly_objs_info = self._get_objects_info([assembly_ref])
+            self._set_gc_content_dna_size_and_md5(genome_obj, assembly_objs_info[0])
 
     def _set_gc_content_dna_size_and_md5(self, genome, assembly_info):
         genome.assembly_info = assembly_info
         genome.gc_content = float(assembly_info[10]["GC content"])
         genome.dna_size = int(assembly_info[10]["Size"])
         genome.md5 = assembly_info[10]["MD5"]
+
+    def _update_genome_data(self, genome_objs):
+        for genome_obj in genome_objs:
+            genome_obj.genome_data["assembly_ref"] = genome_obj.assembly_ref
+            genome_obj.genome_data["gc_content"] = genome_obj.gc_content
+            genome_obj.genome_data["dna_size"] = genome_obj.dna_size
+            genome_obj.genome_data["md5"] = genome_obj.md5
+            genome_obj.genome_data["genbank_handle_ref"] = genome_obj.handle_service_output['handle']['hid']
 
     def _save_assemblies(self, workspace_id, genome_objs):
         id2genome = {}
