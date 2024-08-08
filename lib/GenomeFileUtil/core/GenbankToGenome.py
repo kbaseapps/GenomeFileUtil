@@ -188,8 +188,11 @@ class GenbankToGenome:
             files = self._find_input_files(genome_obj.input_directory)
             genome_obj.consolidated_file = self._join_files_skip_empty_lines(files)
 
+            # load contigs sequence
+            self._load_contigs(genome_obj)
+
             # validate existing assemblies
-            self._load_contigs_for_and_validate_existing_assemblies(genome_obj)
+            self._validate_existing_assemblies(genome_obj)
 
             # parse genbank file
             self._parse_genbank(genome_obj)
@@ -472,18 +475,15 @@ class GenbankToGenome:
         if len(unmatched_ids_md5s) > 0:
             raise ValueError(warnings["assembly_ref_diff_seq"].format(", ".join(unmatched_ids_md5s)))
 
-    def _load_contigs_for_and_validate_existing_assemblies(self, genome_obj):
+    def _load_contigs(self, genome_obj):
+        contigs = Bio.SeqIO.parse(genome_obj.consolidated_file, "genbank")
+        extra_info = self._get_contigs_and_extra_info(contigs, genome_obj)
+        genome_obj.extra_info = extra_info
+
+    def _validate_existing_assemblies(self, genome_obj):
         assembly_ref = genome_obj.use_existing_assembly
         if assembly_ref:
-            contigs = Bio.SeqIO.parse(genome_obj.consolidated_file, "genbank")
-            extra_info = self._get_contigs_and_extra_info(
-                contigs, genome_obj
-            )
-            self._validate_existing_assembly(
-                assembly_ref, genome_obj
-            )
-
-            genome_obj.extra_info = extra_info
+            self._validate_existing_assembly(assembly_ref, genome_obj)
             genome_obj.assembly_ref = assembly_ref
             genome_obj.assembly_path = None
 
@@ -515,15 +515,7 @@ class GenbankToGenome:
             contigs = Bio.SeqIO.parse(genome_obj.consolidated_file, "genbank")
             genome_obj.assembly_id = f"{genome_obj.genome_name}_assembly"
             genome_obj.assembly_path = f"{self.cfg.sharedFolder}/{genome_obj.assembly_id}.fasta"
-
-            # populate contig_seq
-            genome_obj.extra_info = self._get_contigs_and_extra_info(
-                contigs, genome_obj
-            )
-
-            # Output as fasta file
-            contigs_output = Bio.SeqIO.parse(genome_obj.consolidated_file, "genbank")
-            Bio.SeqIO.write(contigs_output, genome_obj.assembly_path, "fasta")
+            Bio.SeqIO.write(contigs, genome_obj.assembly_path, "fasta")
 
             bulk_inputs.append(
                 {
