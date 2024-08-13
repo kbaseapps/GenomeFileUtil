@@ -512,6 +512,8 @@ class GenbankToGenome:
                 continue
 
             # contigs is an iterator
+            # Based on experiments, writing is significantly more time-consuming than reading.
+            # Therefore, reading twice is not going to slow things down much compared to the write.
             contigs = Bio.SeqIO.parse(genome_obj.consolidated_file, "genbank")
             genome_obj.assembly_id = f"{genome_obj.genome_name}_assembly"
             genome_obj.assembly_path = f"{self.cfg.sharedFolder}/{genome_obj.assembly_id}.fasta"
