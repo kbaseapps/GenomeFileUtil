@@ -19,6 +19,7 @@ from Bio.SeqFeature import ExactPosition
 from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.DataFileUtilClient import DataFileUtil
 from GenomeFileUtil.core.GenomeInterface import GenomeInterface
+from GenomeFileUtil.core.MiscUtils import get_int
 from installed_clients.WorkspaceClient import Workspace
 from GenomeFileUtil.core.GenomeUtils import (
     is_parent, propagate_cds_props_to_gene, warnings, parse_inferences,
@@ -125,7 +126,7 @@ class GenbankToGenome:
         # avoid side effects and keep variables in params unmodfied
         inputs = dict(params)
         self._validate_params(inputs)
-        ws_id = self._get_int(inputs.pop(_WSID, None), _WSID)
+        ws_id = get_int(inputs.pop(_WSID, None), _WSID)
         ws_name = inputs.pop(_WSNAME, None)
         if (bool(ws_id) == bool(ws_name)):  # xnor
             raise ValueError(f"Exactly one of a '{_WSID}' or a '{_WSNAME}' parameter must be provided")
@@ -137,7 +138,7 @@ class GenbankToGenome:
         return mass_params
 
     def _validate_mass_params(self, params):
-        ws_id = self._get_int(params.get(_WSID), _WSID)
+        ws_id = get_int(params.get(_WSID), _WSID)
         if not ws_id:
             raise ValueError(f"{_WSID} is required")
         inputs = params.get(_INPUTS)
@@ -150,14 +151,6 @@ class GenbankToGenome:
                 self._validate_params(inp)
             except Exception as e:
                 raise ValueError(f"Entry #{i} in {_INPUTS} field has invalid params: {e}") from e
-
-    def _get_int(self, putative_int, name, minimum=1):
-        if putative_int is not None:
-            if type(putative_int) is not int:
-                raise ValueError(f"{name} must be an integer, got: {putative_int}")
-            if putative_int < minimum:
-                raise ValueError(f"{name} must be an integer >= {minimum}")
-        return putative_int
 
     def _import_genbank_mass(self, params):
 

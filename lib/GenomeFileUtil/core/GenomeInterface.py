@@ -13,8 +13,13 @@ from installed_clients.AssemblySequenceAPIServiceClient import AssemblySequenceA
 from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.WSLargeDataIOClient import WsLargeDataIO
 from GenomeFileUtil.core import GenomeUtils
+from GenomeFileUtil.core.MiscUtils import get_int
 
 MAX_GENOME_SIZE = 2**30
+
+_WS = "workspace"
+_WSID = "workspace_id"
+_INPUTS = "inputs"
 
 
 class GenomeInterface:
@@ -32,18 +37,80 @@ class GenomeInterface:
         self.scratch = config.raw['scratch']
         self.ws_large_data = WsLargeDataIO(self.callback_url)
 
-    @staticmethod
-    def _validate_save_one_genome_params(params):
+    def save_one_genome(self, params):
+        print("validating parameters")
+        mass_params = self._set_up_single_params(params)
+        return self._save_genome_mass(mass_params)[0]
+
+    def save_genome_mass(self, params):
+        print("validating parameters")
+        self._validate_mass_params(params)
+        return self._save_genome_mass(params)
+
+    def _set_up_single_params(self, params):
+        inputs = dict(params)
+        self._validate_genome_input_params(inputs)
+        ws_id = get_int(inputs.pop(_WSID, None), _WSID)
+        ws_name = inputs.pop('workspace', None)
+        if bool(ws_id) == bool(ws_name):  # xnor
+            raise ValueError(f"Exactly one of a '{_WSID}' or a '{_WS}' parameter must be provided")
+        if not ws_id:
+            print(f"Translating workspace name {ws_name} to a workspace ID. Prefer submitting "
+                  + "a workspace ID over a mutable workspace name that may cause race conditions")
+            ws_id = self.dfu.ws_name_to_id(ws_name)
+        mass_params = {_WSID: ws_id, _INPUTS: [inputs]}
+        return mass_params
+
+    def _validate_mass_params(self, params):
+        ws_id = get_int(params.get(_WSID), _WSID)
+        if not ws_id:
+            raise ValueError(f"{_WSID} is required")
+        inputs = params.get(_INPUTS)
+        if not inputs or type(inputs) != list:
+            raise ValueError(f"{_INPUTS} field is required and must be a non-empty list")
+        for i, inp in enumerate(inputs, start=1):
+            if type(inp) != dict:
+                raise ValueError(f"Entry #{i} in {_INPUTS} field is not a mapping as required")
+            try:
+                self._validate_genome_input_params(inp)
+            except Exception as e:
+                raise ValueError(f"Entry #{i} in {_INPUTS} field has invalid params: {e}") from e
+
+    def _validate_genome_input_params(self, genome_input):
         """
-        _validate_save_one_genome_params:
-                validates params passed to save_one_genome method
+        Check required parameters are in genome_input
         """
-        logging.info('start validating save_one_genome params')
+        logging.info("start validating genome_input params")
         # check for required parameters
-        for p in ['workspace', 'name', 'data']:
-            if p not in params:
-                raise ValueError(
-                    '"{}" parameter is required, but missing'.format(p))
+        for p in ["name", "data"]:
+            if p not in genome_input:
+                raise ValueError(f"{p} parameter is required, but missing")
+
+    def _save_genome_objects(
+        self,
+        workspace_id,
+        ws_datatypes,
+        data_paths,
+        names,
+        meta_data,
+        hidden_data,
+    ):
+        ws_inputs = []
+        for ws_datatype, data_path, name, meta, hidden in zip(
+            ws_datatypes, data_paths, names, meta_data, hidden_data
+        ):
+            ws_inputs.append(
+                {
+                    'type': ws_datatype,
+                    'data_json_file': data_path,
+                    'name': name,
+                    'meta': meta,
+                    'hidden': hidden,
+                }
+            )
+        return self.ws_large_data.save_objects(
+            {'id': workspace_id, 'objects': ws_inputs}
+        )
 
     def _check_shock_response(self, response, errtxt):
         """
@@ -128,54 +195,75 @@ class GenomeInterface:
         return data, res['info']
         # return self.dfu.get_objects(params)['data'][0]
 
-    def save_one_genome(self, params):
-        logging.info('start saving genome object')
-        self._validate_save_one_genome_params(params)
-        workspace = params['workspace']
-        name = params['name']
-        data = params['data']
-        # XXX there is no `workspace_datatype` param in the spec
-        ws_datatype = params.get('workspace_datatype', "KBaseGenomes.Genome")
-        # XXX there is no `meta` param in the spec
-        meta = params.get('meta', {})
-        if "AnnotatedMetagenomeAssembly" in ws_datatype:
-            if params.get('upgrade') or 'feature_counts' not in data:
-                data = self._update_metagenome(data)
-        else:
-            if params.get('upgrade') or 'feature_counts' not in data:
-                data = self._update_genome(data)
+    def _save_genome_mass(self, params):
 
-        # check all handles point to shock nodes owned by calling user
-        self._own_handle(data, 'genbank_handle_ref')
-        self._own_handle(data, 'gff_handle_ref')
-        if "AnnotatedMetagenomeAssembly" not in ws_datatype:
-            self._check_dna_sequence_in_features(data)
-            data['warnings'] = self.validate_genome(data)
+        workspace_id = params[_WSID]
+        inputs = params[_INPUTS]
 
-        # sort data
-        data = GenomeUtils.sort_dict(data)
-        # dump genome to scratch for upload
-        data_path = os.path.join(self.scratch, name + ".json")
-        json.dump(data, open(data_path, 'w'))
-        if 'hidden' in params and str(params['hidden']).lower() in ('yes', 'true', 't', '1'):
-            hidden = 1
-        else:
-            hidden = 0
+        ws_datatypes = []
+        data_paths = []
+        names = []
+        meta_data = []
+        hidden_data = []
+        warnings = []
 
-        if isinstance(workspace, int) or workspace.isdigit():
-            workspace_id = workspace
-        else:
-            workspace_id = self.dfu.ws_name_to_id(workspace)
+        for input_params in inputs:
 
-        save_params = {'id': workspace_id,
-                       'objects': [{'type': ws_datatype,
-                                    'data_json_file': data_path,
-                                    'name': name,
-                                    'meta': meta,
-                                    'hidden': hidden}]}
-        dfu_oi = self.ws_large_data.save_objects(save_params)[0]
-        returnVal = {'info': dfu_oi, 'warnings': data.get('warnings', [])}
-        return returnVal
+            # retrive required params
+            name = input_params['name']
+            data = input_params['data']
+
+            # XXX there is no `workspace_datatype` param in the spec
+            ws_datatype = input_params.get('workspace_datatype', "KBaseGenomes.Genome")
+            # XXX there is no `meta` param in the spec
+            meta = input_params.get('meta', {})
+
+            ws_datatypes.append(ws_datatype)
+            names.append(name)
+            meta_data.append(meta)
+
+            if "AnnotatedMetagenomeAssembly" in ws_datatype:
+                if input_params.get('upgrade') or 'feature_counts' not in data:
+                    data = self._update_metagenome(data)
+            else:
+                if input_params.get('upgrade') or 'feature_counts' not in data:
+                    data = self._update_genome(data)
+
+            # check all handles point to shock nodes owned by calling user
+            self._own_handle(data, 'genbank_handle_ref')
+            self._own_handle(data, 'gff_handle_ref')
+            if "AnnotatedMetagenomeAssembly" not in ws_datatype:
+                self._check_dna_sequence_in_features(data)
+                data['warnings'] = self.validate_genome(data)
+
+            # sort data
+            data = GenomeUtils.sort_dict(data)
+            # dump genome to scratch for upload
+            data_path = os.path.join(self.scratch, name + ".json")
+            json.dump(data, open(data_path, 'w'))
+            if 'hidden' in params and str(params['hidden']).lower() in ('yes', 'true', 't', '1'):
+                hidden = 1
+            else:
+                hidden = 0
+
+            data_paths.append(data_path)
+            hidden_data.append(hidden)
+            warnings.append(data.get('warnings', []))
+
+        dfu_infos = self._save_genome_objects(
+            workspace_id,
+            ws_datatypes,
+            data_paths,
+            names,
+            meta_data,
+            hidden_data,
+        )
+
+        output = [
+            {'info': dfu_oi, 'warnings': warning}
+            for dfu_oi, warning in zip(dfu_infos, warnings)
+        ]
+        return output
 
     @staticmethod
     def determine_tier(source):
