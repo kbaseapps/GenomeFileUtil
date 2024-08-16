@@ -223,7 +223,7 @@ class GenbankToGenome:
         results = [
             self.gi.save_one_genome(
                 {
-                    'workspace': workspace_id,
+                    'workspace_id': workspace_id,
                     'name': genome_obj.genome_name,
                     'data': genome_obj.genome_data,
                     "meta": genome_obj.genome_meta,

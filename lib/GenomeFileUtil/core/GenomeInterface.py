@@ -38,12 +38,10 @@ class GenomeInterface:
         self.ws_large_data = WsLargeDataIO(self.callback_url)
 
     def save_one_genome(self, params):
-        print("validating parameters")
         mass_params = self._set_up_single_params(params)
         return self._save_genome_mass(mass_params)[0]
 
     def save_genome_mass(self, params):
-        print("validating parameters")
         self._validate_mass_params(params)
         return self._save_genome_mass(params)
 
@@ -51,7 +49,7 @@ class GenomeInterface:
         inputs = dict(params)
         self._validate_genome_input_params(inputs)
         ws_id = get_int(inputs.pop(_WSID, None), _WSID)
-        ws_name = inputs.pop('workspace', None)
+        ws_name = inputs.pop(_WS, None)
         if bool(ws_id) == bool(ws_name):  # xnor
             raise ValueError(f"Exactly one of a '{_WSID}' or a '{_WS}' parameter must be provided")
         if not ws_id:
