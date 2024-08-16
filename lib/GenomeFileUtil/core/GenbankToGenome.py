@@ -202,7 +202,6 @@ class GenbankToGenome:
         for genome_obj in genome_objs:
             shutil.rmtree(genome_obj.input_directory)
 
-        # TODO make an internal mass function save_genomes
         results = self._save_genomes(workspace_id, genome_objs)
 
         # return the result
@@ -220,17 +219,18 @@ class GenbankToGenome:
         return details
 
     def _save_genomes(self, workspace_id, genome_objs):
-        results = [
-            self.gi.save_one_genome(
-                {
-                    'workspace_id': workspace_id,
-                    'name': genome_obj.genome_name,
-                    'data': genome_obj.genome_data,
-                    "meta": genome_obj.genome_meta,
-                }
-            ) for genome_obj in genome_objs
-        ]
-
+        results = self.gi.save_genome_mass(
+            {
+                "workspace_id": workspace_id,
+                "inputs": [
+                    {
+                        "name": genome_obj.genome_name,
+                        "data": genome_obj.genome_data,
+                        "meta": genome_obj.genome_meta,
+                    } for genome_obj in genome_objs
+                ],
+            }
+        )
         return results
 
     def _validate_params(self, params):
