@@ -192,6 +192,11 @@ class SaveGenomeTest(unittest.TestCase):
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
         self.check_save_one_genome_output(ret, genome_name)
 
+    def test_genomes(self):
+        self.start_test()
+        ret = self.getImpl().save_genomes(self.ctx, {})
+        self.assertEqual(ret, [{}])
+
     def test_GenomeInterface_check_dna_sequence_in_features(self):
         # no feature in genome
         genome = {'missing_features': 'features'}
