@@ -239,7 +239,7 @@ class GenomeInterface:
             # dump genome to scratch for upload
             data_path = os.path.join(self.scratch, name + ".json")
             json.dump(data, open(data_path, 'w'))
-            if 'hidden' in params and str(params['hidden']).lower() in ('yes', 'true', 't', '1'):
+            if 'hidden' in input_params and str(input_params['hidden']).lower() in ('yes', 'true', 't', '1'):
                 hidden = 1
             else:
                 hidden = 0
