@@ -92,6 +92,7 @@ class SaveGenomeTest(unittest.TestCase):
         suffix = int(time.time() * 1000)
         cls.wsName = "test_SaveGenomeTest_" + str(suffix)
         cls.wsClient.create_workspace({'workspace': cls.wsName})
+        cls.wsID = cls.dfu.ws_name_to_id(cls.wsName)
 
         cls.nodes_to_delete = []
         cls.prepare_data()
@@ -142,9 +143,12 @@ class SaveGenomeTest(unittest.TestCase):
         testname = inspect.stack()[1][3]
         print(('\n*** starting test: ' + testname + ' **'))
 
-    def fail_save_one_genome(self, params, error, exception=ValueError, contains=False):
+    def fail_save_genome(self, params, error, exception=ValueError, contains=False, mass=False):
         with self.assertRaises(exception) as context:
-            self.getImpl().save_one_genome(self.ctx, params)
+            if mass:
+                self.genome_interface.save_genome_mass(params)
+            else:
+                self.getImpl().save_one_genome(self.ctx, params)
         if contains:
             self.assertIn(error, str(context.exception))
         else:
@@ -164,7 +168,7 @@ class SaveGenomeTest(unittest.TestCase):
                              'name': 'name',
                              'data': 'data'}
         error_msg = "Exactly one of a 'workspace_id' or a 'workspace' parameter must be provided"
-        self.fail_save_one_genome(invalidate_params, error_msg)
+        self.fail_save_genome(invalidate_params, error_msg)
 
     def test_one_genome(self):
         self.start_test()
@@ -191,6 +195,81 @@ class SaveGenomeTest(unittest.TestCase):
                   'hidden': True}
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
         self.check_save_one_genome_output(ret, genome_name)
+
+    def test_genomes(self):
+        self.start_test()
+        genome_name = 'test_genome'
+        inputs = [
+            {
+                'name': genome_name,
+                'data': self.test_genome_data,
+            }
+        ]
+        params = {'workspace_id': self.wsID, 'inputs': inputs}
+        ret = self.genome_interface.save_genome_mass(params)[0]
+        self.check_save_one_genome_output(ret, genome_name)
+
+    def test_genomes_with_hidden(self):
+        self.start_test()
+        genome_name = 'test_genome_hidden'
+        inputs = [
+            {
+                'name': genome_name,
+                'data': self.test_genome_data,
+                'hidden': 1,
+            }
+        ]
+        params = {'workspace_id': self.wsID, 'inputs': inputs}
+        ret = self.genome_interface.save_genome_mass(params)[0]
+        self.check_save_one_genome_output(ret, genome_name)
+
+        inputs = [
+            {
+                'name': genome_name,
+                'data': self.test_genome_data,
+                'hidden': True,
+            }
+        ]
+        params = {'workspace_id': self.wsID, 'inputs': inputs}
+        ret = self.genome_interface.save_genome_mass(params)[0]
+        self.check_save_one_genome_output(ret, genome_name)
+
+    def test_bad_genomes_params_missing_wsid(self):
+        self.start_test()
+        invalidate_params = {
+            'missing_workspace_id': 'workspace_id',
+            'name': 'name',
+            'data': 'data',
+        }
+        error_msg = "workspace_id is required"
+        self.fail_save_genome(invalidate_params, error_msg, mass=True)
+
+    def test_bad_genomes_params_empty_inputs(self):
+        self.start_test()
+        invalidate_params = {
+            'workspace_id': self.wsID,
+            'inputs': []
+        }
+        error_msg = "inputs field is required and must be a non-empty list"
+        self.fail_save_genome(invalidate_params, error_msg, mass=True)
+
+    def test_bad_genomes_params_invalidate_entry_type(self):
+        self.start_test()
+        invalidate_params = {
+            'workspace_id': self.wsID,
+            'inputs': [['name', 'data']],
+        }
+        error_msg = "Entry #1 in inputs field is not a mapping as required"
+        self.fail_save_genome(invalidate_params, error_msg, mass=True)
+
+    def test_bad_genomes_params_missing_parameter(self):
+        self.start_test()
+        invalidate_params = {
+            'workspace_id': self.wsID,
+            'inputs': [{'data': 'data'}],
+        }
+        error_msg = "Entry #1 in inputs field has invalid params: name parameter is required, but missing"
+        self.fail_save_genome(invalidate_params, error_msg, mass=True)
 
     def test_GenomeInterface_check_dna_sequence_in_features(self):
         # no feature in genome
