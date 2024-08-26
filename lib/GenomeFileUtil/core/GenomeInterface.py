@@ -93,22 +93,23 @@ class GenomeInterface:
         meta_data,
         hidden_data,
     ):
-        ws_inputs = []
-        for ws_datatype, data_path, name, meta, hidden in zip(
-            ws_datatypes, data_paths, names, meta_data, hidden_data
-        ):
-            ws_inputs.append(
-                {
-                    'type': ws_datatype,
-                    'data_json_file': data_path,
-                    'name': name,
-                    'meta': meta,
-                    'hidden': hidden,
-                }
-            )
-        return self.ws_large_data.save_objects(
-            {'id': workspace_id, 'objects': ws_inputs}
+        dfu_infos = self.ws_large_data.save_objects(
+            {
+                'id': workspace_id,
+                'objects': [
+                    {
+                        'type': ws_datatype,
+                        'data_json_file': data_path,
+                        'name': name,
+                        'meta': meta,
+                        'hidden': hidden,
+                    } for ws_datatype, data_path, name, meta, hidden in zip(
+                        ws_datatypes, data_paths, names, meta_data, hidden_data
+                    )
+                ]
+            }
         )
+        return dfu_infos
 
     def _check_shock_response(self, response, errtxt):
         """
