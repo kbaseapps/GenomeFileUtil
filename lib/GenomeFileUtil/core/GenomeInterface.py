@@ -78,7 +78,6 @@ class GenomeInterface:
         """
         Check required parameters are in genome_input
         """
-        logging.info("start validating genome_input params")
         # check for required parameters
         for p in ["name", "data"]:
             if p not in genome_input:
@@ -213,6 +212,7 @@ class GenomeInterface:
             data = input_params['data']
 
             # XXX there is no `workspace_datatype` param in the spec
+            # NOTE: The method caller should not be able to choose an arbitrary workspace type
             ws_datatype = input_params.get('workspace_datatype', "KBaseGenomes.Genome")
             # XXX there is no `meta` param in the spec
             meta = input_params.get('meta', {})
