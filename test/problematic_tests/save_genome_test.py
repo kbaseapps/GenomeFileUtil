@@ -234,42 +234,14 @@ class SaveGenomeTest(unittest.TestCase):
         ret = self.genome_interface.save_genome_mass(params)[0]
         self.check_save_one_genome_output(ret, genome_name)
 
-    # def test_bad_genomes_params_missing_wsid(self):
-    #     self.start_test()
-    #     invalidate_params = {
-    #         'missing_workspace_id': 'workspace_id',
-    #         'name': 'name',
-    #         'data': 'data',
-    #     }
-    #     error_msg = "workspace_id is required"
-    #     self.fail_save_genome(invalidate_params, error_msg, mass=True)
-
-    # def test_bad_genomes_params_empty_inputs(self):
-    #     self.start_test()
-    #     invalidate_params = {
-    #         'workspace_id': self.wsID,
-    #         'inputs': []
-    #     }
-    #     error_msg = "inputs field is required and must be a non-empty list"
-    #     self.fail_save_genome(invalidate_params, error_msg, mass=True)
-
-    # def test_bad_genomes_params_invalidate_entry_type(self):
-    #     self.start_test()
-    #     invalidate_params = {
-    #         'workspace_id': self.wsID,
-    #         'inputs': [['name', 'data']],
-    #     }
-    #     error_msg = "Entry #1 in inputs field is not a mapping as required"
-    #     self.fail_save_genome(invalidate_params, error_msg, mass=True)
-
-    # def test_bad_genomes_params_missing_parameter(self):
-    #     self.start_test()
-    #     invalidate_params = {
-    #         'workspace_id': self.wsID,
-    #         'inputs': [{'data': 'data'}],
-    #     }
-    #     error_msg = "Entry #1 in inputs field has invalid params: name parameter is required, but missing"
-    #     self.fail_save_genome(invalidate_params, error_msg, mass=True)
+    def test_bad_genomes_params_missing_parameter(self):
+        self.start_test()
+        invalidate_params = {
+            'workspace_id': self.wsID,
+            'inputs': [{'data': 'data'}],
+        }
+        error_msg = "Entry #1 in inputs field has invalid params: name parameter is required, but missing"
+        self.fail_save_genome(invalidate_params, error_msg, mass=True)
 
     def test_GenomeInterface_check_dna_sequence_in_features(self):
         # no feature in genome

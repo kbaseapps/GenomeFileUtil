@@ -12,10 +12,7 @@ from installed_clients.AbstractHandleClient import AbstractHandle as HandleServi
 from installed_clients.AssemblySequenceAPIServiceClient import AssemblySequenceAPI
 from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.WSLargeDataIOClient import WsLargeDataIO
-from GenomeFileUtil.core.GenomeUtils import (
-    set_taxon_data, set_default_taxon_data, sort_dict,
-    set_up_single_params, validate_mass_params
-)
+from GenomeFileUtil.core import GenomeUtils
 
 MAX_GENOME_SIZE = 2**30
 
@@ -40,14 +37,14 @@ class GenomeInterface:
         self.ws_large_data = WsLargeDataIO(self.callback_url)
 
     def save_one_genome(self, params):
-        mass_params = set_up_single_params(
+        mass_params = GenomeUtils.set_up_single_params(
             params, _WS, self._validate_genome_input_params, self.dfu.ws_name_to_id
         )
         return self._save_genome_mass(mass_params)[0]
 
     # NOTE If there is more than 1GB of data or more than 10,000 genomes to upload, the workspace will fail.
     def save_genome_mass(self, params):
-        validate_mass_params(params, self._validate_genome_input_params)
+        GenomeUtils.validate_mass_params(params, self._validate_genome_input_params)
         return self._save_genome_mass(params)
 
     def _validate_genome_input_params(self, genome_input):
@@ -212,7 +209,7 @@ class GenomeInterface:
                 data['warnings'] = self.validate_genome(data)
 
             # sort data
-            data = sort_dict(data)
+            data = GenomeUtils.sort_dict(data)
             # dump genome to scratch for upload
             data_path = os.path.join(self.scratch, name + ".json")
             json.dump(data, open(data_path, 'w'))
@@ -287,9 +284,9 @@ class GenomeInterface:
         # NOTE: Metagenome object does not have a 'taxon_assignments' field
         if 'taxon_assignments' in genome and genome['taxon_assignments'].get('ncbi'):
             tax_id = int(genome['taxon_assignments']['ncbi'])
-            set_taxon_data(tax_id, self.re_api_url, genome)
+            GenomeUtils.set_taxon_data(tax_id, self.re_api_url, genome)
         else:
-            set_default_taxon_data(genome)
+            GenomeUtils.set_default_taxon_data(genome)
 
         if any([x not in genome for x in ('dna_size', 'md5', 'gc_content', 'num_contigs')]):
             if 'assembly_ref' in genome:
