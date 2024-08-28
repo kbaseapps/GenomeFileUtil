@@ -3,12 +3,17 @@ import logging
 import os
 import re
 import time
+from typing import Callable, Dict, Any
 
 from relation_engine_client import REClient
 from relation_engine_client.exceptions import RENotFound
+from GenomeFileUtil.core.MiscUtils import get_int
 
 # Name of the ncbi taxonomy namespace stored in "taxon_assignments"
 _NCBI_TAX = 'ncbi'
+
+_WSID = 'workspace_id'
+_INPUTS = 'inputs'
 
 warnings = {
     "cds_excluded": "SUSPECT: CDS from {} was excluded because the associated "
@@ -482,4 +487,90 @@ def set_taxon_data(tax_id, re_api_url, genome_dict):
         )
     # Assign the scientific name to the most specific (right-most) taxon in the lineage
     genome_dict['scientific_name'] = sciname
- 
+
+
+def set_up_single_params(
+    params: Dict[str, Any],
+    ws: str,
+    validate_params_func: Callable[[Dict[str, Any]], None],
+    ws_name_to_id_func: Callable[[str], int]
+) -> Dict[str, Any]:
+    """
+    Sets up parameters by validating them and ensuring that exactly one of workspace ID or name is provided.
+
+    Args:
+        params (Dict[str, Any]): A dictionary where the keys are parameter names (strings) and the values
+            can be of any type.
+        ws (str): A string representing the key for the workspace name or identifier.
+        validate_params_func (Callable[[Dict[str, Any]], None]): A function that takes a dictionary of parameters
+            and validates them. This function should raise an exception if the parameters are invalid.
+        ws_name_to_id_func (Callable[[str], int]): A function that takes a workspace name (string) and returns
+            its corresponding ID (integer).
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the workspace ID and the processed parameters. The dictionary
+            has keys '_WSID' and '_INPUTS', where '_WSID' is the workspace ID and '_INPUTS' is a list containing
+            the input parameters.
+
+    Raises:
+        ValueError: If neither or both the workspace ID and workspace name are provided in the parameters.
+        KeyError: If the workspace ID or name is missing or invalid.
+
+    Notes:
+        - If a workspace ID is not provided, the function will attempt to convert the workspace name to an ID
+          using `ws_name_to_id_func`.
+        - It is preferable to provide a workspace ID directly to avoid potential race conditions with mutable
+          workspace names.
+    """
+    inputs = dict(params)
+    validate_params_func(inputs)
+    ws_id = get_int(inputs.pop(_WSID, None), _WSID)
+    ws_name = inputs.pop(ws, None)
+    if bool(ws_id) == bool(ws_name):  # xnor
+        raise ValueError(f"Exactly one of a '{_WSID}' or a '{ws}' parameter must be provided")
+    if not ws_id:
+        print(f"Translating workspace name {ws_name} to a workspace ID. Prefer submitting "
+                + "a workspace ID over a mutable workspace name that may cause race conditions")
+        ws_id = ws_name_to_id_func(ws_name)
+    mass_params = {_WSID: ws_id, _INPUTS: [inputs]}
+    return mass_params
+
+
+def validate_mass_params(
+    params: Dict[str, Any],
+    validate_params_func: Callable[[Dict[str, Any]], None]
+) -> None:
+    """
+    Validates the provided parameters according to specific rules.
+
+    Args:
+        params (Dict[str, Any]): A dictionary containing parameters to validate. Must include:
+            - _WSID: A workspace ID, which must be present and valid.
+            - _INPUTS: A list of parameter dictionaries, each of which must be validated by `validate_params_func`.
+
+        validate_params_func (Callable[[Dict[str, Any]], None]): A function that takes a dictionary of parameters
+            and validates it. The function should raise an exception if the parameters are invalid.
+
+    Raises:
+        ValueError: If `_WSID` is missing or invalid, if `_INPUTS` is missing or not a non-empty list, or if any
+            entry in `_INPUTS` is not a dictionary or fails validation.
+
+    Notes:
+        - The function checks that `_WSID` is present and converts it to an integer using `get_int`.
+        - The `_INPUTS` field must be a non-empty list of dictionaries. Each dictionary in the list is validated
+          using `validate_params_func`.
+        - If any validation fails, a `ValueError` is raised with a message indicating the issue and entry index.
+    """
+    ws_id = get_int(params.get(_WSID), _WSID)
+    if not ws_id:
+        raise ValueError(f"{_WSID} is required")
+    inputs = params.get(_INPUTS)
+    if not inputs or type(inputs) != list:
+        raise ValueError(f"{_INPUTS} field is required and must be a non-empty list")
+    for i, inp in enumerate(inputs, start=1):
+        if type(inp) != dict:
+            raise ValueError(f"Entry #{i} in {_INPUTS} field is not a mapping as required")
+        try:
+            validate_params_func(inp)
+        except Exception as e:
+            raise ValueError(f"Entry #{i} in {_INPUTS} field has invalid params: {e}") from e

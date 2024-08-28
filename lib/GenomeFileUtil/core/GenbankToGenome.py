@@ -19,11 +19,11 @@ from Bio.SeqFeature import ExactPosition
 from installed_clients.AssemblyUtilClient import AssemblyUtil
 from installed_clients.DataFileUtilClient import DataFileUtil
 from GenomeFileUtil.core.GenomeInterface import GenomeInterface
-from GenomeFileUtil.core.MiscUtils import get_int
 from installed_clients.WorkspaceClient import Workspace
 from GenomeFileUtil.core.GenomeUtils import (
     is_parent, propagate_cds_props_to_gene, warnings, parse_inferences,
-    load_ontology_mappings, set_taxon_data, set_default_taxon_data
+    load_ontology_mappings, set_taxon_data, set_default_taxon_data,
+    set_up_single_params, validate_mass_params
 )
 
 MAX_MISC_FEATURE_SIZE = 10000
@@ -114,43 +114,15 @@ class GenbankToGenome:
 
     def import_genbank(self, params):
         print('validating parameters')
-        mass_params = self._set_up_single_params(params)
+        mass_params = set_up_single_params(
+            params, _WSNAME, self._validate_params, self.dfu.ws_name_to_id
+        )
         return self._import_genbank_mass(mass_params)[0]
 
     def import_genbank_mass(self, params):
         print('validating parameters')
-        self._validate_mass_params(params)
+        validate_mass_params(params, self._validate_params)
         return self._import_genbank_mass(params)
-
-    def _set_up_single_params(self, params):
-        # avoid side effects and keep variables in params unmodfied
-        inputs = dict(params)
-        self._validate_params(inputs)
-        ws_id = get_int(inputs.pop(_WSID, None), _WSID)
-        ws_name = inputs.pop(_WSNAME, None)
-        if (bool(ws_id) == bool(ws_name)):  # xnor
-            raise ValueError(f"Exactly one of a '{_WSID}' or a '{_WSNAME}' parameter must be provided")
-        if not ws_id:
-            print(f"Translating workspace name {ws_name} to a workspace ID. Prefer submitting "
-                  + "a workspace ID over a mutable workspace name that may cause race conditions")
-            ws_id = self.dfu.ws_name_to_id(ws_name)
-        mass_params = {_WSID: ws_id, _INPUTS: [inputs]}
-        return mass_params
-
-    def _validate_mass_params(self, params):
-        ws_id = get_int(params.get(_WSID), _WSID)
-        if not ws_id:
-            raise ValueError(f"{_WSID} is required")
-        inputs = params.get(_INPUTS)
-        if not inputs or type(inputs) is not list:
-            raise ValueError(f"{_INPUTS} field is required and must be a non-empty list")
-        for i, inp in enumerate(inputs, start=1):
-            if type(inp) is not dict:
-                raise ValueError(f"Entry #{i} in {_INPUTS} field is not a mapping as required")
-            try:
-                self._validate_params(inp)
-            except Exception as e:
-                raise ValueError(f"Entry #{i} in {_INPUTS} field has invalid params: {e}") from e
 
     def _import_genbank_mass(self, params):
 
