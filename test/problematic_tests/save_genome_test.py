@@ -209,6 +209,21 @@ class SaveGenomeTest(unittest.TestCase):
         ret = self.genome_interface.save_genome_mass(params)[0]
         self.check_save_one_genome_output(ret, genome_name)
 
+    def test_genomes_with_upgrade(self):
+        self.start_test()
+        genome_name = 'test_genome'
+        inputs = [
+            {
+                'name': genome_name,
+                'data': self.test_genome_data,
+                'ws_datatype': "KBaseMetagenomes.AnnotatedMetagenomeAssembly",
+                'upgrade': True,
+            }
+        ]
+        params = {'workspace_id': self.wsID, 'inputs': inputs}
+        ret = self.genome_interface.save_genome_mass(params)[0]
+        self.check_save_one_genome_output(ret, genome_name)
+
     def test_genomes_with_hidden(self):
         self.start_test()
         genome_name = 'test_genome_hidden'
