@@ -216,7 +216,7 @@ class SaveGenomeTest(unittest.TestCase):
             {
                 'name': genome_name,
                 'data': self.test_genome_data,
-                'ws_datatype': "KBaseMetagenomes.AnnotatedMetagenomeAssembly",
+                'workspace_datatype': "KBaseMetagenomes.AnnotatedMetagenomeAssembly",
                 'upgrade': True,
             }
         ]
