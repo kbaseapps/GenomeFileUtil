@@ -19,7 +19,6 @@
     "gc_content": 0.64469,
     "genetic_code": 1,
     "genome_type": "Metagenome",
-    "gff_handle_ref": "KBH_736244",
     "id": "MyMetagenome",
     "md5": "e2ccbd5a9bed0148015bd6b784e3c1c3",
     "molecule_type": "SingleLetterAlphabet",
