@@ -267,6 +267,7 @@ class GenomeInterface:
         """Checks for missing required fields and fixes breaking changes"""
         if 'molecule_type' not in genome:
             genome['molecule_type'] = 'Unknown'
+        return genome
 
     def _update_genome(self, genome):
         """Checks for missing required fields and fixes breaking changes"""

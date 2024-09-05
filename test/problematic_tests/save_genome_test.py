@@ -23,6 +23,9 @@ from GenomeFileUtil.authclient import KBaseAuth as _KBaseAuth
 from GenomeFileUtil.core.GenomeInterface import GenomeInterface
 from installed_clients.WorkspaceClient import Workspace as workspaceService
 
+KBASE_GENOME = "KBaseGenomes.Genome"
+KBASE_METAGENOME = "KBaseMetagenomes.AnnotatedMetagenomeAssembly"
+
 
 class SaveGenomeTest(unittest.TestCase):
 
@@ -115,17 +118,36 @@ class SaveGenomeTest(unittest.TestCase):
 
     @classmethod
     def prepare_data(cls):
-        assembly_file_path = os.path.join(cls.scratch,
-                                          'e_coli_assembly.fasta')
+
+        assembly_file_path = os.path.join(cls.scratch,'e_coli_assembly.fasta')
+        meta_file_path = os.path.join(cls.scratch,'metagenome.fa')
+
         shutil.copy('data/e_coli/e_coli_assembly.fasta', assembly_file_path)
+        shutil.copy('data/metagenomes/toy/metagenome.fa', meta_file_path)
+
         au = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
-        assembly_ref = au.save_assembly_from_fasta({
-            'workspace_name': cls.wsName,
-            'assembly_name': 'e_coli.assembly',
-            'file': {'path': assembly_file_path}
-        })
+
+        assembly_refs = au.save_assemblies_from_fastas(
+            {
+                'workspace_id': cls.wsID,
+                'inputs': [
+                    {
+                        'assembly_name': 'e_coli.assembly',
+                        'file': assembly_file_path
+                    },
+                    {
+                        'assembly_name': 'metagenome.assembly',
+                        'file': meta_file_path
+                    }
+                ]
+            }
+        )["results"]
+
         cls.test_genome_data = json.load(open('data/e_coli/e_coli.json'))
-        cls.test_genome_data['assembly_ref'] = assembly_ref
+        cls.test_genome_data['assembly_ref'] = assembly_refs[0]["upa"]
+
+        cls.test_metagenome_data = json.load(open('data/metagenomes/toy/metagenome.json'))
+        cls.test_metagenome_data['assembly_ref'] = assembly_refs[1]["upa"]
 
     def getWsClient(self):
         return self.__class__.wsClient
@@ -154,12 +176,12 @@ class SaveGenomeTest(unittest.TestCase):
         else:
             self.assertEqual(error, str(context.exception))
 
-    def check_save_one_genome_output(self, ret, genome_name):
+    def check_save_one_genome_output(self, ret, genome_name, data_type=KBASE_GENOME):
         self.assertTrue('info' in ret)
 
         genome_info = ret['info']
         self.assertEqual(genome_info[1], genome_name)
-        self.assertEqual(genome_info[2].split('-')[0], 'KBaseGenomes.Genome')
+        self.assertEqual(genome_info[2].split('-')[0], data_type)
         self.assertEqual(genome_info[5], self.user_id)
 
     def test_bad_one_genome_params(self):
@@ -211,18 +233,18 @@ class SaveGenomeTest(unittest.TestCase):
 
     def test_genomes_with_upgrade(self):
         self.start_test()
-        genome_name = 'test_genome'
+        genome_name = 'MyMetagenome'
         inputs = [
             {
                 'name': genome_name,
-                'data': self.test_genome_data,
-                'workspace_datatype': "KBaseMetagenomes.AnnotatedMetagenomeAssembly",
+                'data': self.test_metagenome_data,
+                'workspace_datatype': KBASE_METAGENOME,
                 'upgrade': True,
             }
         ]
         params = {'workspace_id': self.wsID, 'inputs': inputs}
         ret = self.genome_interface.save_genome_mass(params)[0]
-        self.check_save_one_genome_output(ret, genome_name)
+        self.check_save_one_genome_output(ret, genome_name, data_type=KBASE_METAGENOME)
 
     def test_genomes_with_hidden(self):
         self.start_test()
