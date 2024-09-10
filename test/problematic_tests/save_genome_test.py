@@ -149,6 +149,29 @@ class SaveGenomeTest(unittest.TestCase):
         cls.test_metagenome_data = json.load(open('data/metagenomes/toy/metagenome.json'))
         cls.test_metagenome_data['assembly_ref'] = assembly_refs[1]["upa"]
 
+        # Move files to the share folder
+        fhr_path = os.path.join(cls.scratch,'features_handle_ref')
+        phr_path = os.path.join(cls.scratch,'protein_handle_ref')
+
+        shutil.copy('data/metagenomes/toy/features_handle_ref', fhr_path)
+        shutil.copy('data/metagenomes/toy/protein_handle_ref', phr_path)
+
+        # Upload files to the blobstore
+        handle_service_outputs = cls.dfu.file_to_shock_mass(
+            [
+                {'file_path': fhr_path, 'make_handle': 1, 'pack': 'gzip'},
+                {'file_path': phr_path, 'make_handle': 1, 'pack': 'gzip'}
+            ]
+        )
+
+        # Update metagenome
+        cls.test_metagenome_data["features_handle_ref"] = handle_service_outputs[0]["handle"]["hid"]
+        cls.test_metagenome_data["protein_handle_ref"]= handle_service_outputs[1]["handle"]["hid"]
+
+        # Delete shock_ids
+        cls.nodes_to_delete.append(handle_service_outputs[0]["shock_id"])
+        cls.nodes_to_delete.append(handle_service_outputs[1]["shock_id"])
+
     def getWsClient(self):
         return self.__class__.wsClient
 

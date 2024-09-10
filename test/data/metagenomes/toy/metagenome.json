@@ -15,7 +15,6 @@
         "non_coding_features": 0,
         "protein_encoding_gene": 20
     },
-    "features_handle_ref": "KBH_736245",
     "gc_content": 0.64469,
     "genetic_code": 1,
     "genome_type": "Metagenome",
@@ -36,7 +35,6 @@
         }
     ],
     "original_source_file_name": null,
-    "protein_handle_ref": "KBH_736243",
     "publications": [],
     "scientific_name": "Arabidopsis thaliana",
     "source": "GFF",
