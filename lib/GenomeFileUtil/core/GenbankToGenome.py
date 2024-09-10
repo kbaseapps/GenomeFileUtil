@@ -162,6 +162,12 @@ class GenbankToGenome:
             # parse genbank file
             self._parse_genbank(genome_obj)
 
+            # check features
+            self.gi.check_dna_sequence_in_features(genome_obj.genome_data)
+
+            # validate genome
+            genome_obj.genome_data['warnings'] = self.gi.validate_genome(genome_obj.genome_data)
+
             # gather all objects
             genome_objs.append(genome_obj)
 

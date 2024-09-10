@@ -307,7 +307,7 @@ class SaveGenomeTest(unittest.TestCase):
         # no feature in genome
         genome = {'missing_features': 'features'}
         copied_genome = genome.copy()
-        self.genome_interface._check_dna_sequence_in_features(copied_genome)
+        self.genome_interface.check_dna_sequence_in_features(copied_genome)
         self.assertEqual(copied_genome, genome)
 
         # with contigs
@@ -315,7 +315,7 @@ class SaveGenomeTest(unittest.TestCase):
         for feat in copied_genome['features']:
             if 'dna_sequence' in feat:
                 del feat['dna_sequence']
-        self.genome_interface._check_dna_sequence_in_features(copied_genome)
+        self.genome_interface.check_dna_sequence_in_features(copied_genome)
 
         feature_dna_sum = 0
         for feature in copied_genome['features']:

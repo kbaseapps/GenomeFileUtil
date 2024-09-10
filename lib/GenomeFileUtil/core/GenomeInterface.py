@@ -43,9 +43,9 @@ class GenomeInterface:
         return self._save_genome_mass(mass_params)[0]
 
     # NOTE If there is more than 1GB of data or more than 10,000 genomes to upload, the workspace will fail.
-    def save_genome_mass(self, params):
+    def save_genome_mass(self, params, validate_genome=False):
         GenomeUtils.validate_mass_params(params, self._validate_genome_input_params)
-        return self._save_genome_mass(params)
+        return self._save_genome_mass(params, validate_genome=validate_genome)
 
     def _validate_genome_input_params(self, genome_input):
         """
@@ -128,11 +128,10 @@ class GenomeInterface:
                 handle_id = dfu_shock['handle']['hid']
                 genome_data[handle_property] = handle_id
 
-    def _check_dna_sequence_in_features(self, genome):
+    def check_dna_sequence_in_features(self, genome):
         """
-        _check_dna_sequence_in_features: check dna sequence in each feature
+        check_dna_sequence_in_features: check dna sequence in each feature
         """
-        logging.info('start checking dna sequence in each feature')
 
         if 'features' in genome:
             features_to_work = {}
@@ -166,7 +165,7 @@ class GenomeInterface:
         return data, res['info']
         # return self.dfu.get_objects(params)['data'][0]
 
-    def _save_genome_mass(self, params):
+    def _save_genome_mass(self, params, validate_genome=True):
 
         workspace_id = params[_WSID]
         inputs = params[_INPUTS]
@@ -204,8 +203,8 @@ class GenomeInterface:
             # check all handles point to shock nodes owned by calling user
             self._own_handle(data, 'genbank_handle_ref')
             self._own_handle(data, 'gff_handle_ref')
-            if "AnnotatedMetagenomeAssembly" not in ws_datatype:
-                self._check_dna_sequence_in_features(data)
+            if "AnnotatedMetagenomeAssembly" not in ws_datatype and validate_genome:
+                self.check_dna_sequence_in_features(data)
                 data['warnings'] = self.validate_genome(data)
 
             # sort data
@@ -406,8 +405,6 @@ class GenomeInterface:
         """
 
         allowed_tiers = {'Representative', 'Reference', 'ExternalDB', 'User'}
-
-        logging.info('Validating genome object contents')
         warnings = g.get('warnings', [])
 
         # TODO: Determine whether these checks make any sense for Metagenome
