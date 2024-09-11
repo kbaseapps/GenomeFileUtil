@@ -251,7 +251,7 @@ class SaveGenomeTest(unittest.TestCase):
             }
         ]
         params = {'workspace_id': self.wsID, 'inputs': inputs}
-        ret = self.genome_interface.save_genome_mass(params)[0]
+        ret = self.genome_interface.save_genome_mass(params, validate_genome=True)[0]
         self.check_save_one_genome_output(ret, genome_name)
 
     def test_genomes_with_upgrade(self):
