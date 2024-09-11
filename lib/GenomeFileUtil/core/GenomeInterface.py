@@ -37,13 +37,48 @@ class GenomeInterface:
         self.ws_large_data = WsLargeDataIO(self.callback_url)
 
     def save_one_genome(self, params):
+        """
+        Saves a single genome object to the workspace.
+
+        This method prepares the parameters for saving a single genome and calls the
+        `_save_genome_mass` method to handle the actual saving process. It processes
+        the input parameters and performs necessary validation before saving the genome.
+
+        Args:
+            params (dict): A dictionary containing the parameters for saving the genome.
+                Must include workspace and genome-specific information.
+
+        Returns:
+            dict: The information about the saved genome object, including metadata.
+                The return value is derived from the `_save_genome_mass` method.
+        """
         mass_params = GenomeUtils.set_up_single_params(
             params, _WS, self._validate_genome_input_params, self.dfu.ws_name_to_id
         )
         return self._save_genome_mass(mass_params)[0]
 
-    # NOTE If there is more than 1GB of data or more than 10,000 genomes to upload, the workspace will fail.
     def save_genome_mass(self, params, validate_genome=False):
+        """
+        Saves multiple genome objects to the workspace.
+
+        This method handles the saving of multiple genome objects in bulk. It validates
+        the parameters, processes each genome individually, and performs necessary
+        updates or validations before saving. If requested, it will also validate the
+        genomes before saving.
+
+        # NOTE If there is more than 1GB of data or more than 10,000 genomes to upload,
+        # the workspace will fail.
+
+        Args:
+            params (dict): A dictionary containing the parameters for saving the genomes.
+                Should include workspace ID and a list of genome inputs with their data.
+            validate_genome (bool, optional): A flag indicating whether to validate the
+                genomes before saving. Defaults to False.
+
+        Returns:
+            list: A list of dictionaries, each containing information about a saved
+                genome object and any warnings encountered during the saving process.
+        """
         GenomeUtils.validate_mass_params(params, self._validate_genome_input_params)
         return self._save_genome_mass(params, validate_genome=validate_genome)
 
@@ -55,33 +90,6 @@ class GenomeInterface:
         for p in ["name", "data"]:
             if p not in genome_input:
                 raise ValueError(f"{p} parameter is required, but missing")
-
-    def _save_genome_objects(
-        self,
-        workspace_id,
-        ws_datatypes,
-        data_paths,
-        names,
-        meta_data,
-        hidden_data,
-    ):
-        dfu_infos = self.ws_large_data.save_objects(
-            {
-                'id': workspace_id,
-                'objects': [
-                    {
-                        'type': ws_datatype,
-                        'data_json_file': data_path,
-                        'name': name,
-                        'meta': meta,
-                        'hidden': hidden,
-                    } for ws_datatype, data_path, name, meta, hidden in zip(
-                        ws_datatypes, data_paths, names, meta_data, hidden_data
-                    )
-                ]
-            }
-        )
-        return dfu_infos
 
     def _check_shock_response(self, response, errtxt):
         """
@@ -170,28 +178,28 @@ class GenomeInterface:
         workspace_id = params[_WSID]
         inputs = params[_INPUTS]
 
-        ws_datatypes = []
-        data_paths = []
-        names = []
-        meta_data = []
-        hidden_data = []
+        objects = []
         warnings = []
 
         for input_params in inputs:
+
+            obj = {}
 
             # retrive required params
             name = input_params['name']
             data = input_params['data']
 
             # XXX there is no `workspace_datatype` param in the spec
-            # NOTE: The method caller should not be able to choose an arbitrary workspace type
+            # NOTE: This allows a user to specify any arbitrary workspace type which could cause,
+            # in the worst case, data corruption. It should be removed from the API
+            # (note it is not currently documented) so users cannot access it.
             ws_datatype = input_params.get('workspace_datatype', "KBaseGenomes.Genome")
             # XXX there is no `meta` param in the spec
             meta = input_params.get('meta', {})
 
-            ws_datatypes.append(ws_datatype)
-            names.append(name)
-            meta_data.append(meta)
+            obj["type"] = ws_datatype
+            obj["name"] = name
+            obj["meta"] = meta
 
             if "AnnotatedMetagenomeAssembly" in ws_datatype:
                 if input_params.get('upgrade') or 'feature_counts' not in data:
@@ -217,17 +225,14 @@ class GenomeInterface:
             else:
                 hidden = 0
 
-            data_paths.append(data_path)
-            hidden_data.append(hidden)
+            obj["data_json_file"] = data_path
+            obj["hidden"] = hidden
+
+            objects.append(obj)
             warnings.append(data.get('warnings', []))
 
-        dfu_infos = self._save_genome_objects(
-            workspace_id,
-            ws_datatypes,
-            data_paths,
-            names,
-            meta_data,
-            hidden_data,
+        dfu_infos = self.ws_large_data.save_objects(
+            {'id': workspace_id, 'objects': objects}
         )
 
         output = [
