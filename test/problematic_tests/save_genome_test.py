@@ -4,6 +4,7 @@ import io
 import json  # noqa: F401
 import os  # noqa: F401
 import shutil
+import tempfile
 import time
 import unittest
 import urllib.error
@@ -149,12 +150,20 @@ class SaveGenomeTest(unittest.TestCase):
         cls.test_metagenome_data = json.load(open('data/metagenomes/toy/metagenome.json'))
         cls.test_metagenome_data['assembly_ref'] = assembly_refs[1]["upa"]
 
-        # Move files to the share folder
+        # Set taregt paths in the share folder
         fhr_path = os.path.join(cls.scratch,'features_handle_ref')
         phr_path = os.path.join(cls.scratch,'protein_handle_ref')
 
-        shutil.copy('data/metagenomes/toy/features_handle_ref', fhr_path)
-        shutil.copy('data/metagenomes/toy/protein_handle_ref', phr_path)
+        # Create temp files
+        with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as temp_features_file:
+            temp_features_file.write("test features_handle_ref")
+
+        with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as temp_protein_file:
+            temp_protein_file.write("test protein_handle_ref")
+
+        # Move files to the share folder
+        shutil.copy(temp_features_file.name, fhr_path)
+        shutil.copy(temp_protein_file.name, phr_path)
 
         # Upload files to the blobstore
         handle_service_outputs = cls.dfu.file_to_shock_mass(
@@ -171,6 +180,10 @@ class SaveGenomeTest(unittest.TestCase):
         # Delete shock_ids
         cls.nodes_to_delete.append(handle_service_outputs[0]["shock_id"])
         cls.nodes_to_delete.append(handle_service_outputs[1]["shock_id"])
+
+        # Remove temp files
+        os.remove(temp_features_file.name)
+        os.remove(temp_protein_file.name)
 
     def getWsClient(self):
         return self.__class__.wsClient

@@ -6,7 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.11.7] - TBD
-- Genomes are now saved in batches to the workspace
 - Unusable `export_genome_features_protein_to_fasta` function was removed
 - The `genbanks_to_genomes` method was added to allow users to upload multiple
 genome objects at once
