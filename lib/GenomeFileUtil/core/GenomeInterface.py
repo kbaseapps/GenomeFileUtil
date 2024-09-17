@@ -187,7 +187,7 @@ class GenomeInterface:
 
             # retrive required params
             name = input_params['name']
-            data = input_params['data']
+            data = dict(input_params['data'])
 
             # XXX there is no `workspace_datatype` param in the spec
             # NOTE: This allows a user to specify any arbitrary workspace type which could cause,

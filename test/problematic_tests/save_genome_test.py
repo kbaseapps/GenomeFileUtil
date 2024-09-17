@@ -12,6 +12,7 @@ import urllib.parse
 import urllib.request
 from configparser import ConfigParser
 from os import environ
+from datetime import datetime
 
 import requests  # noqa: F401
 
@@ -24,8 +25,17 @@ from GenomeFileUtil.authclient import KBaseAuth as _KBaseAuth
 from GenomeFileUtil.core.GenomeInterface import GenomeInterface
 from installed_clients.WorkspaceClient import Workspace as workspaceService
 
-KBASE_GENOME = "KBaseGenomes.Genome"
-KBASE_METAGENOME = "KBaseMetagenomes.AnnotatedMetagenomeAssembly"
+_KBASE_GENOME = "KBaseGenomes.Genome"
+_KBASE_METAGENOME = "KBaseMetagenomes.AnnotatedMetagenomeAssembly"
+
+_GENOME_FILE_WARNINGS = [
+    'For prokaryotes, CDS array should generally be the same length as the Features array.',
+    'Genome molecule_type Unknown is not expected for domain Bacteria.',
+    'Unable to determine organism taxonomy'
+]
+_METAGENOME_FILE_WARNINGS = [
+    'SUSPECT: This genome has 20 genes that needed to be spoofed for existing parentless CDS.'
+]
 
 
 class SaveGenomeTest(unittest.TestCase):
@@ -212,13 +222,27 @@ class SaveGenomeTest(unittest.TestCase):
         else:
             self.assertEqual(error, str(context.exception))
 
-    def check_save_one_genome_output(self, ret, genome_name, data_type=KBASE_GENOME):
+    def check_save_one_genome_output(
+        self,
+        ret,
+        genome_name,
+        data_type=_KBASE_GENOME,
+        warnings=_GENOME_FILE_WARNINGS
+    ):
         self.assertTrue('info' in ret)
+        self.assertTrue('warnings' in ret)
 
+        # Check info
         genome_info = ret['info']
         self.assertEqual(genome_info[1], genome_name)
         self.assertEqual(genome_info[2].split('-')[0], data_type)
+        self.assertTrue(datetime.strptime(genome_info[3], '%Y-%m-%dT%H:%M:%S+%f'))
         self.assertEqual(genome_info[5], self.user_id)
+        self.assertEqual(genome_info[6], self.wsID)
+        self.assertEqual(genome_info[7], self.wsName)
+
+        # Check warnings
+        self.assertEqual(ret['warnings'], warnings)
 
     def test_bad_one_genome_params(self):
         self.start_test()
@@ -274,13 +298,15 @@ class SaveGenomeTest(unittest.TestCase):
             {
                 'name': genome_name,
                 'data': self.test_metagenome_data,
-                'workspace_datatype': KBASE_METAGENOME,
+                'workspace_datatype': _KBASE_METAGENOME,
                 'upgrade': True,
             }
         ]
         params = {'workspace_id': self.wsID, 'inputs': inputs}
         ret = self.genome_interface.save_genome_mass(params)[0]
-        self.check_save_one_genome_output(ret, genome_name, data_type=KBASE_METAGENOME)
+        self.check_save_one_genome_output(
+            ret, genome_name, data_type=_KBASE_METAGENOME, warnings=_METAGENOME_FILE_WARNINGS
+        )
 
     def test_genomes_with_hidden(self):
         self.start_test()
@@ -294,7 +320,7 @@ class SaveGenomeTest(unittest.TestCase):
         ]
         params = {'workspace_id': self.wsID, 'inputs': inputs}
         ret = self.genome_interface.save_genome_mass(params)[0]
-        self.check_save_one_genome_output(ret, genome_name)
+        self.check_save_one_genome_output(ret, genome_name, warnings=[])
 
         inputs = [
             {
@@ -305,7 +331,7 @@ class SaveGenomeTest(unittest.TestCase):
         ]
         params = {'workspace_id': self.wsID, 'inputs': inputs}
         ret = self.genome_interface.save_genome_mass(params)[0]
-        self.check_save_one_genome_output(ret, genome_name)
+        self.check_save_one_genome_output(ret, genome_name, warnings=[])
 
     def test_bad_genomes_params_missing_parameter(self):
         self.start_test()
