@@ -4,7 +4,6 @@ import io
 import json  # noqa: F401
 import os  # noqa: F401
 import shutil
-import tempfile
 import time
 import unittest
 import urllib.error
