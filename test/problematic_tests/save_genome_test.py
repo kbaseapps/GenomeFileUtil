@@ -11,6 +11,7 @@ import urllib.parse
 import urllib.request
 from configparser import ConfigParser
 from os import environ
+from datetime import datetime
 
 import requests  # noqa: F401
 
@@ -22,6 +23,13 @@ from GenomeFileUtil.GenomeFileUtilServer import MethodContext
 from GenomeFileUtil.authclient import KBaseAuth as _KBaseAuth
 from GenomeFileUtil.core.GenomeInterface import GenomeInterface
 from installed_clients.WorkspaceClient import Workspace as workspaceService
+
+_KBASE_GENOME = "KBaseGenomes.Genome"
+_GENOME_FILE_WARNINGS = [
+    'For prokaryotes, CDS array should generally be the same length as the Features array.',
+    'Genome molecule_type Unknown is not expected for domain Bacteria.',
+    'Unable to determine organism taxonomy'
+]
 
 
 class SaveGenomeTest(unittest.TestCase):
@@ -92,6 +100,7 @@ class SaveGenomeTest(unittest.TestCase):
         suffix = int(time.time() * 1000)
         cls.wsName = "test_SaveGenomeTest_" + str(suffix)
         cls.wsClient.create_workspace({'workspace': cls.wsName})
+        cls.wsID = cls.dfu.ws_name_to_id(cls.wsName)
 
         cls.nodes_to_delete = []
         cls.prepare_data()
@@ -114,8 +123,7 @@ class SaveGenomeTest(unittest.TestCase):
 
     @classmethod
     def prepare_data(cls):
-        assembly_file_path = os.path.join(cls.scratch,
-                                          'e_coli_assembly.fasta')
+        assembly_file_path = os.path.join(cls.scratch,'e_coli_assembly.fasta')
         shutil.copy('data/e_coli/e_coli_assembly.fasta', assembly_file_path)
         au = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
         assembly_ref = au.save_assembly_from_fasta({
@@ -142,29 +150,46 @@ class SaveGenomeTest(unittest.TestCase):
         testname = inspect.stack()[1][3]
         print(('\n*** starting test: ' + testname + ' **'))
 
-    def fail_save_one_genome(self, params, error, exception=ValueError, contains=False):
+    def fail_save_genome(self, params, error, exception=ValueError, contains=False, mass=False):
         with self.assertRaises(exception) as context:
-            self.getImpl().save_one_genome(self.ctx, params)
+            if mass:
+                self.genome_interface.save_genome_mass(params)
+            else:
+                self.getImpl().save_one_genome(self.ctx, params)
         if contains:
             self.assertIn(error, str(context.exception))
         else:
             self.assertEqual(error, str(context.exception))
 
-    def check_save_one_genome_output(self, ret, genome_name):
+    def check_save_one_genome_output(
+        self,
+        ret,
+        genome_name,
+        data_type=_KBASE_GENOME,
+        warnings=_GENOME_FILE_WARNINGS
+    ):
         self.assertTrue('info' in ret)
+        self.assertTrue('warnings' in ret)
 
+        # Check info
         genome_info = ret['info']
         self.assertEqual(genome_info[1], genome_name)
-        self.assertEqual(genome_info[2].split('-')[0], 'KBaseGenomes.Genome')
+        self.assertEqual(genome_info[2].split('-')[0], data_type)
+        self.assertTrue(datetime.strptime(genome_info[3], '%Y-%m-%dT%H:%M:%S+%f'))
         self.assertEqual(genome_info[5], self.user_id)
+        self.assertEqual(genome_info[6], self.wsID)
+        self.assertEqual(genome_info[7], self.wsName)
+
+        # Check warnings
+        self.assertEqual(ret['warnings'], warnings)
 
     def test_bad_one_genome_params(self):
         self.start_test()
         invalidate_params = {'missing_workspace': 'workspace',
                              'name': 'name',
                              'data': 'data'}
-        error_msg = '"workspace" parameter is required, but missing'
-        self.fail_save_one_genome(invalidate_params, error_msg)
+        error_msg = "Exactly one of a 'workspace_id' or a 'workspace' parameter must be provided"
+        self.fail_save_genome(invalidate_params, error_msg)
 
     def test_one_genome(self):
         self.start_test()
@@ -192,11 +217,58 @@ class SaveGenomeTest(unittest.TestCase):
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
         self.check_save_one_genome_output(ret, genome_name)
 
+    def test_genomes(self):
+        self.start_test()
+        genome_name = 'test_genome'
+        inputs = [
+            {
+                'name': genome_name,
+                'data': self.test_genome_data,
+            }
+        ]
+        params = {'workspace_id': self.wsID, 'inputs': inputs}
+        ret = self.genome_interface.save_genome_mass(params, validate_genome=True)[0]
+        self.check_save_one_genome_output(ret, genome_name)
+
+    def test_genomes_with_hidden(self):
+        self.start_test()
+        genome_name = 'test_genome_hidden'
+        inputs = [
+            {
+                'name': genome_name,
+                'data': self.test_genome_data,
+                'hidden': 1,
+            }
+        ]
+        params = {'workspace_id': self.wsID, 'inputs': inputs}
+        ret = self.genome_interface.save_genome_mass(params)[0]
+        self.check_save_one_genome_output(ret, genome_name, warnings=[])
+
+        inputs = [
+            {
+                'name': genome_name,
+                'data': self.test_genome_data,
+                'hidden': True,
+            }
+        ]
+        params = {'workspace_id': self.wsID, 'inputs': inputs}
+        ret = self.genome_interface.save_genome_mass(params)[0]
+        self.check_save_one_genome_output(ret, genome_name, warnings=[])
+
+    def test_bad_genomes_params_missing_parameter(self):
+        self.start_test()
+        invalidate_params = {
+            'workspace_id': self.wsID,
+            'inputs': [{'data': 'data'}],
+        }
+        error_msg = "Entry #1 in inputs field has invalid params: name parameter is required, but missing"
+        self.fail_save_genome(invalidate_params, error_msg, mass=True)
+
     def test_GenomeInterface_check_dna_sequence_in_features(self):
         # no feature in genome
         genome = {'missing_features': 'features'}
         copied_genome = genome.copy()
-        self.genome_interface._check_dna_sequence_in_features(copied_genome)
+        self.genome_interface.check_dna_sequence_in_features(copied_genome)
         self.assertEqual(copied_genome, genome)
 
         # with contigs
@@ -204,7 +276,7 @@ class SaveGenomeTest(unittest.TestCase):
         for feat in copied_genome['features']:
             if 'dna_sequence' in feat:
                 del feat['dna_sequence']
-        self.genome_interface._check_dna_sequence_in_features(copied_genome)
+        self.genome_interface.check_dna_sequence_in_features(copied_genome)
 
         feature_dna_sum = 0
         for feature in copied_genome['features']:

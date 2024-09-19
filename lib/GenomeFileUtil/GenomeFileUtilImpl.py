@@ -69,7 +69,7 @@ class GenomeFileUtil:
     ######################################### noqa
     VERSION = "0.11.7"
     GIT_URL = "git@github.com:kbaseapps/GenomeFileUtil.git"
-    GIT_COMMIT_HASH = "591a19ccf4d1b42f01cc06486654b6d3a8ea08e4"
+    GIT_COMMIT_HASH = "330d6c2da8a0dc2d57efffe690e8db2928455776"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER

@@ -22,7 +22,8 @@ from GenomeFileUtil.core.GenomeInterface import GenomeInterface
 from installed_clients.WorkspaceClient import Workspace
 from GenomeFileUtil.core.GenomeUtils import (
     is_parent, propagate_cds_props_to_gene, warnings, parse_inferences,
-    load_ontology_mappings, set_taxon_data, set_default_taxon_data
+    load_ontology_mappings, set_taxon_data, set_default_taxon_data,
+    set_up_single_params, validate_mass_params
 )
 
 MAX_MISC_FEATURE_SIZE = 10000
@@ -113,51 +114,15 @@ class GenbankToGenome:
 
     def import_genbank(self, params):
         print('validating parameters')
-        mass_params = self._set_up_single_params(params)
+        mass_params = set_up_single_params(
+            params, _WSNAME, self._validate_params, self.dfu.ws_name_to_id
+        )
         return self._import_genbank_mass(mass_params)[0]
 
     def import_genbank_mass(self, params):
         print('validating parameters')
-        self._validate_mass_params(params)
+        validate_mass_params(params, self._validate_params)
         return self._import_genbank_mass(params)
-
-    def _set_up_single_params(self, params):
-        # avoid side effects and keep variables in params unmodfied
-        inputs = dict(params)
-        self._validate_params(inputs)
-        ws_id = self._get_int(inputs.pop(_WSID, None), _WSID)
-        ws_name = inputs.pop(_WSNAME, None)
-        if (bool(ws_id) == bool(ws_name)):  # xnor
-            raise ValueError(f"Exactly one of a '{_WSID}' or a '{_WSNAME}' parameter must be provided")
-        if not ws_id:
-            print(f"Translating workspace name {ws_name} to a workspace ID. Prefer submitting "
-                  + "a workspace ID over a mutable workspace name that may cause race conditions")
-            ws_id = self.dfu.ws_name_to_id(ws_name)
-        mass_params = {_WSID: ws_id, _INPUTS: [inputs]}
-        return mass_params
-
-    def _validate_mass_params(self, params):
-        ws_id = self._get_int(params.get(_WSID), _WSID)
-        if not ws_id:
-            raise ValueError(f"{_WSID} is required")
-        inputs = params.get(_INPUTS)
-        if not inputs or type(inputs) is not list:
-            raise ValueError(f"{_INPUTS} field is required and must be a non-empty list")
-        for i, inp in enumerate(inputs, start=1):
-            if type(inp) is not dict:
-                raise ValueError(f"Entry #{i} in {_INPUTS} field is not a mapping as required")
-            try:
-                self._validate_params(inp)
-            except Exception as e:
-                raise ValueError(f"Entry #{i} in {_INPUTS} field has invalid params: {e}") from e
-
-    def _get_int(self, putative_int, name, minimum=1):
-        if putative_int is not None:
-            if type(putative_int) is not int:
-                raise ValueError(f"{name} must be an integer, got: {putative_int}")
-            if putative_int < minimum:
-                raise ValueError(f"{name} must be an integer >= {minimum}")
-        return putative_int
 
     def _import_genbank_mass(self, params):
 
@@ -197,6 +162,12 @@ class GenbankToGenome:
             # parse genbank file
             self._parse_genbank(genome_obj)
 
+            # check features
+            self.gi.check_dna_sequence_in_features(genome_obj.genome_data)
+
+            # validate genome
+            genome_obj.genome_data['warnings'] = self.gi.validate_genome(genome_obj.genome_data)
+
             # gather all objects
             genome_objs.append(genome_obj)
 
@@ -209,7 +180,6 @@ class GenbankToGenome:
         for genome_obj in genome_objs:
             shutil.rmtree(genome_obj.input_directory)
 
-        # TODO make an internal mass function save_genomes
         results = self._save_genomes(workspace_id, genome_objs)
 
         # return the result
@@ -227,17 +197,18 @@ class GenbankToGenome:
         return details
 
     def _save_genomes(self, workspace_id, genome_objs):
-        results = [
-            self.gi.save_one_genome(
-                {
-                    'workspace': workspace_id,
-                    'name': genome_obj.genome_name,
-                    'data': genome_obj.genome_data,
-                    "meta": genome_obj.genome_meta,
-                }
-            ) for genome_obj in genome_objs
-        ]
-
+        results = self.gi.save_genome_mass(
+            {
+                "workspace_id": workspace_id,
+                "inputs": [
+                    {
+                        "name": genome_obj.genome_name,
+                        "data": genome_obj.genome_data,
+                        "meta": genome_obj.genome_meta,
+                    } for genome_obj in genome_objs
+                ],
+            }
+        )
         return results
 
     def _validate_params(self, params):

@@ -16,6 +16,10 @@ from GenomeFileUtil.core import GenomeUtils
 
 MAX_GENOME_SIZE = 2**30
 
+_WS = "workspace"
+_WSID = "workspace_id"
+_INPUTS = "inputs"
+
 
 class GenomeInterface:
     def __init__(self, config):
@@ -32,18 +36,60 @@ class GenomeInterface:
         self.scratch = config.raw['scratch']
         self.ws_large_data = WsLargeDataIO(self.callback_url)
 
-    @staticmethod
-    def _validate_save_one_genome_params(params):
+    def save_one_genome(self, params):
         """
-        _validate_save_one_genome_params:
-                validates params passed to save_one_genome method
+        Saves a single genome object to the workspace.
+
+        This method prepares the parameters for saving a single genome and calls the
+        `_save_genome_mass` method to handle the actual saving process. It processes
+        the input parameters and performs necessary validation before saving the genome.
+
+        Args:
+            params (dict): A dictionary containing the parameters for saving the genome.
+                Must include workspace and genome-specific information.
+
+        Returns:
+            dict: The information about the saved genome object, including metadata.
+                The return value is derived from the `_save_genome_mass` method.
         """
-        logging.info('start validating save_one_genome params')
+        mass_params = GenomeUtils.set_up_single_params(
+            params, _WS, self._validate_genome_input_params, self.dfu.ws_name_to_id
+        )
+        return self._save_genome_mass(mass_params)[0]
+
+    def save_genome_mass(self, params, validate_genome=False):
+        """
+        Saves multiple genome objects to the workspace.
+
+        This method handles the saving of multiple genome objects in bulk. It validates
+        the parameters, processes each genome individually, and performs necessary
+        updates or validations before saving. If requested, it will also validate the
+        genomes before saving.
+
+        # NOTE If there is more than 1GB of data or more than 10,000 genomes to upload,
+        # the workspace will fail.
+
+        Args:
+            params (dict): A dictionary containing the parameters for saving the genomes.
+                Should include workspace ID and a list of genome inputs with their data.
+            validate_genome (bool, optional): A flag indicating whether to validate the
+                genomes before saving. Defaults to False.
+
+        Returns:
+            list: A list of dictionaries, each containing information about a saved
+                genome object and any warnings encountered during the saving process.
+        """
+        GenomeUtils.validate_mass_params(params, self._validate_genome_input_params)
+        return self._save_genome_mass(params, validate_genome=validate_genome)
+
+    def _validate_genome_input_params(self, genome_input):
+        """
+        Check required parameters are in genome_input
+        """
         # check for required parameters
-        for p in ['workspace', 'name', 'data']:
-            if p not in params:
-                raise ValueError(
-                    '"{}" parameter is required, but missing'.format(p))
+        for p in ["name", "data"]:
+            if p not in genome_input:
+                raise ValueError(f"{p} parameter is required, but missing")
 
     def _check_shock_response(self, response, errtxt):
         """
@@ -90,11 +136,10 @@ class GenomeInterface:
                 handle_id = dfu_shock['handle']['hid']
                 genome_data[handle_property] = handle_id
 
-    def _check_dna_sequence_in_features(self, genome):
+    def check_dna_sequence_in_features(self, genome):
         """
-        _check_dna_sequence_in_features: check dna sequence in each feature
+        check_dna_sequence_in_features: check dna sequence in each feature
         """
-        logging.info('start checking dna sequence in each feature')
 
         if 'features' in genome:
             features_to_work = {}
@@ -128,54 +173,70 @@ class GenomeInterface:
         return data, res['info']
         # return self.dfu.get_objects(params)['data'][0]
 
-    def save_one_genome(self, params):
-        logging.info('start saving genome object')
-        self._validate_save_one_genome_params(params)
-        workspace = params['workspace']
-        name = params['name']
-        data = params['data']
-        # XXX there is no `workspace_datatype` param in the spec
-        ws_datatype = params.get('workspace_datatype', "KBaseGenomes.Genome")
-        # XXX there is no `meta` param in the spec
-        meta = params.get('meta', {})
-        if "AnnotatedMetagenomeAssembly" in ws_datatype:
-            if params.get('upgrade') or 'feature_counts' not in data:
-                data = self._update_metagenome(data)
-        else:
-            if params.get('upgrade') or 'feature_counts' not in data:
-                data = self._update_genome(data)
+    def _save_genome_mass(self, params, validate_genome=True):
 
-        # check all handles point to shock nodes owned by calling user
-        self._own_handle(data, 'genbank_handle_ref')
-        self._own_handle(data, 'gff_handle_ref')
-        if "AnnotatedMetagenomeAssembly" not in ws_datatype:
-            self._check_dna_sequence_in_features(data)
-            data['warnings'] = self.validate_genome(data)
+        workspace_id = params[_WSID]
+        inputs = params[_INPUTS]
 
-        # sort data
-        data = GenomeUtils.sort_dict(data)
-        # dump genome to scratch for upload
-        data_path = os.path.join(self.scratch, name + ".json")
-        json.dump(data, open(data_path, 'w'))
-        if 'hidden' in params and str(params['hidden']).lower() in ('yes', 'true', 't', '1'):
-            hidden = 1
-        else:
-            hidden = 0
+        objects = []
+        warnings = []
 
-        if isinstance(workspace, int) or workspace.isdigit():
-            workspace_id = workspace
-        else:
-            workspace_id = self.dfu.ws_name_to_id(workspace)
+        for input_params in inputs:
 
-        save_params = {'id': workspace_id,
-                       'objects': [{'type': ws_datatype,
-                                    'data_json_file': data_path,
-                                    'name': name,
-                                    'meta': meta,
-                                    'hidden': hidden}]}
-        dfu_oi = self.ws_large_data.save_objects(save_params)[0]
-        returnVal = {'info': dfu_oi, 'warnings': data.get('warnings', [])}
-        return returnVal
+            obj = {}
+
+            # retrive required params
+            name = input_params['name']
+            data = dict(input_params['data'])
+
+            # XXX there is no `workspace_datatype` param in the spec
+            # NOTE: This allows a user to specify any arbitrary workspace type which could cause,
+            # in the worst case, data corruption. It should be removed from the API
+            # (note it is not currently documented) so users cannot access it.
+            ws_datatype = input_params.get('workspace_datatype', "KBaseGenomes.Genome")
+            # XXX there is no `meta` param in the spec
+            meta = input_params.get('meta', {})
+
+            obj["type"] = ws_datatype
+            obj["name"] = name
+            obj["meta"] = meta
+
+            if "AnnotatedMetagenomeAssembly" not in ws_datatype:
+                if input_params.get('upgrade') or 'feature_counts' not in data:
+                    data = self._update_genome(data)
+
+            # check all handles point to shock nodes owned by calling user
+            self._own_handle(data, 'genbank_handle_ref')
+            self._own_handle(data, 'gff_handle_ref')
+            if "AnnotatedMetagenomeAssembly" not in ws_datatype and validate_genome:
+                self.check_dna_sequence_in_features(data)
+                data['warnings'] = self.validate_genome(data)
+
+            # sort data
+            data = GenomeUtils.sort_dict(data)
+            # dump genome to scratch for upload
+            data_path = os.path.join(self.scratch, name + ".json")
+            json.dump(data, open(data_path, 'w'))
+            if 'hidden' in input_params and str(input_params['hidden']).lower() in ('yes', 'true', 't', '1'):
+                hidden = 1
+            else:
+                hidden = 0
+
+            obj["data_json_file"] = data_path
+            obj["hidden"] = hidden
+
+            objects.append(obj)
+            warnings.append(data.get('warnings', []))
+
+        dfu_infos = self.ws_large_data.save_objects(
+            {'id': workspace_id, 'objects': objects}
+        )
+
+        output = [
+            {'info': dfu_oi, 'warnings': warning}
+            for dfu_oi, warning in zip(dfu_infos, warnings)
+        ]
+        return output
 
     @staticmethod
     def determine_tier(source):
@@ -202,11 +263,6 @@ class GenomeInterface:
                 return "Ensembl", ['ExternalDB', 'User']
             return "Ensembl", ['Representative', 'ExternalDB']
         return source, ['User']
-
-    def _update_metagenome(self, genome):
-        """Checks for missing required fields and fixes breaking changes"""
-        if 'molecule_type' not in genome:
-            genome['molecule_type'] = 'Unknown'
 
     def _update_genome(self, genome):
         """Checks for missing required fields and fixes breaking changes"""
@@ -345,8 +401,6 @@ class GenomeInterface:
         """
 
         allowed_tiers = {'Representative', 'Reference', 'ExternalDB', 'User'}
-
-        logging.info('Validating genome object contents')
         warnings = g.get('warnings', [])
 
         # TODO: Determine whether these checks make any sense for Metagenome
