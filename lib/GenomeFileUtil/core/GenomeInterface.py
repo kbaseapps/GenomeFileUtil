@@ -201,10 +201,7 @@ class GenomeInterface:
             obj["name"] = name
             obj["meta"] = meta
 
-            if "AnnotatedMetagenomeAssembly" in ws_datatype:
-                if input_params.get('upgrade') or 'feature_counts' not in data:
-                    data = self._update_metagenome(data)
-            else:
+            if "AnnotatedMetagenomeAssembly" not in ws_datatype:
                 if input_params.get('upgrade') or 'feature_counts' not in data:
                     data = self._update_genome(data)
 
@@ -266,12 +263,6 @@ class GenomeInterface:
                 return "Ensembl", ['ExternalDB', 'User']
             return "Ensembl", ['Representative', 'ExternalDB']
         return source, ['User']
-
-    def _update_metagenome(self, genome):
-        """Checks for missing required fields and fixes breaking changes"""
-        if 'molecule_type' not in genome:
-            genome['molecule_type'] = 'Unknown'
-        return genome
 
     def _update_genome(self, genome):
         """Checks for missing required fields and fixes breaking changes"""
