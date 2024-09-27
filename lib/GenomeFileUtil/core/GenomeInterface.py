@@ -142,9 +142,11 @@ class GenomeInterface:
             if params.get('upgrade') or 'feature_counts' not in data:
                 data = self._update_metagenome(data)
         else:
-            if params.get('upgrade') or 'feature_counts' not in data:
-                data = self._update_genome(data)
+#            if params.get('upgrade') or 'feature_counts' not in data:
+            data = self._update_genome(data)
 
+        self._check_for_duplicate_ids(data)
+            
         # check all handles point to shock nodes owned by calling user
         self._own_handle(data, 'genbank_handle_ref')
         self._own_handle(data, 'gff_handle_ref')
@@ -210,6 +212,7 @@ class GenomeInterface:
 
     def _update_genome(self, genome):
         """Checks for missing required fields and fixes breaking changes"""
+
         # do top level updates
         ontologies_present = defaultdict(dict)  # type: dict
         ontologies_present.update(genome.get('ontologies_present', {}))
@@ -228,11 +231,28 @@ class GenomeInterface:
         else:
             GenomeUtils.set_default_taxon_data(genome)
 
-        if any([x not in genome for x in ('dna_size', 'md5', 'gc_content', 'num_contigs')]):
+        # fixes issue of user have contig_ids key but an empty list
+        need_to_populate_assembly_related_metadata = False
+        if 'contig_ids' in genome and len(genome['contig_ids']) == 0 :
+            need_to_populate_assembly_related_metadata = True
+
+        if any([x not in genome for x in ('dna_size', 'md5', 'gc_content', 'num_contigs', 'contig_ids', "contig_lengths")]):
+            need_to_populate_assembly_related_metadata = True
+
+        if need_to_populate_assembly_related_metadata:
             if 'assembly_ref' in genome:
                 assembly_data = self.dfu.get_objects(
                     {'object_refs': [genome['assembly_ref']],
                      'ignore_errors': 0})['data'][0]['data']
+                contig_ids = assembly_data["contigs"].keys()
+                genome["contig_ids"] = contig_ids
+                contig_lengths = list()
+                for contig_id in contig_ids:
+                    if "length" in assembly_data["contigs"][contig_id]:
+                        contig_lengths.append(assembly_data["contigs"][contig_id]["length"])
+                    else:
+                        contig_lengths.append(0)
+                genome["contig_lengths"] = contig_lengths
                 genome["gc_content"] = assembly_data['gc_content']
                 genome["dna_size"] = assembly_data['dna_size']
                 genome["md5"] = assembly_data['md5']
@@ -338,6 +358,55 @@ class GenomeInterface:
         genome['feature_counts'] = type_counts
         return genome
 
+    def _check_for_duplicate_ids(self, genome):
+        """Check for dupicate ids. More of a sanity check as the code should not allow for this"""
+
+        # Double check for duplicate feature ids across all 4 feature lists
+        # Note this is more than anything a check to make sure the coder does not introduce
+        # code that causes the code to handle duplicates to not work properly
+        # The following two lines need to be uncommented to test if the check is working properly
+        # only way to really test this checker.
+        # Uncomment the next two lines to test if dup check is working.
+        #temp_duplicate_cds = genome["cdss"][0]
+        #genome["cdss"].append(temp_duplicate_cds)
+
+        ids_present = set()
+        duplicate_ids_found = set()
+        if "cdss" in genome:
+            for cds in genome["cdss"]:
+                if cds["id"] in ids_present:
+                    duplicate_ids_found.add(cds["id"])
+                else:
+                    ids_present.add(cds["id"])
+        if "features" in genome:
+            for feature in genome["features"]:
+                if feature["id"] in ids_present:
+                    duplicate_ids_found.add(feature["id"])
+                else:
+                    ids_present.add(feature["id"])
+        if "mrnas" in genome:
+            for mrna in genome["mrnas"]:
+                if mrna["id"] in ids_present:
+                    duplicate_ids_found.add(mrna["id"])
+                else:
+                    ids_present.add(mrna["id"])
+        if "non_coding_featues" in genome:
+            for non_coding_feature in genome["non_coding_features"]:
+                if non_coding_feature["id"] in ids_present:
+                    duplicate_ids_found.add(non_coding_feature["id"])
+                else:
+                    ids_present.add(non_coding_feature["id"])
+        print(f"dup ids count {str(len(duplicate_ids_found))}")
+        if len(duplicate_ids_found) > 0:
+            duplicate_ids_string = ', '.join(str(s) for s in duplicate_ids_found)
+            #"Duplicate keys HERE"
+            raised_error_message = ("Duplicate ids were found and not properly handled by the uploader. " +
+                                    "Please enter a help desk ticket.  Duplicate IDs: " +
+                                    duplicate_ids_string)
+            print("Duplicate IDs exist")
+            raise ValueError("DUPLICATES EXIST: " + raised_error_message)
+        return 1
+        
     @staticmethod
     def validate_genome(g):
         """
