@@ -40,9 +40,8 @@ class GenomeInterface:
         """
         Saves a single genome object to the workspace.
 
-        This method prepares the parameters for saving a single genome and calls the
-        `_save_genome_mass` method to handle the actual saving process. It processes
-        the input parameters and performs necessary validation before saving the genome.
+        This method prepares and validates the necessary parameters for saving a genome.
+        It then executes the saving process and returns relevant information about the saved genome.
 
         Args:
             params (dict): A dictionary containing the parameters for saving the genome.
@@ -50,7 +49,6 @@ class GenomeInterface:
 
         Returns:
             dict: The information about the saved genome object, including metadata.
-                The return value is derived from the `_save_genome_mass` method.
         """
         mass_params = GenomeUtils.set_up_single_params(
             params, _WS, self._validate_genome_input_params, self.dfu.ws_name_to_id
