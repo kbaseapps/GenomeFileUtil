@@ -69,7 +69,7 @@ class GenomeFileUtil:
     ######################################### noqa
     VERSION = "0.11.7"
     GIT_URL = "git@github.com:kbaseapps/GenomeFileUtil.git"
-    GIT_COMMIT_HASH = "330d6c2da8a0dc2d57efffe690e8db2928455776"
+    GIT_COMMIT_HASH = "861a50b5ce2d0b8b481fe514b41a6d6b89ee0c96"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -831,27 +831,27 @@ class GenomeFileUtil:
     def save_one_genome(self, ctx, params):
         """
         :param params: instance of type "SaveOneGenomeParams" -> structure:
-           parameter "workspace" of String, parameter "name" of String,
-           parameter "data" of type "Genome" (Genome type -- annotated and
-           assembled genome data. Field descriptions: id - string - KBase
-           legacy data ID scientific_name - string - human readable species
-           name domain - string - human readable phylogenetic domain name
-           (eg. "Bacteria") warnings - list of string - genome-level warnings
-           generated in the annotation process genome_tiers - list of string
-           - controlled vocabulary (based on app input and checked by
-           GenomeFileUtil) A list of labels describing the data source for
-           this genome. Allowed values - Representative, Reference,
-           ExternalDB, User Tier assignments based on genome source: * All
-           phytozome - Representative and ExternalDB * Phytozome flagship
-           genomes - Reference, Representative and ExternalDB * Ensembl -
-           Representative and ExternalDB * RefSeq Reference - Reference,
-           Representative and ExternalDB * RefSeq Representative -
-           Representative and ExternalDB * RefSeq Latest or All Assemblies
-           folder - ExternalDB * User Data - User tagged feature_counts - map
-           of string to integer - total counts of each type of feature keys
-           are a controlled vocabulary of - "CDS", "gene", "misc_feature",
-           "misc_recomb", "mobile_element", "ncRNA" - 72,
-           "non_coding_features", "non_coding_genes",
+           parameter "workspace_id" of Long, parameter "workspace" of String,
+           parameter "name" of String, parameter "data" of type "Genome"
+           (Genome type -- annotated and assembled genome data. Field
+           descriptions: id - string - KBase legacy data ID scientific_name -
+           string - human readable species name domain - string - human
+           readable phylogenetic domain name (eg. "Bacteria") warnings - list
+           of string - genome-level warnings generated in the annotation
+           process genome_tiers - list of string - controlled vocabulary
+           (based on app input and checked by GenomeFileUtil) A list of
+           labels describing the data source for this genome. Allowed values
+           - Representative, Reference, ExternalDB, User Tier assignments
+           based on genome source: * All phytozome - Representative and
+           ExternalDB * Phytozome flagship genomes - Reference,
+           Representative and ExternalDB * Ensembl - Representative and
+           ExternalDB * RefSeq Reference - Reference, Representative and
+           ExternalDB * RefSeq Representative - Representative and ExternalDB
+           * RefSeq Latest or All Assemblies folder - ExternalDB * User Data
+           - User tagged feature_counts - map of string to integer - total
+           counts of each type of feature keys are a controlled vocabulary of
+           - "CDS", "gene", "misc_feature", "misc_recomb", "mobile_element",
+           "ncRNA" - 72, "non_coding_features", "non_coding_genes",
            "protein_encoding_gene", "rRNA", "rep_origin", "repeat_region",
            "tRNA" genetic_code - int - An NCBI-assigned taxonomic category
            for the organism See here -

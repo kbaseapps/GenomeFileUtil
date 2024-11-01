@@ -318,6 +318,7 @@ module GenomeFileUtil {
                 returns (MetagenomeSaveResult returnVal) authentication required;
 
     typedef structure {
+        int workspace_id;
         string workspace;
         string name;
         KBaseGenomes.Genome data;
