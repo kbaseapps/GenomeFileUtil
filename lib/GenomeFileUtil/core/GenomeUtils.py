@@ -495,7 +495,7 @@ def set_up_single_params(
     validate_params_func: Callable[[Dict[str, Any]], None],
     ws_name_to_id_func: Callable[[str], int]
 ) -> Dict[str, Any]:
-    f"""
+    """
     Sets up parameters by validating them and ensuring that exactly one of workspace ID or name is provided.
 
     Args:
@@ -509,7 +509,7 @@ def set_up_single_params(
 
     Returns:
         Dict[str, Any]: A dictionary containing the workspace ID and the processed parameters. The dictionary
-            has keys {_WSID} and {_INPUTS}, where {_WSID} is the workspace ID and {_INPUTS} is a list containing
+            has keys workspace_id and inputs, where workspace_id is the workspace ID and inputs is a list containing
             the input parameters.
 
     Raises:
@@ -539,24 +539,24 @@ def validate_mass_params(
     params: Dict[str, Any],
     validate_params_func: Callable[[Dict[str, Any]], None]
 ) -> None:
-    f"""
+    """
     Validates the provided parameters according to specific rules.
 
     Args:
         params (Dict[str, Any]): A dictionary containing parameters to validate. Must include:
-            - {_WSID}: A workspace ID, which must be present and valid.
-            - {_INPUTS}: A list of parameter dictionaries, each of which must be validated by `validate_params_func`.
+            - workspace_id: A workspace ID, which must be present and valid.
+            - inputs: A list of parameter dictionaries, each of which must be validated by `validate_params_func`.
 
         validate_params_func (Callable[[Dict[str, Any]], None]): A function that takes a dictionary of parameters
             and validates it. The function should raise an exception if the parameters are invalid.
 
     Raises:
-        ValueError: If {_WSID} is missing or invalid, if {_INPUTS} is missing or not a non-empty list, or if any
-            entry in {_INPUTS} is not a dictionary or fails validation.
+        ValueError: If workspace_id is missing or invalid, if inputs is missing or not a non-empty list, or if any
+            entry in inputs is not a dictionary or fails validation.
 
     Notes:
-        - The function checks that {_WSID} is present and converts it to an integer using `get_int`.
-        - The {_INPUTS} field must be a non-empty list of dictionaries. Each dictionary in the list is validated
+        - The function checks that workspace_id is present and converts it to an integer using `get_int`.
+        - The inputs field must be a non-empty list of dictionaries. Each dictionary in the list is validated
           using `validate_params_func`.
         - If any validation fails, a `ValueError` is raised with a message indicating the issue and entry index.
     """
