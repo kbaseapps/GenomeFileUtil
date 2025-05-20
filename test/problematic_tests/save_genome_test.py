@@ -183,6 +183,17 @@ class SaveGenomeTest(unittest.TestCase):
         # Check warnings
         self.assertEqual(ret['warnings'], warnings)
 
+    def check_hidden(self, target_genome_name):
+        object_list = self.wsClient.list_objects({'workspaces': [self.wsName]})
+        genome_names = [object_info[1] for object_info in object_list]
+        self.assertNotIn(target_genome_name, genome_names)
+
+        object_list = self.wsClient.list_objects(
+            {'workspaces': [self.wsName], 'showHidden':1}
+        )
+        genome_names = [object_info[1] for object_info in object_list]
+        self.assertIn(target_genome_name, genome_names)
+
     def test_bad_one_genome_params(self):
         self.start_test()
         invalidate_params = {'missing_workspace': 'workspace',
@@ -202,20 +213,23 @@ class SaveGenomeTest(unittest.TestCase):
 
     def test_one_genome_with_hidden(self):
         self.start_test()
-        genome_name = 'test_genome_hidden'
+        genome_name = 'test_genome_hidden_1'
         params = {'workspace': self.wsName,
                   'name': genome_name,
                   'data': self.test_genome_data,
                   'hidden': 1}
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
         self.check_save_one_genome_output(ret, genome_name)
+        self.check_hidden(genome_name)
 
+        genome_name = 'test_genome_hidden_2'
         params = {'workspace': self.wsName,
                   'name': genome_name,
                   'data': self.test_genome_data,
                   'hidden': True}
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
         self.check_save_one_genome_output(ret, genome_name)
+        self.check_hidden(genome_name)
 
     def test_genomes(self):
         self.start_test()
