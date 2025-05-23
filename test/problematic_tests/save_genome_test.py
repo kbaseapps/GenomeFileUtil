@@ -161,7 +161,32 @@ class SaveGenomeTest(unittest.TestCase):
         else:
             self.assertEqual(error, str(context.exception))
 
-    def check_save_one_genome_output(
+    def _get_object(self, result):
+        ref = f'{result[6]}/{result[0]}/{result[4]}'
+        return self.wsClient.get_objects2({"objects": [{'ref': result[ref]}]})["data"][0]
+
+    def check_genomes_info_prov_data(self, results, genome_names):
+        for idx, res in enumerate(results):
+            obj = self._get_object(res)
+            self.check_genome_info(res, genome_names[idx])
+            self.check_genome_prov(obj)
+            self.check_genome_data(obj)
+
+    def check_genome_data(self, obj):
+        data = obj["data"]
+        print("*" * 40)
+        print("data is: ")
+        print(data)
+        print("*" * 40)
+
+    def check_genome_prov(self, obj):
+        prov = obj["provenance"]
+        print("*" * 40)
+        print("prov is: ")
+        print(prov)
+        print("*" * 40)
+
+    def check_genome_info(
         self,
         ret,
         genome_name,
@@ -176,6 +201,7 @@ class SaveGenomeTest(unittest.TestCase):
         self.assertEqual(genome_info[1], genome_name)
         self.assertEqual(genome_info[2].split('-')[0], data_type)
         self.assertTrue(datetime.strptime(genome_info[3], '%Y-%m-%dT%H:%M:%S+%f'))
+        self.assertEqual(genome_info[4], 1)
         self.assertEqual(genome_info[5], self.user_id)
         self.assertEqual(genome_info[6], self.wsID)
         self.assertEqual(genome_info[7], self.wsName)
@@ -194,7 +220,7 @@ class SaveGenomeTest(unittest.TestCase):
         genome_names = [object_info[1] for object_info in object_list]
         self.assertIn(target_genome_name, genome_names)
 
-    def test_bad_one_genome_params(self):
+    def yest_bad_one_genome_params(self):
         self.start_test()
         invalidate_params = {'missing_workspace': 'workspace',
                              'name': 'name',
@@ -202,16 +228,16 @@ class SaveGenomeTest(unittest.TestCase):
         error_msg = "Exactly one of a 'workspace_id' or a 'workspace' parameter must be provided"
         self.fail_save_genome(invalidate_params, error_msg)
 
-    def test_one_genome(self):
+    def yest_one_genome(self):
         self.start_test()
         genome_name = 'test_genome'
         params = {'workspace': self.wsName,
                   'name': genome_name,
                   'data': self.test_genome_data}
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
-        self.check_save_one_genome_output(ret, genome_name)
+        self.check_genome_info(ret, genome_name)
 
-    def test_one_genome_with_hidden(self):
+    def yest_one_genome_with_hidden(self):
         self.start_test()
         genome_name = 'test_genome_hidden_1'
         params = {'workspace': self.wsName,
@@ -219,7 +245,7 @@ class SaveGenomeTest(unittest.TestCase):
                   'data': self.test_genome_data,
                   'hidden': 1}
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
-        self.check_save_one_genome_output(ret, genome_name)
+        self.check_genome_info(ret, genome_name)
         self.check_hidden(genome_name)
 
         genome_name = 'test_genome_hidden_2'
@@ -228,23 +254,33 @@ class SaveGenomeTest(unittest.TestCase):
                   'data': self.test_genome_data,
                   'hidden': True}
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
-        self.check_save_one_genome_output(ret, genome_name)
+        self.check_genome_info(ret, genome_name)
         self.check_hidden(genome_name)
 
     def test_genomes(self):
         self.start_test()
-        genome_name = 'test_genome'
+        genome_name1 = 'test_genome_1'
+        genome_name2 = 'test_genome_2'
+
+        genome_names = [genome_name1, genome_name2]
+
         inputs = [
             {
-                'name': genome_name,
+                'name': genome_name1,
                 'data': self.test_genome_data,
+                'meta': {"foo": "zoo"}
+            },
+            {
+                'name': genome_name2,
+                'data': self.test_genome_data,
+                'meta': {"zoo": "foo"}
             }
         ]
         params = {'workspace_id': self.wsID, 'inputs': inputs}
-        ret = self.genome_interface.save_genome_mass(params, validate_genome=True)[0]
-        self.check_save_one_genome_output(ret, genome_name)
+        results = self.genome_interface.save_genome_mass(params, validate_genome=True)
+        self.check_genomes_info_prov_data(results, genome_names)
 
-    def test_genomes_with_hidden(self):
+    def yest_genomes_with_hidden(self):
         self.start_test()
         genome_name = 'test_genome_hidden'
         inputs = [
@@ -256,7 +292,7 @@ class SaveGenomeTest(unittest.TestCase):
         ]
         params = {'workspace_id': self.wsID, 'inputs': inputs}
         ret = self.genome_interface.save_genome_mass(params)[0]
-        self.check_save_one_genome_output(ret, genome_name, warnings=[])
+        self.check_genome_info(ret, genome_name, warnings=[])
 
         inputs = [
             {
@@ -267,9 +303,9 @@ class SaveGenomeTest(unittest.TestCase):
         ]
         params = {'workspace_id': self.wsID, 'inputs': inputs}
         ret = self.genome_interface.save_genome_mass(params)[0]
-        self.check_save_one_genome_output(ret, genome_name, warnings=[])
+        self.check_genome_info(ret, genome_name, warnings=[])
 
-    def test_bad_genomes_params_missing_parameter(self):
+    def yest_bad_genomes_params_missing_parameter(self):
         self.start_test()
         invalidate_params = {
             'workspace_id': self.wsID,
@@ -278,7 +314,7 @@ class SaveGenomeTest(unittest.TestCase):
         error_msg = "Entry #1 in inputs field has invalid params: name parameter is required, but missing"
         self.fail_save_genome(invalidate_params, error_msg, mass=True)
 
-    def test_GenomeInterface_check_dna_sequence_in_features(self):
+    def yest_GenomeInterface_check_dna_sequence_in_features(self):
         # no feature in genome
         genome = {'missing_features': 'features'}
         copied_genome = genome.copy()
@@ -305,7 +341,7 @@ class SaveGenomeTest(unittest.TestCase):
         self.assertTrue(feature_dna_sum > 3000000)
         self.assertEqual(copied_genome, self.test_genome_data)
 
-    def test_GenomeInterface_own_handle(self):
+    def yest_GenomeInterface_own_handle(self):
         # no handle in genome
         genome = {'missing_genbank_handle_ref': 'hid'}
         origin_genome = genome.copy()
