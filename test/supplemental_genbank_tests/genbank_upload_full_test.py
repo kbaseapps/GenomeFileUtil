@@ -17,10 +17,11 @@ from installed_clients.AbstractHandleClient import AbstractHandle as HandleServi
 from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.WorkspaceClient import Workspace as workspaceService
 from conftest import assert_exception_correct
+from test_utils import check_result_object_info_provenance_data
 
-_UPA_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/[0-9]$')
-_OBJECT_VERSION_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/1$')
-_PROV_SUBACTION_VERSION_PATTERN = re.compile(r'^\d+\.\d+\.\d+-(release|beta)$')
+# _UPA_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/[0-9]$')
+# _OBJECT_VERSION_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/1$')
+# _PROV_SUBACTION_VERSION_PATTERN = re.compile(r'^\d+\.\d+\.\d+-(release|beta)$')
 
 class GenomeFileUtilTest(unittest.TestCase):
     @classmethod
@@ -225,179 +226,179 @@ class GenomeFileUtilTest(unittest.TestCase):
         with open(json_path, "w") as outfile:
             json.dump(dictionary, outfile)
 
-    def _get_blob_id(self, handle_id):
-        handles = self.hs.hids_to_handles([handle_id])
-        blob_id = handles[0]['id']
-        return blob_id
+    # def _get_blob_id(self, handle_id):
+    #     handles = self.hs.hids_to_handles([handle_id])
+    #     blob_id = handles[0]['id']
+    #     return blob_id
 
-    def _download_file_from_blobstore(self, handle_id):
-        output_dir = self.cfg['scratch'] + "/" + str(uuid.uuid4())
-        os.makedirs(output_dir)
-        file_ret = self.dfuClient.shock_to_file(
-            {
-                'handle_id': handle_id,
-                'file_path': output_dir,
-                'unpack': 'unpack',
-            }
-        )
-        return file_ret
+    # def _download_file_from_blobstore(self, handle_id):
+    #     output_dir = self.cfg['scratch'] + "/" + str(uuid.uuid4())
+    #     os.makedirs(output_dir)
+    #     file_ret = self.dfuClient.shock_to_file(
+    #         {
+    #             'handle_id': handle_id,
+    #             'file_path': output_dir,
+    #             'unpack': 'unpack',
+    #         }
+    #     )
+    #     return file_ret
 
-    def _calculate_md5sum(self, file_path):
-        md5 = hashlib.md5()
-        with open(file_path, "rb") as f:
-            for chunk in iter(lambda: f.read(4096), b""):
-                md5.update(chunk)
-        return md5.hexdigest()
+    # def _calculate_md5sum(self, file_path):
+    #     md5 = hashlib.md5()
+    #     with open(file_path, "rb") as f:
+    #         for chunk in iter(lambda: f.read(4096), b""):
+    #             md5.update(chunk)
+    #     return md5.hexdigest()
 
-    def _retrieve_provenance(self, provenance):
-        # make a deep copy to avoid modifying the original provenance
-        provs = [prov.copy() for prov in provenance]
-        for prov in provs:
-            for key in ["time", "epoch"]:
-                prov.pop(key)
-            for subaction in prov['subactions']:
-                subaction.pop("commit")
-                if subaction["name"] != "GenomeFileUtil":
-                    version = subaction.pop("ver")
-                    assert _PROV_SUBACTION_VERSION_PATTERN.match(version)
-        return provs
+    # def _retrieve_provenance(self, provenance):
+    #     # make a deep copy to avoid modifying the original provenance
+    #     provs = [prov.copy() for prov in provenance]
+    #     for prov in provs:
+    #         for key in ["time", "epoch"]:
+    #             prov.pop(key)
+    #         for subaction in prov['subactions']:
+    #             subaction.pop("commit")
+    #             if subaction["name"] != "GenomeFileUtil":
+    #                 version = subaction.pop("ver")
+    #                 assert _PROV_SUBACTION_VERSION_PATTERN.match(version)
+    #     return provs
 
-    def _check_assembly_upa(self, retrieved_upa, expected_upa):
-        assert _UPA_PATTERN.match(retrieved_upa)
-        assert retrieved_upa == expected_upa
+    # def _check_assembly_upa(self, retrieved_upa, expected_upa):
+    #     assert _UPA_PATTERN.match(retrieved_upa)
+    #     assert retrieved_upa == expected_upa
 
-    def _retrieve_genome_metadata(self, metadata, expected_assembly_upa):
-        # make a deep copy to avoid modifying the original metadata
-        metadata = deepcopy(metadata)
-        retrieved_assembly_upa = metadata.pop("Assembly Object")
-        self._check_assembly_upa(retrieved_assembly_upa, expected_assembly_upa)
-        return metadata
+    # def _retrieve_genome_metadata(self, metadata, expected_assembly_upa):
+    #     # make a deep copy to avoid modifying the original metadata
+    #     metadata = deepcopy(metadata)
+    #     retrieved_assembly_upa = metadata.pop("Assembly Object")
+    #     self._check_assembly_upa(retrieved_assembly_upa, expected_assembly_upa)
+    #     return metadata
 
-    def _retrieve_genome_data(self, data, expected_assembly_ref):
-        # make a deep copy to avoid modifying the original genome data
-        data = deepcopy(data)
-        for key in ["cdss", "features", "mrnas", "non_coding_features"]:
-            for dist in data.get(key):
-                if dist.get("aliases"):
-                    dist["aliases"] = sorted(dist["aliases"])
+    # def _retrieve_genome_data(self, data, expected_assembly_ref):
+    #     # make a deep copy to avoid modifying the original genome data
+    #     data = deepcopy(data)
+    #     for key in ["cdss", "features", "mrnas", "non_coding_features"]:
+    #         for dist in data.get(key):
+    #             if dist.get("aliases"):
+    #                 dist["aliases"] = sorted(dist["aliases"])
 
-        retrieved_assembly_ref = data.pop("assembly_ref")
-        assert _UPA_PATTERN.match(retrieved_assembly_ref)
-        assert retrieved_assembly_ref == expected_assembly_ref
+    #     retrieved_assembly_ref = data.pop("assembly_ref")
+    #     assert _UPA_PATTERN.match(retrieved_assembly_ref)
+    #     assert retrieved_assembly_ref == expected_assembly_ref
 
-        # check handle ref
-        handle_id = data.pop("genbank_handle_ref")
-        file_ret = self._download_file_from_blobstore(handle_id)
+    #     # check handle ref
+    #     handle_id = data.pop("genbank_handle_ref")
+    #     file_ret = self._download_file_from_blobstore(handle_id)
 
-        file_path = file_ret['file_path']
-        retrieved_node_filename = file_ret['node_file_name']
-        retrieved_genome_md5sum = self._calculate_md5sum(file_path)
+    #     file_path = file_ret['file_path']
+    #     retrieved_node_filename = file_ret['node_file_name']
+    #     retrieved_genome_md5sum = self._calculate_md5sum(file_path)
 
-        for ontology_event in data.get("ontology_events", []):
-            ontology_event.pop("timestamp")
-            ontology_ref = ontology_event.pop("ontology_ref")
-            assert _UPA_PATTERN.match(ontology_ref)
+    #     for ontology_event in data.get("ontology_events", []):
+    #         ontology_event.pop("timestamp")
+    #         ontology_ref = ontology_event.pop("ontology_ref")
+    #         assert _UPA_PATTERN.match(ontology_ref)
 
-        return data, retrieved_genome_md5sum, retrieved_node_filename
+    #     return data, retrieved_genome_md5sum, retrieved_node_filename
 
-    def _retrieve_assembly_data(self, data):
-        # make a deep copy to avoid modifying the original assembly data
-        data = deepcopy(data)
+    # def _retrieve_assembly_data(self, data):
+    #     # make a deep copy to avoid modifying the original assembly data
+    #     data = deepcopy(data)
 
-        handle_id = data.pop("fasta_handle_ref")
-        assert handle_id.split("_")[0] == "KBH"
+    #     handle_id = data.pop("fasta_handle_ref")
+    #     assert handle_id.split("_")[0] == "KBH"
 
-        handle_info = data["fasta_handle_info"]
-        blob_id = handle_info.pop("shock_id")
+    #     handle_info = data["fasta_handle_info"]
+    #     blob_id = handle_info.pop("shock_id")
 
-        handle = handle_info['handle']
-        assert handle.pop('hid') == handle_id
-        assert handle.pop('id') == blob_id
+    #     handle = handle_info['handle']
+    #     assert handle.pop('hid') == handle_id
+    #     assert handle.pop('id') == blob_id
 
-        # check handle_id and blob_id are match
-        retrieved_blob_id = self._get_blob_id(handle_id)
-        assert retrieved_blob_id == blob_id
+    #     # check handle_id and blob_id are match
+    #     retrieved_blob_id = self._get_blob_id(handle_id)
+    #     assert retrieved_blob_id == blob_id
 
-        # check handle ref
-        file_ret = self._download_file_from_blobstore(handle_id)
-        file_path = file_ret['file_path']
-        retrieved_node_filename = file_ret['node_file_name']
-        retrieved_assembly_md5sum = self._calculate_md5sum(file_path)
-        assert retrieved_assembly_md5sum == handle["remote_md5"]
+    #     # check handle ref
+    #     file_ret = self._download_file_from_blobstore(handle_id)
+    #     file_path = file_ret['file_path']
+    #     retrieved_node_filename = file_ret['node_file_name']
+    #     retrieved_assembly_md5sum = self._calculate_md5sum(file_path)
+    #     assert retrieved_assembly_md5sum == handle["remote_md5"]
 
-        url = handle.get('url')
-        assert url.startswith('https://')
-        assert url.endswith('kbase.us/services/shock-api')
+    #     url = handle.get('url')
+    #     assert url.startswith('https://')
+    #     assert url.endswith('kbase.us/services/shock-api')
 
-        return data, retrieved_assembly_md5sum, retrieved_node_filename
+    #     return data, retrieved_assembly_md5sum, retrieved_node_filename
 
-    def _get_object(self, result, is_genome):
-        ref = 'genome_ref' if is_genome else 'assembly_ref'
-        assert _OBJECT_VERSION_PATTERN.match(result[ref])
-        return self.wsClient.get_objects2({"objects": [{'ref': result[ref]}]})["data"][0]
+    # def _get_object(self, result, is_genome):
+    #     ref = 'genome_ref' if is_genome else 'assembly_ref'
+    #     assert _OBJECT_VERSION_PATTERN.match(result[ref])
+    #     return self.wsClient.get_objects2({"objects": [{'ref': result[ref]}]})["data"][0]
 
-    def _check_info(self, obj, result, file_name, expected_metadata, is_genome):
-        info = obj["info"]
-        assembly_upa = result["assembly_ref"]
-        object_info = 'genome_info' if is_genome else 'assembly_info'
-        object_name = file_name if is_genome else file_name + "_assembly"
-        object_type = 'KBaseGenomes.Genome' if is_genome else 'KBaseGenomeAnnotations.Assembly'
-        retrieved_metadata = self._retrieve_genome_metadata(info[10], assembly_upa) if is_genome else info[10]
+    # def _check_info(self, obj, result, file_name, expected_metadata, is_genome):
+    #     info = obj["info"]
+    #     assembly_upa = result["assembly_ref"]
+    #     object_info = 'genome_info' if is_genome else 'assembly_info'
+    #     object_name = file_name if is_genome else file_name + "_assembly"
+    #     object_type = 'KBaseGenomes.Genome' if is_genome else 'KBaseGenomeAnnotations.Assembly'
+    #     retrieved_metadata = self._retrieve_genome_metadata(info[10], assembly_upa) if is_genome else info[10]
 
-        assert info == result[object_info]
-        assert info[1] == object_name
-        assert info[2].split('-')[0] == object_type
+    #     assert info == result[object_info]
+    #     assert info[1] == object_name
+    #     assert info[2].split('-')[0] == object_type
 
-        # check version
-        assert info[4] == 1
-        # datetime.fromisoformat is not available in Python 3.6 or below
-        assert datetime.strptime(info[3], '%Y-%m-%dT%H:%M:%S+%f')
-        assert info[6] == self.wsID
-        assert info[7] == self.wsName
+    #     # check version
+    #     assert info[4] == 1
+    #     # datetime.fromisoformat is not available in Python 3.6 or below
+    #     assert datetime.strptime(info[3], '%Y-%m-%dT%H:%M:%S+%f')
+    #     assert info[6] == self.wsID
+    #     assert info[7] == self.wsName
 
-        # check metadata
-        assert retrieved_metadata == expected_metadata
+    #     # check metadata
+    #     assert retrieved_metadata == expected_metadata
 
-    def _check_prov(self, obj, expected_provenance):
-        provenance = obj["provenance"]
-        retrieved_provenance = self._retrieve_provenance(provenance)
-        assert retrieved_provenance == expected_provenance
+    # def _check_prov(self, obj, expected_provenance):
+    #     provenance = obj["provenance"]
+    #     retrieved_provenance = self._retrieve_provenance(provenance)
+    #     assert retrieved_provenance == expected_provenance
 
-    def _check_data(self, obj, result, file_name, expected_data, expected_md5sum, is_genome):
-        data = obj["data"]
-        expected_assembly_ref = result["assembly_ref"]
+    # def _check_data(self, obj, result, file_name, expected_data, expected_md5sum, is_genome):
+    #     data = obj["data"]
+    #     expected_assembly_ref = result["assembly_ref"]
 
-        retrieved_data, retrieved_md5sum, retrieved_node_filename = (
-            self._retrieve_genome_data(data, expected_assembly_ref)
-            if is_genome
-            else self._retrieve_assembly_data(data)
-        )
+    #     retrieved_data, retrieved_md5sum, retrieved_node_filename = (
+    #         self._retrieve_genome_data(data, expected_assembly_ref)
+    #         if is_genome
+    #         else self._retrieve_assembly_data(data)
+    #     )
 
-        expected_node_filename = (
-            file_name + ".gz"
-            if is_genome
-            else file_name + "_assembly.fasta"
-        )
+    #     expected_node_filename = (
+    #         file_name + ".gz"
+    #         if is_genome
+    #         else file_name + "_assembly.fasta"
+    #     )
 
-        assert retrieved_data == expected_data
-        assert retrieved_md5sum == expected_md5sum
-        assert retrieved_node_filename == expected_node_filename
+    #     assert retrieved_data == expected_data
+    #     assert retrieved_md5sum == expected_md5sum
+    #     assert retrieved_node_filename == expected_node_filename
 
-    def _check_result_object_info_provenance_data(
-        self,
-        results,
-        file_names,
-        expected_metadata,
-        expected_provenance,
-        expected_data,
-        expected_md5sum,
-        is_genome=True,
-    ):
-        for idx, res in enumerate(results):
-            obj = self._get_object(res, is_genome)
-            self._check_info(obj, res, file_names[idx], expected_metadata[idx], is_genome)
-            self._check_prov(obj, expected_provenance)
-            self._check_data(obj, res, file_names[idx], expected_data[idx], expected_md5sum[idx], is_genome)
+    # def _check_result_object_info_provenance_data(
+    #     self,
+    #     results,
+    #     file_names,
+    #     expected_metadata,
+    #     expected_provenance,
+    #     expected_data,
+    #     expected_md5sum,
+    #     is_genome=True,
+    # ):
+    #     for idx, res in enumerate(results):
+    #         obj = self._get_object(res, is_genome)
+    #         self._check_info(obj, res, file_names[idx], expected_metadata[idx], is_genome)
+    #         self._check_prov(obj, expected_provenance)
+    #         self._check_data(obj, res, file_names[idx], expected_data[idx], expected_md5sum[idx], is_genome)
 
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
@@ -544,18 +545,30 @@ class GenomeFileUtilTest(unittest.TestCase):
         self.assertEqual(len(results), 3)
 
         # check genome result
-        self._check_result_object_info_provenance_data(
+        check_result_object_info_provenance_data(
             results,
             file_names,
+            self.cfg['scratch'],
+            self.wsClient,
+            self.hs,
+            self.dfuClient,
+            self.wsID,
+            self.wsName,
             genome_metas,
             self.provenance,
             expected_genome_data,
             expected_genome_md5sum
         )
         # check assembly result
-        self._check_result_object_info_provenance_data(
+        check_result_object_info_provenance_data(
             results,
             file_names,
+            self.cfg['scratch'],
+            self.wsClient,
+            self.hs,
+            self.dfuClient,
+            self.wsID,
+            self.wsName,
             assembly_metas,
             self.provenance,
             expected_assembly_data,
