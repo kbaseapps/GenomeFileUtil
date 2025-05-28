@@ -278,7 +278,7 @@ class SaveGenomeTest(unittest.TestCase):
             }
         ]
         params = {'workspace_id': self.wsID, 'inputs': inputs}
-        results = self.genome_interface.save_genome_mass(params, validate_genome=True)[0]
+        results = self.genome_interface.save_genome_mass(params, validate_genome=True)
         self.check_genomes_info_prov_data(results, genome_names)
 
     def yest_genomes_with_hidden(self):
