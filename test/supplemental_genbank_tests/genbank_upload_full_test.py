@@ -79,6 +79,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         cls.wsName = "test_GenomeFileUtil_" + str(suffix)
         cls.wsID = cls.wsClient.create_workspace({'workspace': cls.wsName})[0]
         cls.serviceImpl = GenomeFileUtil(cls.cfg)
+        cls.scratch = cls.cfg['scratch']
         cls.dfuClient = DataFileUtil(os.environ['SDK_CALLBACK_URL'])
         cls.hs = HandleService(cls.cfg['handle-service-url'], token=token)
         cls.kbase_endpoint = cls.cfg['kbase-endpoint']
@@ -366,7 +367,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         check_result_object_info_provenance_data(
             results,
             file_names,
-            self.cfg['scratch'],
+            self.scratch,
             self.wsClient,
             self.hs,
             self.dfuClient,
@@ -381,7 +382,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         check_result_object_info_provenance_data(
             results,
             file_names,
-            self.cfg['scratch'],
+            self.scratch,
             self.wsClient,
             self.hs,
             self.dfuClient,

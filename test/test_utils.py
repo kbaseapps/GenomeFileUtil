@@ -25,25 +25,44 @@ def check_result_object_info_provenance_data(
     is_genome=True,
 ):
     for idx, res in enumerate(results):
-        obj = _get_object(ws_client, res, is_genome)
-        _check_info(obj, res, file_names[idx], expected_metadata[idx], expected_wsID, expected_wsName, is_genome)
+        expected_info, ref, expected_assembly_upa = _get_info_and_ref(res, is_genome)
+        obj = _get_object(ws_client, ref)
+        _check_info(obj, file_names[idx], expected_metadata[idx], expected_wsID, expected_wsName, expected_info, expected_assembly_upa, is_genome)
         _check_prov(obj, expected_provenance)
-        _check_data(obj, res, file_names[idx], scratch_dir, hs_client, dfu_client, expected_data[idx], expected_md5sum[idx], is_genome)
+        _check_data(obj, file_names[idx], scratch_dir, hs_client, dfu_client, expected_data[idx], expected_md5sum[idx], expected_assembly_upa, is_genome)
 
-def _get_object(ws_client, result, is_genome):
-    ref = 'genome_ref' if is_genome else 'assembly_ref'
-    assert _OBJECT_VERSION_PATTERN.match(result[ref])
-    return ws_client.get_objects2({"objects": [{'ref': result[ref]}]})["data"][0]
+def _get_info_and_ref(result, is_genome):
+    # Process the result returned by import_genbank_mass
+    if "genome_ref" in result and "assembly_ref" in result:
+        ref_type = "genome_ref" if is_genome else "assembly_ref"
+        object_info = "genome_info" if is_genome else "assembly_info"
 
-def _check_info(obj, result, file_name, expected_metadata, expected_wsID, expected_wsName, is_genome):
+        info == result[object_info]
+        ref = result[ref_type]
+        assembly_upa = result["assembly_ref"]
+
+    # Process the result returned by save_genome_mass
+    elif "info" in result:
+        info = result["info"]
+        ref = f'{info[6]}/{info[0]}/{info[4]}'
+        assembly_upa = info[10]["Assembly Object"]
+
+    else:
+        raise ValueError("Result must originate from either import_genbank_mass or save_genome_mass.")
+
+    return info, ref, assembly_upa
+
+def _get_object(ws_client, ref):
+    assert _OBJECT_VERSION_PATTERN.match(ref)
+    return ws_client.get_objects2({"objects": [{'ref': ref}]})["data"][0]
+
+def _check_info(obj, file_name, expected_metadata, expected_wsID, expected_wsName, expected_info, expected_assembly_upa, is_genome):
     info = obj["info"]
-    assembly_upa = result["assembly_ref"]
-    object_info = 'genome_info' if is_genome else 'assembly_info'
     object_name = file_name if is_genome else file_name + "_assembly"
     object_type = 'KBaseGenomes.Genome' if is_genome else 'KBaseGenomeAnnotations.Assembly'
-    retrieved_metadata = _retrieve_genome_metadata(info[10], assembly_upa) if is_genome else info[10]
+    retrieved_metadata = _retrieve_genome_metadata(info[10], expected_assembly_upa) if is_genome else info[10]
 
-    assert info == result[object_info]
+    assert info == expected_info
     assert info[1] == object_name
     assert info[2].split('-')[0] == object_type
 
@@ -88,17 +107,16 @@ def _retrieve_provenance(provenance):
 
 def _check_data(
     obj,
-    result,
     file_name,
     scratch_dir,
     hs_client,
     dfu_client,
     expected_data,
     expected_md5sum,
+    expected_assembly_ref,
     is_genome
 ):
     data = obj["data"]
-    expected_assembly_ref = result["assembly_ref"]
 
     retrieved_data, retrieved_md5sum, retrieved_node_filename = (
         _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref)
