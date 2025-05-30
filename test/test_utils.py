@@ -37,7 +37,7 @@ def _get_info_and_ref(result, is_genome):
         ref_type = "genome_ref" if is_genome else "assembly_ref"
         object_info = "genome_info" if is_genome else "assembly_info"
 
-        info == result[object_info]
+        info = result[object_info]
         ref = result[ref_type]
         assembly_upa = result["assembly_ref"]
 
