@@ -12,7 +12,7 @@ from installed_clients.AbstractHandleClient import AbstractHandle as HandleServi
 from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.WorkspaceClient import Workspace as workspaceService
 from conftest import assert_exception_correct
-from test_utils import check_result_object_info_provenance_data
+from test_utils import check_result_object_info_provenance_data, PROVENANCE
 
 
 class GenomeFileUtilTest(unittest.TestCase):
@@ -22,44 +22,7 @@ class GenomeFileUtilTest(unittest.TestCase):
         # WARNING: don't call any logging methods on the context object,
         # it'll result in a NoneType error
         cls.ctx = MethodContext(None)
-        cls.provenance = [
-            {
-                "service": "GenomeFileUtil",
-                "service_ver": "local-dev",
-                "method": "run_local_tests",
-                "method_params": [],
-                "input_ws_objects": [],
-                "resolved_ws_objects": [],
-                "intermediate_incoming": [],
-                "intermediate_outgoing": [],
-                "external_data": [],
-                "subactions": [
-                    {
-                        "name": "GenomeFileUtil",
-                        "ver": "local-dev",
-                        "code_url": "https://localhost",
-                    },
-                    {
-                        "name": "AssemblyUtil",
-                        "code_url": "https://github.com/kbaseapps/AssemblyUtil",
-                    },
-                    {
-                        "name": "DataFileUtil",
-                        "code_url": "https://github.com/kbaseapps/DataFileUtil",
-                    },
-                    {
-                        'name': 'GenomeAnnotationAPI',
-                        'code_url': 'https://github.com/kbase/genome_annotation_api',
-                    },
-                    {
-                        "name": "WsLargeDataIO",
-                        "code_url": "https://github.com/kbaseapps/WsLargeDataIO",
-                    },
-                ],
-                "custom": {},
-                "description": "KBase SDK method run via the KBase Execution Engine",
-            }
-        ]
+        cls.provenance = PROVENANCE
         cls.ctx.update(
             {
                 'token': token,

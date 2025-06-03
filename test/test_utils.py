@@ -9,6 +9,45 @@ _UPA_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/[0-9]$')
 _OBJECT_VERSION_PATTERN = re.compile(r'^[0-9]+\/[0-9]+\/1$')
 _PROV_SUBACTION_VERSION_PATTERN = re.compile(r'^\d+\.\d+\.\d+-(release|beta)$')
 
+PROVENANCE = [
+    {
+        "service": "GenomeFileUtil",
+        "service_ver": "local-dev",
+        "method": "run_local_tests",
+        "method_params": [],
+        "input_ws_objects": [],
+        "resolved_ws_objects": [],
+        "intermediate_incoming": [],
+        "intermediate_outgoing": [],
+        "external_data": [],
+        "subactions": [
+            {
+                "name": "GenomeFileUtil",
+                "ver": "local-dev",
+                "code_url": "https://localhost",
+            },
+            {
+                "name": "AssemblyUtil",
+                "code_url": "https://github.com/kbaseapps/AssemblyUtil",
+            },
+            {
+                "name": "DataFileUtil",
+                "code_url": "https://github.com/kbaseapps/DataFileUtil",
+            },
+            {
+                "name": "GenomeAnnotationAPI",
+                "code_url": "https://github.com/kbase/genome_annotation_api",
+            },
+            {
+                "name": "WsLargeDataIO",
+                "code_url": "https://github.com/kbaseapps/WsLargeDataIO",
+            },
+        ],
+        "custom": {},
+        "description": "KBase SDK method run via the KBase Execution Engine",
+    }
+]
+
 def check_result_object_info_provenance_data(
     results,
     file_names,
@@ -129,6 +168,21 @@ def _check_data(
         if is_genome
         else file_name + "_assembly.fasta"
     )
+    print("*" * 40)
+    print(f"file_name is {file_name}")
+    print("*" * 40)
+
+    print("*" * 40)
+    print(f"retrieved_data is {retrieved_data}")
+    print("*" * 40)
+
+    print("*" * 40)
+    print(f"retrieved_md5sum is {retrieved_md5sum}")
+    print("*" * 40)
+
+    print("*" * 40)
+    print(f"retrieved_node_filename is {retrieved_node_filename}")
+    print("*" * 40)
 
     assert retrieved_data == expected_data
     assert retrieved_md5sum == expected_md5sum

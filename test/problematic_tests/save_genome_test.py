@@ -16,6 +16,7 @@ from datetime import datetime
 import requests  # noqa: F401
 
 from installed_clients.AssemblyUtilClient import AssemblyUtil
+from installed_clients.AbstractHandleClient import AbstractHandle as HandleService
 from installed_clients.DataFileUtilClient import DataFileUtil
 from GenomeFileUtil.GenomeFileUtilImpl import GenomeFileUtil
 from GenomeFileUtil.GenomeFileUtilImpl import SDKConfig
@@ -23,6 +24,7 @@ from GenomeFileUtil.GenomeFileUtilServer import MethodContext
 from GenomeFileUtil.authclient import KBaseAuth as _KBaseAuth
 from GenomeFileUtil.core.GenomeInterface import GenomeInterface
 from installed_clients.WorkspaceClient import Workspace as workspaceService
+from test_utils import check_result_object_info_provenance_data, PROVENANCE
 
 _KBASE_GENOME = "KBaseGenomes.Genome"
 _GENOME_FILE_WARNINGS = [
@@ -66,6 +68,8 @@ class SaveGenomeTest(unittest.TestCase):
         cls.callback_url = os.environ['SDK_CALLBACK_URL']
 
         cls.dfu = DataFileUtil(cls.callback_url)
+        cls.hs = HandleService(cls.cfg['handle-service-url'], token=cls.token)
+        cls.provenance = PROVENANCE
         cls.cfg['KB_AUTH_TOKEN'] = cls.token
 
         # build genome interface instance
@@ -265,6 +269,55 @@ class SaveGenomeTest(unittest.TestCase):
 
         genome_names = [genome_name1, genome_name2]
 
+        genome_metas = [
+            {
+                "Taxonomy": "cellular organisms; Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales; Enterobacteriaceae; Escherichia; Escherichia coli; Escherichia coli K-12",
+                "Size": "4641652",
+                "foo": "zoo",
+                "Source": "RefSeq",
+                "Name": "Escherichia coli str. K-12 substr. MG1655",
+                "GC content": "0.50791",
+                "Genetic code": "11",
+                "Number of Genome Level Warnings": "3",
+                "Source ID": "NC_000913",
+                "Number of Protein Encoding Genes": "0",
+                "Number contigs": "1",
+                "Domain": "Bacteria",
+                "Number of CDS": "4319",
+                "Genome Type": "Unknown",
+                "MD5": "afd67f98d72869f1e5b943aa9efd72af",
+            },
+            {
+                "Taxonomy": "cellular organisms; Bacteria; Proteobacteria; Gammaproteobacteria; Enterobacteriales; Enterobacteriaceae; Escherichia; Escherichia coli; Escherichia coli K-12",
+                "Size": "4641652",
+                "Source": "RefSeq",
+                "Name": "Escherichia coli str. K-12 substr. MG1655",
+                "GC content": "0.50791",
+                "Genetic code": "11",
+                "Number of Genome Level Warnings": "3",
+                "Source ID": "NC_000913",
+                "Number of Protein Encoding Genes": "0",
+                "Number contigs": "1",
+                "zoo": "foo",
+                "Domain": "Bacteria",
+                "Number of CDS": "4319",
+                "Genome Type": "Unknown",
+                "MD5": "afd67f98d72869f1e5b943aa9efd72af",
+            }
+        ]
+
+        expected_genome_data = [
+            {},
+            {},
+            {},
+        ]
+
+        expected_genome_md5sum = [
+            "",
+            "",
+            "",
+        ]
+
         inputs = [
             {
                 'name': genome_name1,
@@ -279,7 +332,22 @@ class SaveGenomeTest(unittest.TestCase):
         ]
         params = {'workspace_id': self.wsID, 'inputs': inputs}
         results = self.genome_interface.save_genome_mass(params, validate_genome=True)
-        self.check_genomes_info_prov_data(results, genome_names)
+
+        # check genome result
+        check_result_object_info_provenance_data(
+            results,
+            genome_names,
+            self.scratch,
+            self.wsClient,
+            self.hs,
+            self.dfu,
+            self.wsID,
+            self.wsName,
+            genome_metas,
+            self.provenance,
+            expected_genome_data,
+            expected_genome_md5sum
+        )
 
     def yest_genomes_with_hidden(self):
         self.start_test()
