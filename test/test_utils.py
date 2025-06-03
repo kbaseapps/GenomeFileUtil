@@ -200,6 +200,10 @@ def _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref):
     assert _UPA_PATTERN.match(retrieved_assembly_ref)
     assert retrieved_assembly_ref == expected_assembly_ref
 
+    print("*" * 40)
+    print(f"data before pop is: {data}")
+    print("*" * 40)
+
     # check handle ref
     handle_id = data.pop("genbank_handle_ref")
     file_ret = _download_file_from_blobstore(dfu_client, scratch_dir, handle_id)
