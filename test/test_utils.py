@@ -191,6 +191,11 @@ def _check_data(
 def _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref):
     # make a deep copy to avoid modifying the original genome data
     data = deepcopy(data)
+
+    print("*" * 40)
+    print(f"data before processing is: {data}")
+    print("*" * 40)
+
     for key in ["cdss", "features", "mrnas", "non_coding_features"]:
         for dist in data.get(key):
             if dist.get("aliases"):
@@ -200,9 +205,9 @@ def _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref):
     assert _UPA_PATTERN.match(retrieved_assembly_ref)
     assert retrieved_assembly_ref == expected_assembly_ref
 
-    print("*" * 40)
-    print(f"data before pop is: {data}")
-    print("*" * 40)
+    # print("*" * 40)
+    # print(f"data before pop is: {data}")
+    # print("*" * 40)
 
     # check handle ref
     handle_id = data.pop("genbank_handle_ref")
