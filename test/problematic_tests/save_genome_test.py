@@ -10,8 +10,9 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from configparser import ConfigParser
-from os import environ
+from copy import deepcopy
 from datetime import datetime
+from os import environ
 
 import requests  # noqa: F401
 
@@ -262,8 +263,27 @@ class SaveGenomeTest(unittest.TestCase):
         self.check_genome_info(ret, genome_name)
         self.check_hidden(genome_name)
 
+    def _setup_handle(self):
+        # Save genome file to scratch dir
+        file_path =  os.path.join(self.scratch, "e_coli_with_assembly.json")
+        with open(file_path, "w") as f:
+            json.dump(self.test_genome_data, f, indent=4)
+
+        # Upload to blobstore
+        shock_ret = self.dfu.file_to_shock(
+            {"file_path": file_path, "make_handle": 1, "pack": "gzip"}
+        )
+
+        # Return updated genome
+        genome_with_handle_ref = deepcopy(self.test_genome_data)
+        genome_with_handle_ref["genbank_handle_ref"] = shock_ret['handle']['hid']
+        return genome_with_handle_ref
+
     def test_genomes(self):
         self.start_test()
+
+        genome_with_handle_ref = self._setup_handle()
+
         genome_name1 = 'test_genome_1'
         genome_name2 = 'test_genome_2'
 
@@ -321,12 +341,12 @@ class SaveGenomeTest(unittest.TestCase):
         inputs = [
             {
                 'name': genome_name1,
-                'data': self.test_genome_data,
+                'data': genome_with_handle_ref,
                 'meta': {"foo": "zoo"}
             },
             {
                 'name': genome_name2,
-                'data': self.test_genome_data,
+                'data': genome_with_handle_ref,
                 'meta': {"zoo": "foo"}
             }
         ]
