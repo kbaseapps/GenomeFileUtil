@@ -1,4 +1,3 @@
-import json
 import os
 import pytest
 import shutil
@@ -12,7 +11,7 @@ from installed_clients.AbstractHandleClient import AbstractHandle as HandleServi
 from installed_clients.DataFileUtilClient import DataFileUtil
 from installed_clients.WorkspaceClient import Workspace as workspaceService
 from conftest import assert_exception_correct
-from test_utils import check_result_object_info_provenance_data, PROVENANCE
+from test_utils import check_result_object_info_provenance_data, PROVENANCE, load_expected_data
 
 
 class GenomeFileUtilTest(unittest.TestCase):
@@ -173,15 +172,6 @@ class GenomeFileUtilTest(unittest.TestCase):
             self.serviceImpl.genbanks_to_genomes(self.ctx, params)
         assert_exception_correct(got.value, ValueError(error_message))
 
-    def _load_expected_data(self, json_path):
-        with open(json_path, "r") as read_file:
-            data = json.load(read_file)
-        return data
-
-    def _dump_retrieved_data(self, json_path, dictionary):
-        with open(json_path, "w") as outfile:
-            json.dump(dictionary, outfile)
-
     def test_genbank_to_genome_invalid_workspace(self):
         genome_name = "GCF_000970165.1_ASM97016v1_genomic.gbff.gz"
         params = {
@@ -271,15 +261,15 @@ class GenomeFileUtilTest(unittest.TestCase):
         ]
 
         expected_genome_data = [
-            self._load_expected_data("data/genome_curated/genome_Cyanidioschyzon_merolae_one_locus.json"),
-            self._load_expected_data("data/genome_curated/genome_mRNA_with_no_parent.json"),
-            self._load_expected_data("data/genome_curated/genome_ontology.json"),
+            load_expected_data("data/genome_curated/genome_Cyanidioschyzon_merolae_one_locus.json"),
+            load_expected_data("data/genome_curated/genome_mRNA_with_no_parent.json"),
+            load_expected_data("data/genome_curated/genome_ontology.json"),
         ]
 
         expected_assembly_data = [
-            self._load_expected_data("data/genome_curated/assembly_Cyanidioschyzon_merolae_one_locus.json"),
-            self._load_expected_data("data/genome_curated/assembly_mRNA_with_no_parent.json"),
-            self._load_expected_data("data/genome_curated/assembly_ontology.json"),
+            load_expected_data("data/genome_curated/assembly_Cyanidioschyzon_merolae_one_locus.json"),
+            load_expected_data("data/genome_curated/assembly_mRNA_with_no_parent.json"),
+            load_expected_data("data/genome_curated/assembly_ontology.json"),
         ]
 
         expected_genome_md5sum = [

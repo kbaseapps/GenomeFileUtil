@@ -1,5 +1,6 @@
 from copy import deepcopy
 import hashlib
+import json
 import os
 import re
 from datetime import datetime
@@ -215,7 +216,7 @@ def _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref):
 
     file_path = file_ret['file_path']
     retrieved_node_filename = file_ret['node_file_name']
-    retrieved_genome_md5sum = _calculate_md5sum(file_path)
+    retrieved_genome_md5sum = calculate_md5sum(file_path)
 
     for ontology_event in data.get("ontology_events", []):
         ontology_event.pop("timestamp")
@@ -246,7 +247,7 @@ def _retrieve_assembly_data(hs_client, dfu_client, scratch_dir, data):
     file_ret = _download_file_from_blobstore(dfu_client, scratch_dir, handle_id)
     file_path = file_ret['file_path']
     retrieved_node_filename = file_ret['node_file_name']
-    retrieved_assembly_md5sum = _calculate_md5sum(file_path)
+    retrieved_assembly_md5sum = calculate_md5sum(file_path)
     assert retrieved_assembly_md5sum == handle["remote_md5"]
 
     url = handle.get('url')
@@ -267,12 +268,17 @@ def _download_file_from_blobstore(dfu_client, scratch_dir, handle_id):
     )
     return file_ret
 
-def _calculate_md5sum(file_path):
+def calculate_md5sum(file_path):
     md5 = hashlib.md5()
     with open(file_path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             md5.update(chunk)
     return md5.hexdigest()
+
+def load_expected_data(json_path):
+    with open(json_path, "r") as read_file:
+        data = json.load(read_file)
+    return data
 
 def _get_blob_id(hs_client, handle_id):
     handles = hs_client.hids_to_handles([handle_id])

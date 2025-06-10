@@ -25,7 +25,7 @@ from GenomeFileUtil.GenomeFileUtilServer import MethodContext
 from GenomeFileUtil.authclient import KBaseAuth as _KBaseAuth
 from GenomeFileUtil.core.GenomeInterface import GenomeInterface
 from installed_clients.WorkspaceClient import Workspace as workspaceService
-from test_utils import check_result_object_info_provenance_data, PROVENANCE
+from test_utils import check_result_object_info_provenance_data, PROVENANCE, calculate_md5sum, load_expected_data
 
 _KBASE_GENOME = "KBaseGenomes.Genome"
 _GENOME_FILE_WARNINGS = [
@@ -166,33 +166,7 @@ class SaveGenomeTest(unittest.TestCase):
         else:
             self.assertEqual(error, str(context.exception))
 
-    def _get_object(self, result):
-        info = result["info"]
-        ref = f'{info[6]}/{info[0]}/{info[4]}'
-        return self.wsClient.get_objects2({"objects": [{'ref': ref}]})["data"][0]
-
-    def check_genomes_info_prov_data(self, results, genome_names):
-        for idx, res in enumerate(results):
-            obj = self._get_object(res)
-            self.check_genome_info(res, genome_names[idx])
-            self.check_genome_prov(obj)
-            self.check_genome_data(obj)
-
-    def check_genome_data(self, obj):
-        data = obj["data"]
-        print("*" * 40)
-        print("data is: ")
-        print(data)
-        print("*" * 40)
-
-    def check_genome_prov(self, obj):
-        prov = obj["provenance"]
-        print("*" * 40)
-        print("prov is: ")
-        print(prov)
-        print("*" * 40)
-
-    def check_genome_info(
+    def check_save_one_genome_output(
         self,
         ret,
         genome_name,
@@ -241,7 +215,7 @@ class SaveGenomeTest(unittest.TestCase):
                   'name': genome_name,
                   'data': self.test_genome_data}
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
-        self.check_genome_info(ret, genome_name)
+        self.check_save_one_genome_output(ret, genome_name)
 
     def yest_one_genome_with_hidden(self):
         self.start_test()
@@ -251,7 +225,7 @@ class SaveGenomeTest(unittest.TestCase):
                   'data': self.test_genome_data,
                   'hidden': 1}
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
-        self.check_genome_info(ret, genome_name)
+        self.check_save_one_genome_output(ret, genome_name)
         self.check_hidden(genome_name)
 
         genome_name = 'test_genome_hidden_2'
@@ -260,7 +234,7 @@ class SaveGenomeTest(unittest.TestCase):
                   'data': self.test_genome_data,
                   'hidden': True}
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
-        self.check_genome_info(ret, genome_name)
+        self.check_save_one_genome_output(ret, genome_name)
         self.check_hidden(genome_name)
 
     def _setup_handle(self, file_name):
@@ -268,6 +242,9 @@ class SaveGenomeTest(unittest.TestCase):
         file_path =  os.path.join(self.scratch, file_name)
         with open(file_path, "w") as f:
             json.dump(self.test_genome_data, f, indent=4)
+
+        # Calculate expected md5sum
+        md5sum = calculate_md5sum(file_path)
 
         # Upload to blobstore
         shock_ret = self.dfu.file_to_shock(
@@ -277,7 +254,7 @@ class SaveGenomeTest(unittest.TestCase):
         # Return updated genome
         genome_with_handle_ref = deepcopy(self.test_genome_data)
         genome_with_handle_ref["genbank_handle_ref"] = shock_ret['handle']['hid']
-        return genome_with_handle_ref
+        return genome_with_handle_ref, md5sum
 
     def test_genomes(self):
         self.start_test()
@@ -285,10 +262,11 @@ class SaveGenomeTest(unittest.TestCase):
         genome_name1 = 'e_coli_with_assembly_1.json'
         genome_name2 = 'e_coli_with_assembly_2.json'
 
-        genome_with_handle_ref_1 = self._setup_handle(genome_name1)
-        genome_with_handle_ref_2 = self._setup_handle(genome_name2)
+        genome_with_handle_ref_1, genome1_md5sum = self._setup_handle(genome_name1)
+        genome_with_handle_ref_2, genome2_md5sum= self._setup_handle(genome_name2)
 
         file_names = [genome_name1, genome_name2]
+        expected_genome_md5sum = [genome1_md5sum, genome2_md5sum]
 
         genome_metas = [
             {
@@ -328,15 +306,8 @@ class SaveGenomeTest(unittest.TestCase):
         ]
 
         expected_genome_data = [
-            {},
-            {},
-            {},
-        ]
-
-        expected_genome_md5sum = [
-            "",
-            "",
-            "",
+            load_expected_data("data/e_coli/e_coli_with_assembly_curated.json"),
+            load_expected_data("data/e_coli/e_coli_with_assembly_curated.json"),
         ]
 
         inputs = [
@@ -382,7 +353,7 @@ class SaveGenomeTest(unittest.TestCase):
         ]
         params = {'workspace_id': self.wsID, 'inputs': inputs}
         ret = self.genome_interface.save_genome_mass(params)[0]
-        self.check_genome_info(ret, genome_name, warnings=[])
+        self.check_save_one_genome_output(ret, genome_name, warnings=[])
 
         inputs = [
             {
@@ -393,7 +364,7 @@ class SaveGenomeTest(unittest.TestCase):
         ]
         params = {'workspace_id': self.wsID, 'inputs': inputs}
         ret = self.genome_interface.save_genome_mass(params)[0]
-        self.check_genome_info(ret, genome_name, warnings=[])
+        self.check_save_one_genome_output(ret, genome_name, warnings=[])
 
     def yest_bad_genomes_params_missing_parameter(self):
         self.start_test()
