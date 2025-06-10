@@ -263,9 +263,9 @@ class SaveGenomeTest(unittest.TestCase):
         self.check_genome_info(ret, genome_name)
         self.check_hidden(genome_name)
 
-    def _setup_handle(self):
+    def _setup_handle(self, file_name):
         # Save genome file to scratch dir
-        file_path =  os.path.join(self.scratch, "e_coli_with_assembly.json")
+        file_path =  os.path.join(self.scratch, file_name)
         with open(file_path, "w") as f:
             json.dump(self.test_genome_data, f, indent=4)
 
@@ -282,12 +282,13 @@ class SaveGenomeTest(unittest.TestCase):
     def test_genomes(self):
         self.start_test()
 
-        genome_with_handle_ref = self._setup_handle()
+        genome_name1 = 'e_coli_with_assembly_1.json'
+        genome_name2 = 'e_coli_with_assembly_2.json'
 
-        genome_name1 = 'test_genome_1'
-        genome_name2 = 'test_genome_2'
+        genome_with_handle_ref_1 = self._setup_handle(genome_name1)
+        genome_with_handle_ref_2 = self._setup_handle(genome_name2)
 
-        genome_names = [genome_name1, genome_name2]
+        file_names = [genome_name1, genome_name2]
 
         genome_metas = [
             {
@@ -341,12 +342,12 @@ class SaveGenomeTest(unittest.TestCase):
         inputs = [
             {
                 'name': genome_name1,
-                'data': genome_with_handle_ref,
+                'data': genome_with_handle_ref_1,
                 'meta': {"foo": "zoo"}
             },
             {
                 'name': genome_name2,
-                'data': genome_with_handle_ref,
+                'data': genome_with_handle_ref_2,
                 'meta': {"zoo": "foo"}
             }
         ]
@@ -356,7 +357,7 @@ class SaveGenomeTest(unittest.TestCase):
         # check genome result
         check_result_object_info_provenance_data(
             results,
-            genome_names,
+            file_names,
             self.scratch,
             self.wsClient,
             self.hs,
