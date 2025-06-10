@@ -200,7 +200,7 @@ class SaveGenomeTest(unittest.TestCase):
         genome_names = [object_info[1] for object_info in object_list]
         self.assertIn(target_genome_name, genome_names)
 
-    def yest_bad_one_genome_params(self):
+    def test_bad_one_genome_params(self):
         self.start_test()
         invalidate_params = {'missing_workspace': 'workspace',
                              'name': 'name',
@@ -208,7 +208,7 @@ class SaveGenomeTest(unittest.TestCase):
         error_msg = "Exactly one of a 'workspace_id' or a 'workspace' parameter must be provided"
         self.fail_save_genome(invalidate_params, error_msg)
 
-    def yest_one_genome(self):
+    def test_one_genome(self):
         self.start_test()
         genome_name = 'test_genome'
         params = {'workspace': self.wsName,
@@ -217,7 +217,7 @@ class SaveGenomeTest(unittest.TestCase):
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
         self.check_save_one_genome_output(ret, genome_name)
 
-    def yest_one_genome_with_hidden(self):
+    def test_one_genome_with_hidden(self):
         self.start_test()
         genome_name = 'test_genome_hidden_1'
         params = {'workspace': self.wsName,
@@ -341,9 +341,9 @@ class SaveGenomeTest(unittest.TestCase):
             expected_genome_md5sum
         )
 
-    def yest_genomes_with_hidden(self):
+    def test_genomes_with_hidden(self):
         self.start_test()
-        genome_name = 'test_genome_hidden'
+        genome_name = 'test_genomes_hidden_1'
         inputs = [
             {
                 'name': genome_name,
@@ -354,7 +354,9 @@ class SaveGenomeTest(unittest.TestCase):
         params = {'workspace_id': self.wsID, 'inputs': inputs}
         ret = self.genome_interface.save_genome_mass(params)[0]
         self.check_save_one_genome_output(ret, genome_name, warnings=[])
+        self.check_hidden(genome_name)
 
+        genome_name = 'test_genomes_hidden_2'
         inputs = [
             {
                 'name': genome_name,
@@ -365,8 +367,9 @@ class SaveGenomeTest(unittest.TestCase):
         params = {'workspace_id': self.wsID, 'inputs': inputs}
         ret = self.genome_interface.save_genome_mass(params)[0]
         self.check_save_one_genome_output(ret, genome_name, warnings=[])
+        self.check_hidden(genome_name)
 
-    def yest_bad_genomes_params_missing_parameter(self):
+    def test_bad_genomes_params_missing_parameter(self):
         self.start_test()
         invalidate_params = {
             'workspace_id': self.wsID,
@@ -375,7 +378,7 @@ class SaveGenomeTest(unittest.TestCase):
         error_msg = "Entry #1 in inputs field has invalid params: name parameter is required, but missing"
         self.fail_save_genome(invalidate_params, error_msg, mass=True)
 
-    def yest_GenomeInterface_check_dna_sequence_in_features(self):
+    def test_GenomeInterface_check_dna_sequence_in_features(self):
         # no feature in genome
         genome = {'missing_features': 'features'}
         copied_genome = genome.copy()
@@ -402,7 +405,7 @@ class SaveGenomeTest(unittest.TestCase):
         self.assertTrue(feature_dna_sum > 3000000)
         self.assertEqual(copied_genome, self.test_genome_data)
 
-    def yest_GenomeInterface_own_handle(self):
+    def test_GenomeInterface_own_handle(self):
         # no handle in genome
         genome = {'missing_genbank_handle_ref': 'hid'}
         origin_genome = genome.copy()
