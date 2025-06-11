@@ -161,4 +161,4 @@ class GenomeFileUtilTest(unittest.TestCase):
         ws_obj_name = 'large_genome_with_g2g_mass'
         input_data = self._prep_input(gbk_path, ws_obj_name, g2g_mass=True)
         with self.assertRaisesRegex(ValueError, "This genome size of "):
-            self.serviceImpl.genbank_to_genome(self.ctx, input_data)
+            self.serviceImpl.genbanks_to_genomes(self.ctx, input_data)
