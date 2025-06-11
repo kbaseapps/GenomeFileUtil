@@ -251,6 +251,9 @@ class SaveGenomeTest(unittest.TestCase):
             {"file_path": file_path, "make_handle": 1, "pack": "gzip"}
         )
 
+        # Register this node for cleanup in the deletion
+        self.nodes_to_delete.append(shock_ret['shock_id'])
+
         # Return updated genome
         genome_with_handle_ref = deepcopy(self.test_genome_data)
         genome_with_handle_ref["genbank_handle_ref"] = shock_ret['handle']['hid']
