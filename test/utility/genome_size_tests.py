@@ -1,8 +1,7 @@
+import mock
 import os
-import shutil
 import time
 import unittest
-import mock
 from configparser import ConfigParser
 
 from installed_clients.DataFileUtilClient import DataFileUtil
@@ -33,8 +32,13 @@ class GenomeFileUtilTest(unittest.TestCase):
             cls.cfg[nameval[0]] = nameval[1]
         cls.wsURL = cls.cfg['workspace-url']
         cls.wsClient = workspaceService(cls.wsURL, token=token)
+        cls.dfuClient = DataFileUtil(os.environ['SDK_CALLBACK_URL'], token=token, service_ver='dev')
         cls.serviceImpl = GenomeFileUtil(cls.cfg)
-        cls.token = token
+
+        suffix = int(time.time() * 1000)
+        cls.wsName = "test_GenomeFileUtil_" + str(suffix)
+        cls.wsClient.create_workspace({'workspace': cls.wsName})
+        cls.wsID = cls.dfuClient.ws_name_to_id(cls.wsName)
 
     @classmethod
     def tearDownClass(cls):
@@ -42,42 +46,34 @@ class GenomeFileUtilTest(unittest.TestCase):
             cls.wsClient.delete_workspace({'workspace': cls.wsName})
             print('Test workspace was deleted')
 
-    def getWsClient(self):
-        return self.__class__.wsClient
+    def _prep_input(self, gbk_path, ws_obj_name, g2g_mass=False):
 
-    def getWsName(self):
-        if hasattr(self.__class__, 'wsName'):
-            return self.__class__.wsName
-        suffix = int(time.time() * 1000)
-        wsName = "test_GenomeFileUtil_" + str(suffix)
-        self.getWsClient().create_workspace({'workspace': wsName})
-        self.__class__.wsName = wsName
-        return wsName
+        base_input = {
+            'file': {'path': gbk_path},
+            'workspace_name': self.wsName,
+            'genome_name': ws_obj_name,
+            'generate_ids_if_needed': 1
+        }
 
-    def getImpl(self):
-        return self.__class__.serviceImpl
+        if g2g_mass:
 
-    def getContext(self):
-        return self.__class__.ctx
+            base_input.pop('workspace_name')
+            return {
+                'workspace_id': self.wsID,
+                'inputs': [base_input]
+            }
+
+        return base_input
 
     def test_full_sequence(self):
         # features should not have sequences in it. But both non_coding_features and CDSs should have sequences.
         print("test_full_sequence")
         gbk_path = "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff"
         ws_obj_name = 'full_sequence'
-        result = self.getImpl().genbank_to_genome(
-            self.getContext(),
-            {
-              'file': {
-                  'path': gbk_path},
-              'workspace_name': self.getWsName(),
-              'genome_name': ws_obj_name,
-              'generate_ids_if_needed': 1
-            })[0]
-        data_file_cli = DataFileUtil(os.environ['SDK_CALLBACK_URL'], 
-                                    token=self.__class__.token,
-                                    service_ver='dev')
-        genome = data_file_cli.get_objects({'object_refs': [result['genome_ref']]})['data'][0]['data']
+        input_data = self._prep_input(gbk_path, ws_obj_name)
+        result = self.serviceImpl.genbank_to_genome(self.ctx, input_data)[0]
+
+        genome = self.dfuClient.get_objects({'object_refs': [result['genome_ref']]})['data'][0]['data']
         count_features_without_dna_sequence = 0
         for feature in genome['features']:
             if "dna_sequence" not in feature:
@@ -103,19 +99,10 @@ class GenomeFileUtilTest(unittest.TestCase):
         print("test_partial_sequence")
         gbk_path = "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff"
         ws_obj_name = 'partial_sequence'
-        result = self.getImpl().genbank_to_genome(
-            self.getContext(),
-            {
-              'file': {
-                  'path': gbk_path},
-              'workspace_name': self.getWsName(),
-              'genome_name': ws_obj_name,
-              'generate_ids_if_needed': 1
-            })[0]
-        data_file_cli = DataFileUtil(os.environ['SDK_CALLBACK_URL'], 
-                                    token=self.__class__.token,
-                                    service_ver='dev')
-        genome = data_file_cli.get_objects({'object_refs': [result['genome_ref']]})['data'][0]['data']
+        input_data = self._prep_input(gbk_path, ws_obj_name)
+        result = self.serviceImpl.genbank_to_genome(self.ctx, input_data)[0]
+
+        genome = self.dfuClient.get_objects({'object_refs': [result['genome_ref']]})['data'][0]['data']
         count_features_with_dna_sequence = 0
         for feature in genome['features']:
             if "dna_sequence" in feature:
@@ -141,19 +128,10 @@ class GenomeFileUtilTest(unittest.TestCase):
         print("test_no_sequence_kept")
         gbk_path = "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff"
         ws_obj_name = 'no_sequence'
-        result = self.getImpl().genbank_to_genome(
-            self.getContext(),
-            {
-              'file': {
-                  'path': gbk_path},
-              'workspace_name': self.getWsName(),
-              'genome_name': ws_obj_name,
-              'generate_ids_if_needed': 1
-            })[0]
-        data_file_cli = DataFileUtil(os.environ['SDK_CALLBACK_URL'], 
-                                    token=self.__class__.token,
-                                    service_ver='dev')
-        genome = data_file_cli.get_objects({'object_refs': [result['genome_ref']]})['data'][0]['data']
+        input_data = self._prep_input(gbk_path, ws_obj_name)
+        result = self.serviceImpl.genbank_to_genome(self.ctx, input_data)[0]
+
+        genome = self.dfuClient.get_objects({'object_refs': [result['genome_ref']]})['data'][0]['data']
         count_features_with_dna_sequence = 0
         for feature in genome['features']:
             if "dna_sequence" in feature:
@@ -175,3 +153,12 @@ class GenomeFileUtilTest(unittest.TestCase):
     def test_max_genome_size(self):
         with self.assertRaisesRegex(ValueError, "This genome size of "):
             GenomeInterface.validate_genome({"taxon_ref": "", "domain": ""})
+
+    @mock.patch("GenomeFileUtil.core.GenomeInterface.MAX_GENOME_SIZE", 1)
+    def test_max_genome_size_with_genbanks_to_genomes(self):
+        print("test_max_genome_size_with_genbanks_to_genomes")
+        gbk_path = "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff"
+        ws_obj_name = 'large_genome_with_g2g_mass'
+        input_data = self._prep_input(gbk_path, ws_obj_name, g2g_mass=True)
+        with self.assertRaisesRegex(ValueError, "This genome size of "):
+            self.serviceImpl.genbank_to_genome(self.ctx, input_data)
