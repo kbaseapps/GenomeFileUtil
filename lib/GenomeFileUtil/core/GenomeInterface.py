@@ -65,7 +65,7 @@ class GenomeInterface:
         genomes before saving.
 
         # NOTE If there is more than 1GB of data or more than 10,000 genomes to upload,
-        # the workspace will fail.
+        # the workspace service request will fail.
 
         Args:
             params (dict): A dictionary containing the parameters for saving the genomes.
