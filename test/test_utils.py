@@ -130,6 +130,11 @@ def _check_assembly_upa(retrieved_upa, expected_upa):
 def _check_prov(obj, expected_provenance):
     provenance = obj["provenance"]
     retrieved_provenance = _retrieve_provenance(provenance)
+
+    print(f"expected_provenance is: {expected_provenance}")
+    print("*" * 30)
+    print(f"retrieved_provenance is: {retrieved_provenance}")
+
     assert retrieved_provenance == expected_provenance
 
 def _retrieve_provenance(provenance):
