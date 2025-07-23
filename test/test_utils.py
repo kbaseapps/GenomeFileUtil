@@ -35,10 +35,10 @@ PROVENANCE = [
                 "name": "DataFileUtil",
                 "code_url": "https://github.com/kbaseapps/DataFileUtil",
             },
-            {
-                "name": "GenomeAnnotationAPI",
-                "code_url": "https://github.com/kbase/genome_annotation_api",
-            },
+            # {
+            #     "name": "GenomeAnnotationAPI",
+            #     "code_url": "https://github.com/kbase/genome_annotation_api",
+            # },
             {
                 "name": "WsLargeDataIO",
                 "code_url": "https://github.com/kbaseapps/WsLargeDataIO",

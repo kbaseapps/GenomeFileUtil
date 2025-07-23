@@ -25,7 +25,7 @@ from GenomeFileUtil.GenomeFileUtilServer import MethodContext
 from GenomeFileUtil.authclient import KBaseAuth as _KBaseAuth
 from GenomeFileUtil.core.GenomeInterface import GenomeInterface
 from installed_clients.WorkspaceClient import Workspace as workspaceService
-from test_utils import check_result_object_info_provenance_data, PROVENANCE, calculate_md5sum, load_expected_data
+from test_utils import check_result_object_info_provenance_data, PROVENANCE, load_expected_data
 
 _KBASE_GENOME = "KBaseGenomes.Genome"
 _GENOME_FILE_WARNINGS = [
