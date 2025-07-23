@@ -6,7 +6,9 @@ export PYTHONPATH=$script_dir/../lib:$PYTHONPATH
 export PYTHONPATH=$script_dir/../test:$PYTHONPATH
 
 # Set TEST_PATH to run a specific test. Eg: TEST_PATH=test.core.update_taxon_assignments_test
-export TEST_PATH=.
+export TEST_PATH=test.problematic_tests.save_genome_test
+# export TEST_PATH=test.supplemental_genbank_tests.genbank_upload_full_test
+# export TEST_PATH=test.core.toy_metagenome_tests
 
 cd $script_dir/../test
 python -m nose --with-coverage --cover-package=GenomeFileUtil --cover-html --cover-html-dir=/kb/module/work/test_coverage --cover-xml --cover-xml-file=/kb/module/work/test_coverage/coverage.xml --nocapture --nologcapture $TEST_PATH

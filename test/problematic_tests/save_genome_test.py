@@ -238,13 +238,10 @@ class SaveGenomeTest(unittest.TestCase):
         self.check_hidden(genome_name)
 
     def _setup_handle(self, file_name):
-        # Save genome file to scratch dir
-        file_path =  os.path.join(self.scratch, file_name)
-        with open(file_path, "w") as f:
-            json.dump(self.test_genome_data, f, indent=4)
-
-        # Calculate expected md5sum
-        md5sum = calculate_md5sum(file_path)
+        # Copy local genbank file to scratch dir
+        local_genbank_path = "data/e_coli/Ecoli_spoofing_test_genome.gbff"
+        file_path = os.path.join(self.scratch, file_name)
+        shutil.copy2(local_genbank_path, file_path)
 
         # Upload to blobstore
         shock_ret = self.dfu.file_to_shock(
@@ -257,19 +254,19 @@ class SaveGenomeTest(unittest.TestCase):
         # Return updated genome
         genome_with_handle_ref = deepcopy(self.test_genome_data)
         genome_with_handle_ref["genbank_handle_ref"] = shock_ret['handle']['hid']
-        return genome_with_handle_ref, md5sum
+        return genome_with_handle_ref
 
     def test_genomes(self):
         self.start_test()
 
-        genome_name1 = 'e_coli_with_assembly_1.json'
-        genome_name2 = 'e_coli_with_assembly_2.json'
+        genome_name1 = 'e_coli_test_genome_1.gbff'
+        genome_name2 = 'e_coli_test_genome_2.gbff'
 
-        genome_with_handle_ref_1, genome1_md5sum = self._setup_handle(genome_name1)
-        genome_with_handle_ref_2, genome2_md5sum= self._setup_handle(genome_name2)
+        genome_with_genbank_handle_ref_1 = self._setup_handle(genome_name1)
+        genome_with_genbank_handle_ref_2 = self._setup_handle(genome_name2)
 
         file_names = [genome_name1, genome_name2]
-        expected_genome_md5sum = [genome1_md5sum, genome2_md5sum]
+        expected_genome_md5sum = ["457e38b607e3f4c5800cbe608abee12d", "457e38b607e3f4c5800cbe608abee12d"]
 
         genome_metas = [
             {
@@ -316,12 +313,12 @@ class SaveGenomeTest(unittest.TestCase):
         inputs = [
             {
                 'name': genome_name1,
-                'data': genome_with_handle_ref_1,
+                'data': genome_with_genbank_handle_ref_1,
                 'meta': {"foo": "zoo"}
             },
             {
                 'name': genome_name2,
-                'data': genome_with_handle_ref_2,
+                'data': genome_with_genbank_handle_ref_2,
                 'meta': {"zoo": "foo"}
             }
         ]
