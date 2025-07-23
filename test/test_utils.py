@@ -28,12 +28,12 @@ PROVENANCE = [
                 "code_url": "https://localhost",
             },
             {
-                "name": "AssemblyUtil",
-                "code_url": "https://github.com/kbaseapps/AssemblyUtil",
-            },
-            {
                 "name": "DataFileUtil",
                 "code_url": "https://github.com/kbaseapps/DataFileUtil",
+            },
+            {
+                "name": "AssemblyUtil",
+                "code_url": "https://github.com/kbaseapps/AssemblyUtil",
             },
             # {
             #     "name": "GenomeAnnotationAPI",
