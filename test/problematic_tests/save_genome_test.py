@@ -226,8 +226,7 @@ class SaveGenomeTest(unittest.TestCase):
                   'hidden': 1}
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
         self.check_save_one_genome_output(ret, genome_name)
-        print(f"ret is {ret}")
-        self.check_hidden(genome_name)
+        self.check_hidden(ret["info"][0])
 
         genome_name = 'test_genome_hidden_2'
         params = {'workspace': self.wsName,
@@ -236,7 +235,7 @@ class SaveGenomeTest(unittest.TestCase):
                   'hidden': True}
         ret = self.getImpl().save_one_genome(self.ctx, params)[0]
         self.check_save_one_genome_output(ret, genome_name)
-        self.check_hidden(genome_name)
+        self.check_hidden(ret["info"][0])
 
     def _setup_handle(self, file_name):
         # Copy local genbank file to scratch dir
@@ -355,8 +354,7 @@ class SaveGenomeTest(unittest.TestCase):
         params = {'workspace_id': self.wsID, 'inputs': inputs}
         ret = self.genome_interface.save_genome_mass(params)[0]
         self.check_save_one_genome_output(ret, genome_name, warnings=[])
-        print(f"ret mass is {ret}")
-        self.check_hidden(genome_name)
+        self.check_hidden(ret["info"][0])
 
         genome_name = 'test_genomes_hidden_2'
         inputs = [
@@ -369,7 +367,7 @@ class SaveGenomeTest(unittest.TestCase):
         params = {'workspace_id': self.wsID, 'inputs': inputs}
         ret = self.genome_interface.save_genome_mass(params)[0]
         self.check_save_one_genome_output(ret, genome_name, warnings=[])
-        self.check_hidden(genome_name)
+        self.check_hidden(ret["info"][0])
 
     def test_bad_genomes_params_missing_parameter(self):
         self.start_test()
