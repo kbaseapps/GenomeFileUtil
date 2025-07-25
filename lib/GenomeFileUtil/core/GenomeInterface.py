@@ -199,8 +199,11 @@ class GenomeInterface:
             obj["name"] = name
             obj["meta"] = meta
 
-            if "AnnotatedMetagenomeAssembly" not in ws_datatype:
-                if input_params.get('upgrade') or 'feature_counts' not in data:
+            if "AnnotatedMetagenomeAssembly" in ws_datatype:
+                if params.get('upgrade') or 'feature_counts' not in data:
+                    data = self._update_metagenome(data)
+            else:
+                if params.get('upgrade') or 'feature_counts' not in data:
                     data = self._update_genome(data)
 
             # check all handles point to shock nodes owned by calling user
@@ -261,6 +264,11 @@ class GenomeInterface:
                 return "Ensembl", ['ExternalDB', 'User']
             return "Ensembl", ['Representative', 'ExternalDB']
         return source, ['User']
+
+    def _update_metagenome(self, genome):
+        """Checks for missing required fields and fixes breaking changes"""
+        if 'molecule_type' not in genome:
+            genome['molecule_type'] = 'Unknown'
 
     def _update_genome(self, genome):
         """Checks for missing required fields and fixes breaking changes"""
