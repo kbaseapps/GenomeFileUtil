@@ -25,13 +25,18 @@ from GenomeFileUtil.GenomeFileUtilServer import MethodContext
 from GenomeFileUtil.authclient import KBaseAuth as _KBaseAuth
 from GenomeFileUtil.core.GenomeInterface import GenomeInterface
 from installed_clients.WorkspaceClient import Workspace as workspaceService
-from test_utils import check_result_object_info_provenance_data, PROVENANCE, load_expected_data
+from test_utils import check_result_object_info_provenance_data, PROVENANCE, METAGENOME, load_expected_data
 
 _KBASE_GENOME = "KBaseGenomes.Genome"
+_KBASE_METAGENOME = "KBaseMetagenomes.AnnotatedMetagenomeAssembly"
+
 _GENOME_FILE_WARNINGS = [
     'For prokaryotes, CDS array should generally be the same length as the Features array.',
     'Genome molecule_type Unknown is not expected for domain Bacteria.',
     'Unable to determine organism taxonomy'
+]
+_METAGENOME_FILE_WARNINGS = [
+    'SUSPECT: This genome has 20 genes that needed to be spoofed for existing parentless CDS.'
 ]
 
 
@@ -129,15 +134,60 @@ class SaveGenomeTest(unittest.TestCase):
     @classmethod
     def prepare_data(cls):
         assembly_file_path = os.path.join(cls.scratch,'e_coli_assembly.fasta')
+        meta_file_path = os.path.join(cls.scratch,'metagenome.fa')
+
         shutil.copy('data/e_coli/e_coli_assembly.fasta', assembly_file_path)
+        shutil.copy('data/metagenomes/toy/metagenome.fa', meta_file_path)
+
         au = AssemblyUtil(os.environ['SDK_CALLBACK_URL'])
-        assembly_ref = au.save_assembly_from_fasta({
-            'workspace_name': cls.wsName,
-            'assembly_name': 'e_coli.assembly',
-            'file': {'path': assembly_file_path}
-        })
+        assembly_refs = au.save_assemblies_from_fastas(
+            {
+                'workspace_id': cls.wsID,
+                'inputs': [
+                    {
+                        'assembly_name': 'e_coli.assembly',
+                        'file': assembly_file_path
+                    },
+                    {
+                        'assembly_name': 'metagenome.assembly',
+                        'file': meta_file_path
+                    }
+                ]
+            }
+        )["results"]
+
         cls.test_genome_data = json.load(open('data/e_coli/e_coli.json'))
-        cls.test_genome_data['assembly_ref'] = assembly_ref
+        cls.test_genome_data['assembly_ref'] = assembly_refs[0]["upa"]
+
+        cls.test_metagenome_data = METAGENOME
+        cls.test_metagenome_data['assembly_ref'] = assembly_refs[1]["upa"]
+
+        # Define target paths in the shared folder
+        fhr_path = os.path.join(cls.scratch, 'features_handle_ref')
+        phr_path = os.path.join(cls.scratch, 'protein_handle_ref')
+
+        # Create the files directly in the shared folder
+        with open(fhr_path, 'w', encoding='utf-8') as fhr_file:
+            fhr_file.write("test features_handle_ref")
+
+        with open(phr_path, 'w', encoding='utf-8') as phr_file:
+            phr_file.write("test protein_handle_ref")
+
+        # Upload files to the blobstore
+        handle_service_outputs = cls.dfu.file_to_shock_mass([
+            {'file_path': fhr_path, 'make_handle': 1, 'pack': 'gzip'},
+            {'file_path': phr_path, 'make_handle': 1, 'pack': 'gzip'}
+        ])
+
+        # Update metagenome
+        cls.test_metagenome_data["features_handle_ref"] = handle_service_outputs[0]["handle"]["hid"]
+        cls.test_metagenome_data["protein_handle_ref"] = handle_service_outputs[1]["handle"]["hid"]
+
+        # Track shock_ids for cleanup
+        cls.nodes_to_delete.extend([
+            handle_service_outputs[0]["shock_id"],
+            handle_service_outputs[1]["shock_id"]
+        ])
 
     def getWsClient(self):
         return self.__class__.wsClient
@@ -237,7 +287,7 @@ class SaveGenomeTest(unittest.TestCase):
         self.check_save_one_genome_output(ret, genome_name)
         self.check_hidden(ret["info"][0])
 
-    def _setup_handle(self, file_name):
+    def _setup_handle(self, file_name, genome_data):
         # Copy local genbank file to scratch dir
         local_genbank_path = "data/e_coli/Ecoli_spoofing_test_genome.gbff"
         file_path = os.path.join(self.scratch, file_name)
@@ -252,7 +302,7 @@ class SaveGenomeTest(unittest.TestCase):
         self.nodes_to_delete.append(shock_ret['shock_id'])
 
         # Return updated genome
-        genome_with_handle_ref = deepcopy(self.test_genome_data)
+        genome_with_handle_ref = deepcopy(genome_data)
         genome_with_handle_ref["genbank_handle_ref"] = shock_ret['handle']['hid']
         return genome_with_handle_ref
 
@@ -262,8 +312,8 @@ class SaveGenomeTest(unittest.TestCase):
         genome_name1 = 'e_coli_test_genome_1.gbff'
         genome_name2 = 'e_coli_test_genome_2.gbff'
 
-        genome_with_genbank_handle_ref_1 = self._setup_handle(genome_name1)
-        genome_with_genbank_handle_ref_2 = self._setup_handle(genome_name2)
+        genome_with_genbank_handle_ref_1 = self._setup_handle(genome_name1, self.test_genome_data)
+        genome_with_genbank_handle_ref_2 = self._setup_handle(genome_name2, self.test_genome_data)
 
         file_names = [genome_name1, genome_name2]
         expected_genome_md5sum = ["457e38b607e3f4c5800cbe608abee12d", "457e38b607e3f4c5800cbe608abee12d"]
@@ -368,6 +418,45 @@ class SaveGenomeTest(unittest.TestCase):
         ret = self.genome_interface.save_genome_mass(params)[0]
         self.check_save_one_genome_output(ret, genome_name, warnings=[])
         self.check_hidden(ret["info"][0])
+
+    def test_genomes_with_upgrade(self):
+        self.start_test()
+
+        genome_name = 'MyMetagenome'
+        metagenome_with_genbank_handle_ref = self._setup_handle(genome_name, self.test_metagenome_data)
+
+        file_names = [genome_name]
+        expected_genome_md5sum = ["457e38b607e3f4c5800cbe608abee12d"]
+        genome_metas = []
+        expected_genome_data = []
+
+        inputs = [
+            {
+                'name': genome_name,
+                'data': metagenome_with_genbank_handle_ref,
+                'workspace_datatype': _KBASE_METAGENOME,
+                'meta': {"cat": "dog"},
+                'upgrade': True,
+            }
+        ]
+        params = {'workspace_id': self.wsID, 'inputs': inputs}
+        results = self.genome_interface.save_genome_mass(params)
+
+        # check metagenome result
+        check_result_object_info_provenance_data(
+            results,
+            file_names,
+            self.scratch,
+            self.wsClient,
+            self.hs,
+            self.dfu,
+            self.wsID,
+            self.wsName,
+            genome_metas,
+            self.provenance,
+            expected_genome_data,
+            expected_genome_md5sum
+        )
 
     def test_bad_genomes_params_missing_parameter(self):
         self.start_test()
