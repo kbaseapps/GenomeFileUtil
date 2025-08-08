@@ -437,7 +437,52 @@ class SaveGenomeTest(unittest.TestCase):
                 'MD5': 'e2ccbd5a9bed0148015bd6b784e3c1c3'
             }
         ]
-        expected_genome_data = [{}]
+        expected_genome_data = [
+            {
+                "contig_ids": ["Ga0065724_100001"],
+                "contig_lengths": [538871],
+                "dna_size": 538871,
+                "domain": "Eukaryota",
+                "environment": None,
+                "external_source_origination_date": None,
+                "feature_counts": {
+                    "CDS": 20,
+                    "gene": 20,
+                    "non_coding_features": 0,
+                    "protein_encoding_gene": 20,
+                },
+                "features_handle_ref": "KBH_743550",
+                "gc_content": 0.64469,
+                "genetic_code": 1,
+                "genome_type": "Metagenome",
+                "id": "MyMetagenome",
+                "md5": "e2ccbd5a9bed0148015bd6b784e3c1c3",
+                "molecule_type": "SingleLetterAlphabet",
+                "notes": None,
+                "num_contigs": 1,
+                "num_features": 40,
+                "ontologies_present": {},
+                "ontology_events": [
+                    {
+                        "id": "GO",
+                        "method": "GenomeFileUtils Genbank uploader from annotations",
+                        "method_version": "0.11.7",
+                    }
+                ],
+                "original_source_file_name": None,
+                "protein_handle_ref": "KBH_743551",
+                "publications": [],
+                "scientific_name": "Arabidopsis thaliana",
+                "source": "GFF",
+                "source_id": "unknown",
+                "suspect": 1,
+                "taxon_assignments": {"ncbi": "3702"},
+                "taxonomy": "cellular organisms; Eukaryota; Viridiplantae; Streptophyta; Streptophytina; Embryophyta; Tracheophyta; Euphyllophyta; Spermatophyta; Magnoliopsida; Mesangiospermae; eudicotyledons; Gunneridae; Pentapetalae; rosids; malvids; Brassicales; Brassicaceae; Camelineae; Arabidopsis",
+                "warnings": [
+                    "SUSPECT: This genome has 20 genes that needed to be spoofed for existing parentless CDS."
+                ],
+            }
+        ]
 
         inputs = [
             {
