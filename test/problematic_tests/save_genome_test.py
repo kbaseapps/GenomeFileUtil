@@ -451,7 +451,6 @@ class SaveGenomeTest(unittest.TestCase):
                     "non_coding_features": 0,
                     "protein_encoding_gene": 20,
                 },
-                "features_handle_ref": "KBH_743550",
                 "gc_content": 0.64469,
                 "genetic_code": 1,
                 "genome_type": "Metagenome",
@@ -470,7 +469,6 @@ class SaveGenomeTest(unittest.TestCase):
                     }
                 ],
                 "original_source_file_name": None,
-                "protein_handle_ref": "KBH_743551",
                 "publications": [],
                 "scientific_name": "Arabidopsis thaliana",
                 "source": "GFF",
