@@ -216,12 +216,13 @@ def _check_data(
     expected_data,
     expected_md5sum,
     expected_assembly_ref,
-    is_genome
+    is_genome,
+    is_metagenome
 ):
     data = obj["data"]
 
     retrieved_data, retrieved_md5sum, retrieved_node_filename = (
-        _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref)
+        _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref, is_metagenome)
         if is_genome
         else _retrieve_assembly_data(hs_client, dfu_client, scratch_dir, data)
     )
@@ -239,7 +240,7 @@ def _check_data(
     assert retrieved_md5sum == expected_md5sum
     assert retrieved_node_filename == expected_node_filename
 
-def _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref):
+def _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref, is_metagenome):
     # make a deep copy to avoid modifying the original genome data
     data = deepcopy(data)
 
@@ -266,6 +267,10 @@ def _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref):
         ontology_event.pop("timestamp")
         ontology_ref = ontology_event.pop("ontology_ref")
         assert _UPA_PATTERN.match(ontology_ref)
+
+    if is_metagenome:
+        data.pop("features_handle_ref")
+        data.pop("protein_handle_ref")
 
     return data, retrieved_genome_md5sum, retrieved_node_filename
 
