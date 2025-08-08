@@ -120,7 +120,7 @@ def check_result_object_info_provenance_data(
         expected_info, ref, expected_assembly_upa = _get_info_and_ref(res, is_genome)
         obj = _get_object(ws_client, ref)
         _check_info(obj, file_names[idx], expected_metadata[idx], expected_wsID, expected_wsName, expected_info, expected_assembly_upa, is_genome, is_metagenome)
-        # _check_prov(obj, expected_provenance)
+        _check_prov(obj, expected_provenance)
         _check_data(obj, file_names[idx], scratch_dir, hs_client, dfu_client, expected_data[idx], expected_md5sum[idx], expected_assembly_upa, is_genome, is_metagenome)
 
 def _get_info_and_ref(result, is_genome):
@@ -150,9 +150,6 @@ def _get_object(ws_client, ref):
 
 def _check_info(obj, file_name, expected_metadata, expected_wsID, expected_wsName, expected_info, expected_assembly_upa, is_genome, is_metagenome):
     info = obj["info"]
-    print("-----------")
-    print(info)
-    print("-----------")
     object_name = file_name if is_genome else file_name + "_assembly"
     object_type = _get_object_type(is_genome, is_metagenome)
     retrieved_metadata = _retrieve_genome_metadata(info[10], expected_assembly_upa) if is_genome else info[10]
@@ -233,9 +230,6 @@ def _check_data(
         else file_name + "_assembly.fasta"
     )
 
-    print("*" * 20)
-    print(retrieved_data)
-    print("*" * 20)
     assert retrieved_data == expected_data
     assert retrieved_md5sum == expected_md5sum
     assert retrieved_node_filename == expected_node_filename
@@ -243,8 +237,6 @@ def _check_data(
 def _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref, is_metagenome):
     # make a deep copy to avoid modifying the original genome data
     data = deepcopy(data)
-
-    print(f"data is {data}")
 
     for key in ["cdss", "features", "mrnas", "non_coding_features"]:
         for dist in data.get(key, []):
@@ -255,10 +247,13 @@ def _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref, 
     assert _UPA_PATTERN.match(retrieved_assembly_ref)
     assert retrieved_assembly_ref == expected_assembly_ref
 
-    # remove features_handle_ref and protein_handle_ref
+    # check features_handle_ref and protein_handle_ref
     if is_metagenome:
-        data.pop("features_handle_ref")
-        data.pop("protein_handle_ref")
+        features_handle_ref = data.pop("features_handle_ref")
+        protein_handle_ref = data.pop("protein_handle_ref")
+
+        assert features_handle_ref.split("_")[0] == "KBH"
+        assert protein_handle_ref.split("_")[0] == "KBH"
 
     # check handle ref
     handle_id = data.pop("genbank_handle_ref")
