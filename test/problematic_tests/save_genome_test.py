@@ -424,7 +424,19 @@ class SaveGenomeTest(unittest.TestCase):
 
         file_names = [genome_name]
         expected_genome_md5sum = ["457e38b607e3f4c5800cbe608abee12d"]
-        genome_metas = [{}]
+        genome_metas = [
+            {
+                'GC content': '0.64469',
+                'Source ID': 'unknown',
+                'Size': '538871',
+                'cat': 'dog',
+                'Number features': '40',
+                'Number contigs': '1',
+                'Number of Warnings': '1',
+                'Source': 'GFF',
+                'MD5': 'e2ccbd5a9bed0148015bd6b784e3c1c3'
+            }
+        ]
         expected_genome_data = [{}]
 
         inputs = [
@@ -452,7 +464,8 @@ class SaveGenomeTest(unittest.TestCase):
             genome_metas,
             self.provenance,
             expected_genome_data,
-            expected_genome_md5sum
+            expected_genome_md5sum,
+            is_metagenome=True
         )
 
     def yest_bad_genomes_params_missing_parameter(self):

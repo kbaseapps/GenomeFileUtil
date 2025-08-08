@@ -114,6 +114,7 @@ def check_result_object_info_provenance_data(
     expected_data,
     expected_md5sum,
     is_genome=True,
+    is_metagenome=False
 ):
     for idx, res in enumerate(results):
         expected_info, ref, expected_assembly_upa = _get_info_and_ref(res, is_genome)
@@ -147,13 +148,13 @@ def _get_object(ws_client, ref):
     assert _OBJECT_VERSION_PATTERN.match(ref)
     return ws_client.get_objects2({"objects": [{'ref': ref}]})["data"][0]
 
-def _check_info(obj, file_name, expected_metadata, expected_wsID, expected_wsName, expected_info, expected_assembly_upa, is_genome):
+def _check_info(obj, file_name, expected_metadata, expected_wsID, expected_wsName, expected_info, expected_assembly_upa, is_genome, is_metagenome):
     info = obj["info"]
     print("-----------")
     print(info)
     print("-----------")
     object_name = file_name if is_genome else file_name + "_assembly"
-    object_type = 'KBaseGenomes.Genome' if is_genome else 'KBaseGenomeAnnotations.Assembly'
+    object_type = _get_object_type(is_genome, is_metagenome)
     retrieved_metadata = _retrieve_genome_metadata(info[10], expected_assembly_upa) if is_genome else info[10]
 
     assert info == expected_info
@@ -169,6 +170,13 @@ def _check_info(obj, file_name, expected_metadata, expected_wsID, expected_wsNam
 
     # check metadata
     assert retrieved_metadata == expected_metadata
+
+def _get_object_type(is_genome, is_metagenome):
+    if is_metagenome:
+        return "KBaseMetagenomes.AnnotatedMetagenomeAssembly"
+    if is_genome:
+        return "KBaseGenomes.Genome"
+    return "KBaseGenomeAnnotations.Assembly"
 
 def _retrieve_genome_metadata(metadata, expected_assembly_upa):
     # make a deep copy to avoid modifying the original metadata
@@ -229,6 +237,9 @@ def _check_data(
         else file_name + "_assembly.fasta"
     )
 
+    print("*" * 20)
+    print(retrieved_data)
+    print("*" * 20)
     assert retrieved_data == expected_data
     assert retrieved_md5sum == expected_md5sum
     assert retrieved_node_filename == expected_node_filename
