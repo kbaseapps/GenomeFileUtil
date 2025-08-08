@@ -121,7 +121,7 @@ def check_result_object_info_provenance_data(
         obj = _get_object(ws_client, ref)
         _check_info(obj, file_names[idx], expected_metadata[idx], expected_wsID, expected_wsName, expected_info, expected_assembly_upa, is_genome, is_metagenome)
         # _check_prov(obj, expected_provenance)
-        _check_data(obj, file_names[idx], scratch_dir, hs_client, dfu_client, expected_data[idx], expected_md5sum[idx], expected_assembly_upa, is_genome)
+        _check_data(obj, file_names[idx], scratch_dir, hs_client, dfu_client, expected_data[idx], expected_md5sum[idx], expected_assembly_upa, is_genome, is_metagenome)
 
 def _get_info_and_ref(result, is_genome):
     # Process the result returned by import_genbank_mass
@@ -255,6 +255,11 @@ def _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref, 
     assert _UPA_PATTERN.match(retrieved_assembly_ref)
     assert retrieved_assembly_ref == expected_assembly_ref
 
+    # remove features_handle_ref and protein_handle_ref
+    if is_metagenome:
+        data.pop("features_handle_ref")
+        data.pop("protein_handle_ref")
+
     # check handle ref
     handle_id = data.pop("genbank_handle_ref")
     file_ret = _download_file_from_blobstore(dfu_client, scratch_dir, handle_id)
@@ -267,10 +272,6 @@ def _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref, 
         ontology_event.pop("timestamp")
         ontology_ref = ontology_event.pop("ontology_ref")
         assert _UPA_PATTERN.match(ontology_ref)
-
-    if is_metagenome:
-        data.pop("features_handle_ref")
-        data.pop("protein_handle_ref")
 
     return data, retrieved_genome_md5sum, retrieved_node_filename
 
