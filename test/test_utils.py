@@ -119,7 +119,7 @@ def check_result_object_info_provenance_data(
     for idx, res in enumerate(results):
         expected_info, ref, expected_assembly_upa = _get_info_and_ref(res, is_genome)
         obj = _get_object(ws_client, ref)
-        _check_info(obj, file_names[idx], expected_metadata[idx], expected_wsID, expected_wsName, expected_info, expected_assembly_upa, is_genome)
+        _check_info(obj, file_names[idx], expected_metadata[idx], expected_wsID, expected_wsName, expected_info, expected_assembly_upa, is_genome, is_metagenome)
         # _check_prov(obj, expected_provenance)
         _check_data(obj, file_names[idx], scratch_dir, hs_client, dfu_client, expected_data[idx], expected_md5sum[idx], expected_assembly_upa, is_genome)
 
