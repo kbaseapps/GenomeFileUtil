@@ -248,6 +248,8 @@ def _retrieve_genome_data(dfu_client, scratch_dir, data, expected_assembly_ref):
     # make a deep copy to avoid modifying the original genome data
     data = deepcopy(data)
 
+    print(f"data is {data}")
+
     for key in ["cdss", "features", "mrnas", "non_coding_features"]:
         for dist in data.get(key):
             if dist.get("aliases"):
