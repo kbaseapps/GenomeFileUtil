@@ -200,10 +200,10 @@ class GenomeInterface:
             obj["meta"] = meta
 
             if "AnnotatedMetagenomeAssembly" in ws_datatype:
-                if params.get('upgrade') or 'feature_counts' not in data:
+                if input_params.get('upgrade') or 'feature_counts' not in data:
                     data = self._update_metagenome(data)
             else:
-                if params.get('upgrade') or 'feature_counts' not in data:
+                if input_params.get('upgrade') or 'feature_counts' not in data:
                     data = self._update_genome(data)
 
             # check all handles point to shock nodes owned by calling user
