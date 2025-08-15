@@ -68,11 +68,19 @@ class GenomeFileUtilTest(unittest.TestCase):
     def test_full_sequence(self):
         # features should not have sequences in it. But both non_coding_features and CDSs should have sequences.
         print("test_full_sequence")
-        gbk_path = "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff"
-        ws_obj_name = 'full_sequence'
-        input_data = self._prep_input(gbk_path, ws_obj_name)
-        result = self.serviceImpl.genbank_to_genome(self.ctx, input_data)[0]
+        self._test_sequence(
+            "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff",
+            "full_sequence",
+            self.serviceImpl.genbank_to_genome,
+            self._check_full_sequence
+        )
 
+    def _test_sequence(self, gbk_path, ws_obj_name, g2g_func, check_seq_func):
+        input_data = self._prep_input(gbk_path, ws_obj_name)
+        result = g2g_func(self.ctx, input_data)[0]
+        check_seq_func(result)
+
+    def _check_full_sequence(self, result):
         genome = self.dfuClient.get_objects({'object_refs': [result['genome_ref']]})['data'][0]['data']
         count_features_without_dna_sequence = 0
         for feature in genome['features']:
@@ -97,11 +105,14 @@ class GenomeFileUtilTest(unittest.TestCase):
     def test_partial_sequence(self):
         # features should not have sequences in it. But both non_coding_features and CDSs should have sequences.
         print("test_partial_sequence")
-        gbk_path = "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff"
-        ws_obj_name = 'partial_sequence'
-        input_data = self._prep_input(gbk_path, ws_obj_name)
-        result = self.serviceImpl.genbank_to_genome(self.ctx, input_data)[0]
+        self._test_sequence(
+            "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff",
+            "partial_sequence",
+            self.serviceImpl.genbank_to_genome,
+            self._check_partial_sequence
+        )
 
+    def _check_partial_sequence(self, result):
         genome = self.dfuClient.get_objects({'object_refs': [result['genome_ref']]})['data'][0]['data']
         count_features_with_dna_sequence = 0
         for feature in genome['features']:
@@ -126,11 +137,14 @@ class GenomeFileUtilTest(unittest.TestCase):
     def test_no_sequence_kept(self):
         # features, cds, and non_coding_features should not have sequences in it.
         print("test_no_sequence_kept")
-        gbk_path = "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff"
-        ws_obj_name = 'no_sequence'
-        input_data = self._prep_input(gbk_path, ws_obj_name)
-        result = self.serviceImpl.genbank_to_genome(self.ctx, input_data)[0]
+        self._test_sequence(
+            "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff",
+            "no_sequence",
+            self.serviceImpl.genbank_to_genome,
+            self._check_no_sequence
+        )
 
+    def _check_no_sequence(self, result):
         genome = self.dfuClient.get_objects({'object_refs': [result['genome_ref']]})['data'][0]['data']
         count_features_with_dna_sequence = 0
         for feature in genome['features']:
