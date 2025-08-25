@@ -71,13 +71,16 @@ class GenomeFileUtilTest(unittest.TestCase):
         self._test_sequence(
             "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff",
             "full_sequence",
-            self.serviceImpl.genbank_to_genome,
             self._check_full_sequence
         )
 
-    def _test_sequence(self, gbk_path, ws_obj_name, g2g_func, check_seq_func):
+    def _test_sequence(self, gbk_path, ws_obj_name, check_seq_func, g2g_mass=False):
         input_data = self._prep_input(gbk_path, ws_obj_name)
-        result = g2g_func(self.ctx, input_data)[0]
+        if g2g_mass:
+            result = self.serviceImpl.genbanks_to_genomes(self.ctx, input_data)[0]
+        else:
+            result = self.serviceImpl.genbank_to_genome(self.ctx, input_data)[0]
+
         check_seq_func(result)
 
     def _check_full_sequence(self, result):
@@ -108,7 +111,6 @@ class GenomeFileUtilTest(unittest.TestCase):
         self._test_sequence(
             "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff",
             "partial_sequence",
-            self.serviceImpl.genbank_to_genome,
             self._check_partial_sequence
         )
 
@@ -140,7 +142,6 @@ class GenomeFileUtilTest(unittest.TestCase):
         self._test_sequence(
             "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff",
             "no_sequence",
-            self.serviceImpl.genbank_to_genome,
             self._check_no_sequence
         )
 
