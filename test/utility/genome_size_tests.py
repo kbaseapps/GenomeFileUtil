@@ -74,10 +74,20 @@ class GenomeFileUtilTest(unittest.TestCase):
             self._check_full_sequence
         )
 
+    def test_full_sequence_mass(self):
+        # features should not have sequences in it. But both non_coding_features and CDSs should have sequences.
+        print("test_full_sequence_mass")
+        self._test_sequence(
+            "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff",
+            "full_sequence",
+            self._check_full_sequence,
+            True,
+        )
+
     def _test_sequence(self, gbk_path, ws_obj_name, check_seq_func, g2g_mass=False):
-        input_data = self._prep_input(gbk_path, ws_obj_name)
+        input_data = self._prep_input(gbk_path, ws_obj_name, g2g_mass)
         if g2g_mass:
-            result = self.serviceImpl.genbanks_to_genomes(self.ctx, input_data)[0]
+            result = self.serviceImpl.genbanks_to_genomes(self.ctx, input_data)[0]["results"][0]
         else:
             result = self.serviceImpl.genbank_to_genome(self.ctx, input_data)[0]
 
@@ -114,6 +124,17 @@ class GenomeFileUtilTest(unittest.TestCase):
             self._check_partial_sequence
         )
 
+    @mock.patch("GenomeFileUtil.core.GenomeInterface.MAX_GENOME_SIZE", 14000000)
+    def test_partial_sequence_mass(self):
+        # features should not have sequences in it. But both non_coding_features and CDSs should have sequences.
+        print("test_partial_sequence_mass")
+        self._test_sequence(
+            "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff",
+            "partial_sequence",
+            self._check_partial_sequence,
+            True
+        )
+
     def _check_partial_sequence(self, result):
         genome = self.dfuClient.get_objects({'object_refs': [result['genome_ref']]})['data'][0]['data']
         count_features_with_dna_sequence = 0
@@ -143,6 +164,17 @@ class GenomeFileUtilTest(unittest.TestCase):
             "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff",
             "no_sequence",
             self._check_no_sequence
+        )
+
+    @mock.patch("GenomeFileUtil.core.GenomeInterface.MAX_GENOME_SIZE", 9000000)
+    def test_no_sequence_kept_mass(self):
+        # features, cds, and non_coding_features should not have sequences in it.
+        print("test_no_sequence_kept_mass")
+        self._test_sequence(
+            "data/e_coli/GCF_000005845.2_ASM584v2_genomic.gbff",
+            "no_sequence",
+            self._check_no_sequence,
+            True
         )
 
     def _check_no_sequence(self, result):
