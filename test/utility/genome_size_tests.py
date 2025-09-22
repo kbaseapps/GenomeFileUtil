@@ -37,8 +37,7 @@ class GenomeFileUtilTest(unittest.TestCase):
 
         suffix = int(time.time() * 1000)
         cls.wsName = "test_GenomeFileUtil_" + str(suffix)
-        cls.wsClient.create_workspace({'workspace': cls.wsName})
-        cls.wsID = cls.dfuClient.ws_name_to_id(cls.wsName)
+        cls.wsID = cls.wsClient.create_workspace({'workspace': cls.wsName})[0]
 
     @classmethod
     def tearDownClass(cls):
